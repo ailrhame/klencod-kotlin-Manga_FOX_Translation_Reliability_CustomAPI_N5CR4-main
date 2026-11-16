@@ -1,0 +1,79 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    namespace 'com.manga.fox'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'com.manga.fox'
+        minSdk 26
+        targetSdk 34
+        versionCode 1
+        versionName '1.0.0'
+        ndk {
+            abiFilters 'arm64-v8a'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    sourceSets {
+        main.res.srcDir(layout.buildDirectory.dir('generated/mangaFoxResources/res'))
+    }
+}
+
+// Generate the accessibility-service XML; no hand-authored XML resource is needed.
+def accessibilityXml = layout.buildDirectory.file('generated/mangaFoxResources/res/xml/mangafox_accessibility_config.xml')
+
+tasks.register('generateMangaFoxAccessibilityConfig') {
+    outputs.file(accessibilityXml)
+    doLast {
+        def outputFile = accessibilityXml.get().asFile
+        outputFile.parentFile.mkdirs()
+        outputFile.text = '''<?xml version="1.0" encoding="utf-8"?>
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:accessibilityEventTypes="typeAllMask"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:notificationTimeout="100"
+    android:canRetrieveWindowContent="true"
+    android:canTakeScreenshot="true"
+    android:canPerformGestures="true"
+    android:accessibilityFlags="flagRetrieveInteractiveWindows|flagReportViewIds" />
+'''
+    }
+}
+
+tasks.named('preBuild').configure {
+    dependsOn(tasks.named('generateMangaFoxAccessibilityConfig'))
+}
+
+dependencies {
+    implementation 'androidx.core:core-ktx:1.13.1'
+
+    // Prebuilt Android llama.cpp engine. No CMake/NDK build in the app project.
+    implementation 'dev.ffmpegkit-maintained:llama-android:0.1.1'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0'
+
+    // ML Kit OCR: Latin, Japanese, Korean and Chinese scripts.
+    implementation 'com.google.mlkit:text-recognition:16.0.1'
+    implementation 'com.google.mlkit:text-recognition-japanese:16.0.1'
+    implementation 'com.google.mlkit:text-recognition-korean:16.0.1'
+    implementation 'com.google.mlkit:text-recognition-chinese:16.0.1'
+
+    implementation 'com.google.mlkit:language-id:17.0.6'
+    implementation 'com.google.mlkit:translate:17.0.3'
+}

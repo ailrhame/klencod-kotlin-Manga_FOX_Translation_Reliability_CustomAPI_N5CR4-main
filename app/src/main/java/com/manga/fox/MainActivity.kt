@@ -1,0 +1,11236 @@
+package com.manga.fox
+
+import android.accessibilityservice.AccessibilityService
+import android.accessibilityservice.AccessibilityServiceInfo
+import android.accessibilityservice.GestureDescription
+import android.Manifest
+import android.app.Notification
+import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
+import android.app.AlertDialog
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Context
+import android.content.pm.PackageManager
+import android.content.Intent
+import android.content.SharedPreferences
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.ColorMatrix
+import android.graphics.ColorMatrixColorFilter
+import android.graphics.Matrix
+import android.graphics.LinearGradient
+import android.graphics.Shader
+import android.graphics.RectF
+import android.graphics.PointF
+import android.graphics.drawable.Drawable
+import android.graphics.ColorFilter
+import android.graphics.Paint
+import android.graphics.Path
+import android.graphics.pdf.PdfDocument
+import android.graphics.PixelFormat
+import android.graphics.Rect
+import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
+import android.hardware.HardwareBuffer
+import android.os.Build
+import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.os.SystemClock
+import android.provider.Settings
+import android.provider.DocumentsContract
+import android.security.keystore.KeyGenParameterSpec
+import android.security.keystore.KeyProperties
+import android.provider.OpenableColumns
+import android.view.Gravity
+import android.view.GestureDetector
+import android.view.MotionEvent
+import android.view.ScaleGestureDetector
+import android.view.View
+import android.view.WindowManager
+import android.view.animation.AccelerateDecelerateInterpolator
+import android.view.accessibility.AccessibilityEvent
+import android.view.accessibility.AccessibilityNodeInfo
+import android.widget.Button
+import android.widget.CheckBox
+import android.widget.EditText
+import android.widget.FrameLayout
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.ProgressBar
+import android.widget.ScrollView
+import android.widget.SeekBar
+import android.widget.TextView
+import android.widget.Toast
+import android.speech.tts.TextToSpeech
+import com.google.android.gms.tasks.Tasks
+import com.google.mlkit.nl.languageid.LanguageIdentification
+import com.google.mlkit.common.model.DownloadConditions
+import com.google.mlkit.nl.translate.TranslateLanguage
+import com.google.mlkit.nl.translate.Translation
+import com.google.mlkit.nl.translate.Translator
+import com.google.mlkit.nl.translate.TranslatorOptions
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.text.Text
+import com.google.mlkit.vision.text.TextRecognition
+import com.google.mlkit.vision.text.TextRecognizer
+import com.google.mlkit.vision.text.chinese.ChineseTextRecognizerOptions
+import com.google.mlkit.vision.text.japanese.JapaneseTextRecognizerOptions
+import com.google.mlkit.vision.text.korean.KoreanTextRecognizerOptions
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions
+import java.io.File
+import java.io.FileOutputStream
+import java.net.URL
+import java.net.HttpURLConnection
+import java.security.KeyStore
+import javax.crypto.Cipher
+import javax.crypto.KeyGenerator
+import javax.crypto.SecretKey
+import javax.crypto.spec.GCMParameterSpec
+import android.util.Base64
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.math.abs
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.math.roundToInt
+import org.json.JSONArray
+import org.json.JSONObject
+import java.io.InputStream
+import java.io.OutputStream
+import java.util.Locale
+import java.util.zip.ZipEntry
+import java.util.zip.ZipInputStream
+import java.util.zip.ZipOutputStream
+
+
+
+// ============================================================
+// @N5CR4 · Manga FOX custom development
+// MERGED FROM: MangaFox_V3_0_3_MainActivity.kt
+// ============================================================
+
+internal const val ACTION_SHOW_RESULTS = "com.manga.fox.SHOW_RESULTS"
+internal const val ACTION_STOP_CAPTURE = "com.manga.fox.STOP_CAPTURE"
+internal const val PREFS_NAME = "manga_fox_v2_preferences"
+internal const val PREF_FONT_SIZE = "font_size_sp"
+internal const val PREF_FONT_FAMILY = "font_family"
+internal const val PREF_FONT_BOLD = "font_bold"
+internal const val PREF_FONT_FILE = "font_file_path"
+internal const val PREF_FONT_LABEL = "font_file_label"
+internal const val PREF_CURRENT_WORK_NAME = "current_work_name_v1"
+internal const val PREF_CURRENT_CHAPTER_NAME = "current_chapter_name_v1"
+internal const val PREF_AUTO_FONT_FIT = "auto_font_fit_enabled"
+internal const val PREF_TRANSLATED_TEXT_COLOR = "translated_text_color"
+internal const val PREF_TRANSLATED_OUTLINE_COLOR = "translated_text_outline_color"
+internal const val PREF_TRANSLATED_OUTLINE_WIDTH = "translated_text_outline_width"
+internal const val PREF_LENS_IMAGE_PATH = "lens_custom_background_image_path"
+internal const val PREF_RESULTS_EDIT_MODE = "results_edit_mode"
+internal const val REQUEST_PICK_FONT = 713
+internal const val REQUEST_PICK_LENS_IMAGE = 717
+internal const val REQUEST_SAVE_PDF = 714
+internal const val REQUEST_EXPORT_PHANTOM_PROJECT = 715
+internal const val REQUEST_IMPORT_PHANTOM_PROJECT = 716
+internal const val PREF_LENS_SIZE = "lens_size_dp"
+internal const val PREF_LENS_ALPHA = "lens_alpha"
+internal const val PREF_LENS_GLYPH = "lens_custom_glyph"
+internal const val PREF_LENS_COLOR = "lens_custom_color"
+internal const val PREF_SOURCE_LANGUAGE = "translation_source_language"
+internal const val PREF_ONBOARDING_SEEN = "onboarding_seen_v1"
+internal const val PREF_CONTEXT_PAGE_TRANSLATION = "context_page_translation_v1"
+internal const val PREF_CONTEXT_ONLINE_ENGINE = "context_online_engine_v1"
+internal const val PREF_CONTEXT_LOCAL_ENGINE = "context_local_engine_v1"
+internal const val PREF_CONTEXT_MODEL = "context_translation_model_v1"
+internal const val PREF_CONTEXT_PROVIDER = "context_translation_provider_v1"
+internal const val PREF_CUSTOM_API_BASE_URL = "custom_api_base_url_v1"
+internal const val PREF_CUSTOM_API_MODEL = "custom_api_model_v1"
+internal const val PREF_SHOW_BUBBLE_BOUNDS = "show_bubble_bounds_v1"
+internal const val PREF_READER_BRIGHTNESS = "reader_brightness_v1"
+internal const val PREF_READER_LAST_CHAPTER_ID = "reader_last_chapter_id_v1"
+internal const val PREF_READER_LAST_PAGE = "reader_last_page_v1"
+internal const val PREF_TRANSLATE_SFX = "translate_japanese_sfx"
+internal const val PREF_LEARNED_TRANSLATIONS = "learned_translation_dictionary"
+internal const val PREF_AI_ZH_ENABLED = "ai_chinese_translation_enabled"
+internal const val PREF_ZH_SCRIPT = "chinese_script_variant"
+internal const val PREF_AI_SECRET_CIPHER = "ai_translation_secret_cipher"
+internal const val PREF_AI_SECRET_IV = "ai_translation_secret_iv"
+internal const val PREF_QWEN_TRANSLATION_MODE = "qwen_translation_quality_mode_v1"
+internal const val PREF_AUTO_NEXT_CHAPTER = "auto_next_chapter_v1"
+internal const val PREF_ACTIVE_THEME_ID = "mfox_active_theme_v1"
+internal const val REQUEST_IMPORT_THEME = 718
+internal const val REQUEST_EXPORT_THEME = 719
+internal const val REQUEST_IMPORT_IMAGE_ARCHIVE = 720
+internal const val REQUEST_IMPORT_IMAGE_FOLDER = 721
+
+class MainActivity : android.app.Activity() {
+    private var activeTheme: MangaFoxTheme = MangaFoxThemeStore.defaultTheme
+    private val dark: Int get() = activeTheme.background
+    private val panel: Int get() = activeTheme.panel
+    private val gold: Int get() = activeTheme.accent
+    private var pendingThemeArchive: File? = null
+    private lateinit var preferences: SharedPreferences
+    private var fontPreview: TextView? = null
+    private var fontStatusText: TextView? = null
+    private var requestedFontLabel: String? = null
+    private var readingFullscreen = false
+    private var pendingPdfFile: File? = null
+    private var pendingProjectArchive: File? = null
+    private val fontDownloadExecutor: ExecutorService = Executors.newSingleThreadExecutor()
+    private var selectedHomeTab = "home"
+    private var homeContent: LinearLayout? = null
+    private var homeNavBar: LinearLayout? = null
+    private var homeScrollView: ScrollView? = null
+    private var statusText: TextView? = null
+    private var progressText: TextView? = null
+    private var homeProgress: ProgressBar? = null
+    private var accessPermissionText: TextView? = null
+    private var overlayPermissionText: TextView? = null
+    private var notificationPermissionText: TextView? = null
+    private var textToSpeech: TextToSpeech? = null
+    private var textToSpeechReady = false
+    private var pendingSpeechText: String = ""
+    private var homeVisible = false
+    private val homeUiHandler = Handler(Looper.getMainLooper())
+    private val homeUiTick = object : Runnable {
+        override fun run() {
+            if (!homeVisible) return
+            refreshHomeIndicators()
+            homeUiHandler.postDelayed(this, 500L)
+        }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        preferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        activeTheme = MangaFoxThemeStore.resolve(this, preferences.getString(PREF_ACTIVE_THEME_ID, "fox_noir"))
+        restoreFontSelectionFromDisk()
+        MangaFoxRuntime.restore(this)
+        // Preserve a restored session if it is not already represented in the permanent archive.
+        // This also covers an upgrade where the catalog contains earlier chapters but the
+        // currently active legacy session has not yet been migrated.
+        val existingArchive = MangaFoxChapterArchive.list(this)
+        val currentSessionIsArchived = MangaFoxRuntime.activeArchiveId.isNotBlank() &&
+            existingArchive.any { it.id == MangaFoxRuntime.activeArchiveId }
+        if (MangaFoxRuntime.resultPages.isNotEmpty() &&
+            MangaFoxRuntime.resultPages.all { it.isNotBlank() && File(it).isFile } &&
+            !currentSessionIsArchived) {
+            val legacyTitle = MangaFoxRuntime.resultTitle.ifBlank { "الفصل السابق" }
+            val legacyWork = MangaFoxRuntime.activeWorkName.takeUnless { it.isBlank() || it == "عمل غير مصنف" }
+                ?: "أعمال سابقة"
+            val legacyChapter = MangaFoxRuntime.activeChapterName.takeUnless { it.isBlank() || it == "الفصل المترجم" }
+                ?: legacyTitle
+            MangaFoxChapterArchive.save(
+                this, legacyWork, legacyChapter, legacyTitle,
+                MangaFoxRuntime.sourcePages, MangaFoxRuntime.resultPages,
+                MangaFoxRuntime.translationLayerFiles, MangaFoxRuntime.captureOnlyResult,
+                MangaFoxRuntime.qualitySummary
+            )
+            MangaFoxRuntime.persist(this)
+        }
+        applySystemBars()
+        showSplashThen {
+            handleIntent(this.intent)
+            offerInterruptedOperationRecovery()
+            // Keep onboarding behind the splash so dialogs never cover the brand animation.
+            homeUiHandler.postDelayed({ maybeShowOnboarding() }, 450L)
+        }
+    }
+
+    private fun offerInterruptedOperationRecovery() {
+        val checkpoint = MangaFoxOperationCheckpoint.read(this) ?: return
+        val completed = checkpoint.optJSONArray("results")?.length() ?: 0
+        val inputs = checkpoint.optJSONArray("inputs")?.length() ?: 0
+        val groupSize = if (checkpoint.optBoolean("preserveInputs", false)) 1 else 2
+        val total = (inputs + groupSize - 1) / groupSize
+        val next = checkpoint.optInt("nextGroup", 0).coerceIn(0, total)
+        if (next >= total) {
+            MangaFoxOperationCheckpoint.clear(this)
+            return
+        }
+        AlertDialog.Builder(this)
+            .setTitle("استعادة عملية متوقفة")
+            .setMessage("تم العثور على عملية غير مكتملة.\nالصفحات المحفوظة: $completed\nالمتبقي تقريباً: ${total - next}\nهل تريد الاستكمال من آخر نقطة حفظ؟")
+            .setNegativeButton("ليس الآن", null)
+            .setNeutralButton("حذف بيانات الاستكمال") { _, _ ->
+                MangaFoxOperationCheckpoint.clear(this)
+                toast("تم حذف بيانات الاستكمال؛ الصفحات المكتملة تبقى محفوظة")
+            }
+            .setPositiveButton("استكمال") { _, _ ->
+                val service = MangaFoxAccessibilityService.instance
+                if (service?.resumeInterruptedOperation() == true) {
+                    toast("بدأ استكمال العملية من آخر صفحة محفوظة")
+                } else {
+                    toast("تعذر الاستكمال: تأكد من تفعيل خدمة Manga FOX وأن ملفات الصفحات المتبقية موجودة")
+                }
+            }
+            .show()
+    }
+
+    private fun showSplashThen(onFinished: () -> Unit) {
+        val root = FrameLayout(this).apply {
+            setBackgroundColor(Color.rgb(8, 7, 12))
+            isClickable = true
+            isFocusable = true
+        }
+        val center = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            layoutDirection = View.LAYOUT_DIRECTION_RTL
+            setPadding(dp(24), dp(24), dp(24), dp(24))
+        }
+        val glyph = TextView(this).apply {
+            text = "狐"
+            textSize = 76f
+            typeface = Typeface.create("serif", Typeface.BOLD)
+            gravity = Gravity.CENTER
+            setTextColor(Color.WHITE)
+            paint.shader = LinearGradient(
+                0f, 0f, 0f, dp(112).toFloat(),
+                intArrayOf(Color.rgb(235, 221, 255), Color.rgb(177, 107, 255), Color.rgb(91, 55, 145)),
+                floatArrayOf(0f, 0.58f, 1f), Shader.TileMode.CLAMP
+            )
+            elevation = dp(8).toFloat()
+        }
+        val brand = TextView(this).apply {
+            text = "MANGA FOX"
+            textSize = 24f
+            letterSpacing = 0.16f
+            gravity = Gravity.CENTER
+            typeface = Typeface.create("sans-serif-black", Typeface.BOLD)
+            setTextColor(Color.rgb(205, 171, 255))
+            alpha = 0f
+        }
+        val signature = TextView(this).apply {
+            text = "N5CR4"
+            textSize = 9f
+            letterSpacing = 0.30f
+            gravity = Gravity.CENTER
+            setTextColor(Color.rgb(145, 137, 122))
+            alpha = 0f
+        }
+        center.addView(glyph, LinearLayout.LayoutParams(dp(150), dp(130)))
+        center.addView(brand, matchWrap(dp(3)))
+        center.addView(signature, matchWrap())
+        root.addView(center, FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT
+        ))
+        val halo = View(this).apply {
+            background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                intArrayOf(Color.rgb(55, 34, 86), Color.TRANSPARENT, Color.rgb(20, 13, 34))).apply {
+                gradientType = GradientDrawable.RADIAL_GRADIENT
+                gradientRadius = dp(260).toFloat()
+            }
+            alpha = 0.62f
+        }
+        root.addView(halo, FrameLayout.LayoutParams(dp(520), dp(520), Gravity.CENTER))
+        root.bringChildToFront(center)
+        setContentView(root)
+
+        val pulse = ObjectAnimator.ofFloat(glyph, View.SCALE_X, 0.92f, 1.05f).apply {
+            duration = 650L
+            repeatCount = ValueAnimator.INFINITE
+            repeatMode = ValueAnimator.REVERSE
+            interpolator = AccelerateDecelerateInterpolator()
+        }
+        val pulseY = ObjectAnimator.ofFloat(glyph, View.SCALE_Y, 0.92f, 1.05f).apply {
+            duration = 650L
+            repeatCount = ValueAnimator.INFINITE
+            repeatMode = ValueAnimator.REVERSE
+            interpolator = AccelerateDecelerateInterpolator()
+        }
+        pulse.start(); pulseY.start()
+        val completed = AtomicBoolean(false)
+        lateinit var timeout: Runnable
+        val revealBrand = Runnable {
+            if (!completed.get()) {
+                glyph.animate().alpha(0f).scaleX(0.78f).scaleY(0.78f).setDuration(260L).start()
+                brand.animate().alpha(1f).setDuration(300L).start()
+                signature.animate().alpha(1f).setStartDelay(100L).setDuration(260L).start()
+            }
+        }
+        val finish = {
+            if (completed.compareAndSet(false, true)) {
+                homeUiHandler.removeCallbacks(timeout)
+                homeUiHandler.removeCallbacks(revealBrand)
+                pulse.cancel(); pulseY.cancel()
+                glyph.animate().cancel(); brand.animate().cancel(); signature.animate().cancel()
+                onFinished()
+            }
+        }
+        timeout = Runnable { finish() }
+        root.setOnClickListener { finish() }
+        homeUiHandler.postDelayed(revealBrand, 650L)
+        homeUiHandler.postDelayed(timeout, 1500L)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleIntent(intent)
+    }
+
+    private fun handleIntent(source: Intent?) {
+        when (source?.action) {
+            ACTION_SHOW_RESULTS -> showResults()
+            ACTION_STOP_CAPTURE -> {
+                showHome()
+                MangaFoxAccessibilityService.instance?.stopCaptureByUser()
+                    ?: toast("خدمة Manga Fox غير متصلة؛ أعد تفعيلها ثم حاول مرة أخرى")
+            }
+            else -> showHome()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        homeVisible = true
+        homeUiHandler.removeCallbacks(homeUiTick)
+        homeUiHandler.post(homeUiTick)
+        refreshHomeIndicators()
+        MangaFoxAccessibilityService.instance?.onHostActivityResumed()
+    }
+
+    override fun onPause() {
+        homeVisible = false
+        homeUiHandler.removeCallbacks(homeUiTick)
+        MangaFoxAccessibilityService.instance?.onHostActivityPaused()
+        super.onPause()
+    }
+
+    override fun onDestroy() {
+        homeUiHandler.removeCallbacks(homeUiTick)
+        textToSpeech?.stop()
+        textToSpeech?.shutdown()
+        textToSpeech = null
+        super.onDestroy()
+    }
+
+    /** Reads the saved Arabic translation layers in page and bubble order. */
+    private fun speakResultsAloud() {
+        if (textToSpeech?.isSpeaking == true) {
+            textToSpeech?.stop()
+            toast("تم إيقاف القراءة الصوتية")
+            return
+        }
+        val extracted = ArrayList<String>()
+        MangaFoxRuntime.translationLayerFiles.forEach { path ->
+            val file = path.takeIf { it.isNotBlank() }?.let(::File)?.takeIf { it.isFile } ?: return@forEach
+            val layers = runCatching { org.json.JSONArray(file.readText(Charsets.UTF_8)) }.getOrNull() ?: return@forEach
+            for (index in 0 until layers.length()) {
+                val translated = layers.optJSONObject(index)?.optString("translated", "")?.trim().orEmpty()
+                if (translated.isNotBlank()) extracted.add(translated)
+            }
+        }
+        val speechText = extracted.joinToString(". ")
+        if (speechText.isBlank()) {
+            toast("لا توجد طبقات ترجمة نصية لهذه النتيجة. أعد OCR والترجمة أولاً")
+            return
+        }
+        pendingSpeechText = speechText
+        val existing = textToSpeech
+        if (existing != null && textToSpeechReady) {
+            speakTextInChunks(speechText)
+            return
+        }
+        if (existing == null) {
+            textToSpeechReady = false
+            textToSpeech = TextToSpeech(this) { status ->
+                runOnUiThread {
+                    val engine = textToSpeech
+                    if (status != TextToSpeech.SUCCESS || engine == null) {
+                        textToSpeechReady = false
+                        toast("تعذر تشغيل محرك القراءة الصوتية على هذا الجهاز")
+                        return@runOnUiThread
+                    }
+                    val languageStatus = engine.setLanguage(Locale("ar"))
+                    if (languageStatus == TextToSpeech.LANG_MISSING_DATA ||
+                        languageStatus == TextToSpeech.LANG_NOT_SUPPORTED) {
+                        textToSpeechReady = false
+                        toast("محرك الصوت لا يدعم العربية حالياً؛ ثبّت بيانات الصوت العربي")
+                        return@runOnUiThread
+                    }
+                    textToSpeechReady = true
+                    speakTextInChunks(pendingSpeechText)
+                }
+            }
+        } else {
+            toast("يجري تجهيز محرك القراءة الصوتية")
+        }
+    }
+
+    private fun speakTextInChunks(value: String) {
+        val engine = textToSpeech ?: return
+        if (!textToSpeechReady) return
+        val chunks = ArrayList<String>()
+        var remaining = value.trim()
+        while (remaining.length > 3000) {
+            var cut = remaining.lastIndexOf(' ', 3000).takeIf { it > 1200 } ?: 3000
+            val sentenceCut = remaining.lastIndexOfAny(charArrayOf('.', '؟', '!', '؛'), cut)
+            if (sentenceCut > 1200) cut = sentenceCut + 1
+            chunks.add(remaining.substring(0, cut).trim())
+            remaining = remaining.substring(cut).trim()
+        }
+        if (remaining.isNotBlank()) chunks.add(remaining)
+        engine.stop()
+        chunks.forEachIndexed { index, chunk ->
+            val queue = if (index == 0) TextToSpeech.QUEUE_FLUSH else TextToSpeech.QUEUE_ADD
+            engine.speak(chunk, queue, null, "mfox_read_$index")
+        }
+        toast("بدأت القراءة الصوتية للترجمة العربية")
+    }
+
+    private fun applySystemBars() {
+        window.statusBarColor = dark
+        window.navigationBarColor = dark
+        if (Build.VERSION.SDK_INT >= 29) {
+            window.isNavigationBarContrastEnforced = false
+            window.isStatusBarContrastEnforced = false
+        }
+        if (!readingFullscreen) {
+            val lightBackground = (Color.red(dark) * 299 + Color.green(dark) * 587 + Color.blue(dark) * 114) / 1000 >= 150
+            @Suppress("DEPRECATION")
+            window.decorView.systemUiVisibility = if (lightBackground) {
+                View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+            } else View.SYSTEM_UI_FLAG_VISIBLE
+        }
+    }
+
+    private fun setReadingFullscreen(enabled: Boolean) {
+        readingFullscreen = enabled
+        @Suppress("DEPRECATION")
+        run {
+            window.decorView.systemUiVisibility = if (enabled) {
+                (View.SYSTEM_UI_FLAG_FULLSCREEN or
+                    View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
+                    View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
+                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+                    View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
+                    View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION)
+            } else {
+                View.SYSTEM_UI_FLAG_VISIBLE
+            }
+        }
+        if (enabled) {
+            window.statusBarColor = Color.BLACK
+            window.navigationBarColor = Color.BLACK
+        } else {
+            applySystemBars()
+        }
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus && readingFullscreen) setReadingFullscreen(true)
+    }
+
+    @Suppress("DEPRECATION")
+    override fun onBackPressed() {
+        if (readingFullscreen) showHome() else super.onBackPressed()
+    }
+
+    /** @N5CR4 — Premium Dark Studio application shell with persistent bottom navigation. */
+    private fun showHome() {
+        setReadingFullscreen(false)
+        val shell = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutDirection = View.LAYOUT_DIRECTION_RTL
+            setBackgroundColor(dark)
+        }
+
+        val header = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutDirection = View.LAYOUT_DIRECTION_RTL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(18), dp(12), dp(18), dp(12))
+            background = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
+                intArrayOf(blendColors(panel, dark, 0.12f), dark))
+        }
+        val brandGlyph = TextView(this).apply {
+            text = "狐"
+            textSize = 25f
+            gravity = Gravity.CENTER
+            typeface = Typeface.create("serif", Typeface.BOLD)
+            setTextColor(Color.WHITE)
+            background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                intArrayOf(gold, blendColors(gold, Color.BLACK, 0.28f))).apply {
+                cornerRadius = dp(15).toFloat()
+                setStroke(dp(1), withAlpha(Color.WHITE, 65))
+            }
+            elevation = dp(4).toFloat()
+        }
+        header.addView(brandGlyph, LinearLayout.LayoutParams(dp(48), dp(48)))
+        val brandText = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(11), 0, 0, 0)
+        }
+        brandText.addView(TextView(this).apply {
+            text = "MANGA FOX"
+            textSize = 18f
+            letterSpacing = 0.08f
+            typeface = Typeface.create("sans-serif-black", Typeface.BOLD)
+            setTextColor(activeTheme.text)
+        }, matchWrap())
+        brandText.addView(TextView(this).apply {
+            text = "استوديو المانغا الذكي"
+            textSize = 11f
+            setTextColor(activeTheme.muted)
+        }, matchWrap())
+        header.addView(brandText, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+        val settingsShortcut = TextView(this).apply {
+            text = "⚙"
+            textSize = 21f
+            gravity = Gravity.CENTER
+            setTextColor(gold)
+            background = rounded(activeTheme.surfaceAlt, 14)
+            isClickable = true
+            isFocusable = true
+            setOnClickListener {
+                selectedHomeTab = "settings"
+                homeNavBar?.let { updateHomeTabs(it) }
+                renderHomeTab()
+            }
+        }
+        header.addView(settingsShortcut, LinearLayout.LayoutParams(dp(46), dp(46)))
+        shell.addView(header, matchWrap())
+
+        val divider = View(this).apply { setBackgroundColor(withAlpha(gold, 38)) }
+        shell.addView(divider, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(1)))
+
+        val scroll = ScrollView(this).apply {
+            setBackgroundColor(dark)
+            isFillViewport = true
+            clipToPadding = false
+            overScrollMode = View.OVER_SCROLL_NEVER
+        }
+        val pageRoot = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutDirection = View.LAYOUT_DIRECTION_RTL
+            setPadding(dp(16), dp(16), dp(16), dp(22))
+        }
+        val contentContainer = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutDirection = View.LAYOUT_DIRECTION_RTL
+        }
+        homeContent = contentContainer
+        pageRoot.addView(contentContainer, matchWrap())
+        pageRoot.addView(TextView(this).apply {
+            text = "MANGA FOX  ·  N5CR4"
+            textSize = 10f
+            letterSpacing = 0.10f
+            setTextColor(withAlpha(activeTheme.muted, 180))
+            gravity = Gravity.CENTER
+            setPadding(0, dp(18), 0, dp(5))
+        }, matchWrap())
+        scroll.addView(pageRoot)
+        homeScrollView = scroll
+        shell.addView(scroll, LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f
+        ))
+
+        val navBar = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutDirection = View.LAYOUT_DIRECTION_RTL
+            gravity = Gravity.CENTER
+            setPadding(dp(7), dp(7), dp(7), dp(7))
+            background = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
+                intArrayOf(panel, blendColors(panel, Color.BLACK, 0.12f))).apply {
+                cornerRadii = floatArrayOf(dp(20).toFloat(), dp(20).toFloat(), dp(20).toFloat(), dp(20).toFloat(), 0f, 0f, 0f, 0f)
+                setStroke(dp(1), withAlpha(gold, 38))
+            }
+            elevation = dp(12).toFloat()
+        }
+        homeNavBar = navBar
+        shell.addView(navBar, LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT, dp(72)
+        ))
+        setContentView(shell)
+        updateHomeTabs(navBar)
+        renderHomeTab()
+        refreshHomeIndicators()
+    }
+
+    private fun addHomeDashboard(root: LinearLayout) {
+        val archive = MangaFoxChapterArchive.list(this)
+        val workCount = archive.map { it.workName }.distinct().size
+        val pageCount = archive.sumOf { it.pageCount }
+
+        val hero = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutDirection = View.LAYOUT_DIRECTION_RTL
+            setPadding(dp(20), dp(21), dp(20), dp(19))
+            background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                intArrayOf(Color.rgb(66, 39, 105), Color.rgb(34, 25, 56), Color.rgb(22, 20, 33))).apply {
+                cornerRadius = dp(25).toFloat()
+                setStroke(dp(1), withAlpha(Color.rgb(196, 153, 255), 90))
+            }
+            elevation = dp(5).toFloat()
+        }
+        hero.addView(TextView(this).apply {
+            text = "✦  مساحة العمل الإبداعية"
+            textSize = 11f
+            letterSpacing = 0.04f
+            typeface = Typeface.DEFAULT_BOLD
+            setTextColor(Color.rgb(216, 190, 255))
+        }, matchWrap(dp(10)))
+        hero.addView(TextView(this).apply {
+            text = "ترجم أعمالك،\nواقرأها بطريقتك"
+            textSize = 27f
+            setLineSpacing(dp(2).toFloat(), 1f)
+            typeface = Typeface.create("sans-serif-black", Typeface.BOLD)
+            setTextColor(Color.WHITE)
+            gravity = Gravity.RIGHT
+        }, matchWrap(dp(7)))
+        hero.addView(TextView(this).apply {
+            text = "كل أدوات المانغا في مكان واحد: ترجمة ذكية، ذاكرة مصطلحات، تحرير احترافي وقارئ عمودي."
+            textSize = 13f
+            setTextColor(Color.rgb(213, 204, 228))
+            gravity = Gravity.RIGHT
+            setLineSpacing(dp(2).toFloat(), 1.05f)
+        }, matchWrap(dp(15)))
+        val heroActions = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutDirection = View.LAYOUT_DIRECTION_RTL
+        }
+        heroActions.addView(actionButton("ترجمة الآن", true) {
+            selectedHomeTab = "translation"
+            homeNavBar?.let { updateHomeTabs(it) }
+            renderHomeTab()
+        }, LinearLayout.LayoutParams(0, dp(48), 1f).apply { marginEnd = dp(4) })
+        heroActions.addView(actionButton("فتح المكتبة", false) {
+            selectedHomeTab = "library"
+            homeNavBar?.let { updateHomeTabs(it) }
+            renderHomeTab()
+        }, LinearLayout.LayoutParams(0, dp(48), 1f).apply { marginStart = dp(4) })
+        hero.addView(heroActions, matchWrap())
+        root.addView(hero, matchWrap(dp(15)))
+
+        val statsTitle = sectionHeading("نظرة عامة", "إحصائيات مكتبتك")
+        root.addView(statsTitle, matchWrap(dp(8)))
+        val stats = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutDirection = View.LAYOUT_DIRECTION_RTL
+        }
+        stats.addView(statTile("الأعمال", workCount.toString(), "▤"), LinearLayout.LayoutParams(0, dp(94), 1f).apply { marginEnd = dp(4) })
+        stats.addView(statTile("الفصول", archive.size.toString(), "◫"), LinearLayout.LayoutParams(0, dp(94), 1f).apply { marginStart = dp(2); marginEnd = dp(2) })
+        stats.addView(statTile("الصفحات", pageCount.toString(), "▧"), LinearLayout.LayoutParams(0, dp(94), 1f).apply { marginStart = dp(4) })
+        root.addView(stats, matchWrap(dp(17)))
+
+        buildContinueCard()?.let { root.addView(it, matchWrap(dp(16))) }
+
+        root.addView(sectionHeading("اختصارات", "أدوات سريعة"), matchWrap(dp(8)))
+        val shortcuts = android.widget.GridLayout(this).apply {
+            columnCount = 2
+            rowCount = 2
+            alignmentMode = android.widget.GridLayout.ALIGN_BOUNDS
+            useDefaultMargins = false
+        }
+        val tiles: List<Pair<Triple<String, String, String>, () -> Unit>> = listOf(
+            Triple("⌁", "ترجمة الشاشة", "التقط الصفحة الحالية") to {
+                val service = MangaFoxAccessibilityService.instance
+                if (service == null) toast("فعّل خدمة Manga FOX أولاً") else {
+                    service.startSingleCapture(700L)
+                    window.decorView.postDelayed({ moveTaskToBack(true) }, 120L)
+                }
+                Unit
+            },
+            Triple("▤", "أرشيف الأعمال", "تابع فصولك المحفوظة") to {
+                selectedHomeTab = "archive"; homeNavBar?.let { updateHomeTabs(it) }; renderHomeTab()
+            },
+            Triple("✎", "محرر الصفحات", "عدّل الفقاعات والنصوص") to {
+                if (MangaFoxRuntime.resultPages.isEmpty()) toast("لا توجد نتيجة لتحريرها") else showResults()
+            },
+            Triple("◉", "تصميم العدسة", "لون ورمز وحجم مخصص") to { openLensStudio() }
+        )
+        tiles.forEachIndexed { index, entry ->
+            val data = entry.first
+            val tile = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                gravity = Gravity.CENTER_VERTICAL
+                layoutDirection = View.LAYOUT_DIRECTION_RTL
+                setPadding(dp(14), dp(12), dp(14), dp(12))
+                background = studioSurface()
+                isClickable = true
+                isFocusable = true
+                elevation = dp(2).toFloat()
+                setOnClickListener { entry.second() }
+            }
+            tile.addView(TextView(this).apply {
+                text = data.first
+                textSize = 22f
+                setTextColor(gold)
+            }, matchWrap(dp(4)))
+            tile.addView(TextView(this).apply {
+                text = data.second
+                textSize = 14f
+                typeface = Typeface.DEFAULT_BOLD
+                setTextColor(activeTheme.text)
+            }, matchWrap(dp(2)))
+            tile.addView(TextView(this).apply {
+                text = data.third
+                textSize = 10f
+                setTextColor(activeTheme.muted)
+            }, matchWrap())
+            val params = android.widget.GridLayout.LayoutParams(
+                android.widget.GridLayout.spec(index / 2, 1f),
+                android.widget.GridLayout.spec(index % 2, 1f)
+            ).apply {
+                width = 0
+                height = dp(112)
+                setMargins(dp(4), dp(4), dp(4), dp(4))
+            }
+            shortcuts.addView(tile, params)
+        }
+        root.addView(shortcuts, matchWrap(dp(16)))
+
+        root.addView(sectionHeading("الأحدث", "آخر الفصول المحفوظة"), matchWrap(dp(8)))
+        if (archive.isEmpty()) {
+            val empty = card()
+            empty.addView(text("مكتبتك جاهزة لاستقبال أول فصل", 16f, Color.WHITE, true))
+            empty.addView(text("ابدأ بترجمة شاشة أو فصل كامل، وستظهر أعمالك هنا تلقائياً.", 12f, Color.LTGRAY))
+            empty.addView(actionButton("ابدأ أول ترجمة", true) {
+                selectedHomeTab = "translation"; homeNavBar?.let { updateHomeTabs(it) }; renderHomeTab()
+            }, matchWrap())
+            root.addView(empty, matchWrap(dp(12)))
+        } else {
+            archive.take(3).forEach { chapter ->
+                val item = LinearLayout(this).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    layoutDirection = View.LAYOUT_DIRECTION_RTL
+                    gravity = Gravity.CENTER_VERTICAL
+                    setPadding(dp(14), dp(11), dp(14), dp(11))
+                    background = studioSurface()
+                    isClickable = true
+                    isFocusable = true
+                    setOnClickListener {
+                        if (MangaFoxChapterArchive.open(this@MainActivity, chapter.id)) showResults()
+                        else toast("تعذر فتح الفصل")
+                    }
+                }
+                val cover = TextView(this).apply {
+                    text = "狐"
+                    textSize = 19f
+                    gravity = Gravity.CENTER
+                    setTextColor(Color.WHITE)
+                    background = rounded(withAlpha(gold, 45), 12)
+                }
+                item.addView(cover, LinearLayout.LayoutParams(dp(44), dp(52)))
+                val meta = LinearLayout(this).apply {
+                    orientation = LinearLayout.VERTICAL
+                    setPadding(dp(10), 0, 0, 0)
+                }
+                meta.addView(text(chapter.workName, 13f, Color.WHITE, true), matchWrap())
+                meta.addView(text("${chapter.chapterName}  ·  ${chapter.pageCount} صفحة", 11f, Color.LTGRAY), matchWrap())
+                item.addView(meta, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+                item.addView(text("›", 24f, gold, true).apply { gravity = Gravity.CENTER }, LinearLayout.LayoutParams(dp(24), dp(48)))
+                root.addView(item, matchWrap(dp(7)))
+            }
+            root.addView(actionButton("عرض جميع الأعمال والفصول", false) {
+                selectedHomeTab = "archive"; homeNavBar?.let { updateHomeTabs(it) }; renderHomeTab()
+            }, matchWrap(dp(10)))
+        }
+
+        val status = card()
+        status.addView(text("حالة النظام", 15f, gold, true))
+        val access = isAccessibilityEnabled()
+        val overlay = Build.VERSION.SDK_INT < 23 || Settings.canDrawOverlays(this)
+        status.addView(text("${if (access) "●" else "○"} خدمة إمكانية الوصول   ${if (access) "مفعّلة" else "تحتاج تفعيل"}", 12f, if (access) Color.rgb(91, 220, 155) else Color.LTGRAY))
+        status.addView(text("${if (overlay) "●" else "○"} العدسة العائمة   ${if (overlay) "جاهزة" else "تحتاج إذناً"}", 12f, if (overlay) Color.rgb(91, 220, 155) else Color.LTGRAY))
+        status.addView(actionButton("إدارة أذونات التطبيق", false) { showQuickSidePanel() }, matchWrap())
+        root.addView(status, matchWrap(dp(8)))
+    }
+
+    private fun sectionHeading(kicker: String, title: String): LinearLayout = LinearLayout(this).apply {
+        orientation = LinearLayout.VERTICAL
+        layoutDirection = View.LAYOUT_DIRECTION_RTL
+        setPadding(dp(2), dp(2), dp(2), dp(2))
+        addView(TextView(this@MainActivity).apply {
+            text = kicker
+            textSize = 10f
+            letterSpacing = 0.08f
+            setTextColor(gold)
+            typeface = Typeface.DEFAULT_BOLD
+        }, matchWrap())
+        addView(TextView(this@MainActivity).apply {
+            text = title
+            textSize = 18f
+            setTextColor(activeTheme.text)
+            typeface = Typeface.create("sans-serif", Typeface.BOLD)
+        }, matchWrap())
+    }
+
+    private fun statTile(label: String, value: String, glyph: String): LinearLayout = LinearLayout(this).apply {
+        orientation = LinearLayout.VERTICAL
+        layoutDirection = View.LAYOUT_DIRECTION_RTL
+        gravity = Gravity.CENTER_VERTICAL
+        setPadding(dp(12), dp(10), dp(12), dp(10))
+        background = studioSurface()
+        addView(TextView(this@MainActivity).apply {
+            text = glyph
+            textSize = 14f
+            setTextColor(gold)
+        }, matchWrap())
+        addView(TextView(this@MainActivity).apply {
+            text = value
+            textSize = 21f
+            typeface = Typeface.DEFAULT_BOLD
+            setTextColor(activeTheme.text)
+        }, matchWrap())
+        addView(TextView(this@MainActivity).apply {
+            text = label
+            textSize = 10f
+            setTextColor(activeTheme.muted)
+        }, matchWrap())
+    }
+
+    private fun studioSurface(): GradientDrawable = GradientDrawable(
+        GradientDrawable.Orientation.TL_BR,
+        intArrayOf(blendColors(panel, activeTheme.surfaceAlt, 0.20f), panel)
+    ).apply {
+        cornerRadius = dp(17).toFloat()
+        setStroke(dp(1), withAlpha(gold, 32))
+    }
+
+    private fun blendColors(first: Int, second: Int, amount: Float): Int {
+        val t = amount.coerceIn(0f, 1f)
+        fun channel(a: Int, b: Int, shift: Int) =
+            (((a shr shift) and 0xFF) * (1f - t) + ((b shr shift) and 0xFF) * t).toInt().coerceIn(0, 255)
+        return Color.rgb(channel(first, second, 16), channel(first, second, 8), channel(first, second, 0))
+    }
+
+    private fun withAlpha(color: Int, alpha: Int): Int = Color.argb(alpha.coerceIn(0, 255), Color.red(color), Color.green(color), Color.blue(color))
+
+    private fun buildContinueCard(): LinearLayout? {
+        val latest = MangaFoxChapterArchive.list(this).firstOrNull() ?: return null
+        val container = card()
+        container.addView(text("متابعة القراءة", 17f, gold, true))
+        container.addView(text("${latest.workName}  ·  ${latest.chapterName}", 14f, Color.WHITE, true), matchWrap(dp(3)))
+        val savedPage = if (preferences.getString(PREF_READER_LAST_CHAPTER_ID, "") == latest.id)
+            preferences.getInt(PREF_READER_LAST_PAGE, 0).coerceIn(0, (latest.pageCount - 1).coerceAtLeast(0)) else 0
+        container.addView(text("${latest.pageCount} صفحة · ${if (latest.captureOnly) "لقطات أصلية" else "مترجم"} · آخر موضع: ${if (latest.pageCount > 0) savedPage + 1 else 0}", 11f, Color.LTGRAY), matchWrap(dp(4)))
+        val actions = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; layoutDirection = View.LAYOUT_DIRECTION_RTL }
+        actions.addView(actionButton("تابع القراءة", true) {
+            if (MangaFoxChapterArchive.open(this, latest.id)) showResults()
+            else toast("تعذر استعادة آخر فصل")
+        }, LinearLayout.LayoutParams(0, dp(46), 1f).apply { marginEnd = dp(4) })
+        actions.addView(actionButton("ترجم الفصل التالي", false) {
+            val nextName = nextChapterLabel(latest.chapterName)
+            preferences.edit().putString(PREF_CURRENT_WORK_NAME, latest.workName)
+                .putString(PREF_CURRENT_CHAPTER_NAME, nextName).apply()
+            MangaFoxRuntime.activeWorkName = latest.workName
+            MangaFoxRuntime.activeChapterName = nextName
+            val service = MangaFoxAccessibilityService.instance
+            if (service != null) {
+                service.startFullChapterCapture(500L)
+                moveTaskToBack(true)
+            } else {
+                selectedHomeTab = "translation"
+                showHome()
+                toast("تم تجهيز $nextName. فعّل خدمة Manga FOX ثم ابدأ الالتقاط")
+            }
+        }, LinearLayout.LayoutParams(0, dp(46), 1f).apply { marginStart = dp(4) })
+        container.addView(actions, matchWrap())
+        return container
+    }
+
+    private fun nextChapterLabel(current: String): String {
+        val match = Regex("\\d+(?:\\.\\d+)?").find(current) ?: return "الفصل التالي"
+        val old = match.value
+        val next = old.toDoubleOrNull()?.plus(1.0) ?: return "الفصل التالي"
+        val formatted = if (old.contains('.')) String.format(Locale.US, "%0${old.length}.${old.substringAfter('.').length}f", next)
+            else next.toInt().toString().padStart(old.length, '0')
+        return current.replaceRange(match.range, formatted)
+    }
+
+    /** @N5CR4 — Five primary destinations; secondary tools live in the More drawer. */
+    private fun updateHomeTabs(tabs: LinearLayout) {
+        val items = listOf(
+            Triple("home", "⌂", "الرئيسية"),
+            Triple("translation", "文", "الترجمة"),
+            Triple("library", "▤", "مكتبتي"),
+            Triple("studio", "✧", "الاستوديو"),
+            Triple("more", "☰", "المزيد")
+        )
+        tabs.removeAllViews()
+        items.forEach { (key, glyph, label) ->
+            val selected = when (key) {
+                "more" -> selectedHomeTab in setOf("more", "quality", "knowledge", "settings", "themes", "archive")
+                else -> selectedHomeTab == key
+            }
+            val item = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                gravity = Gravity.CENTER
+                layoutDirection = View.LAYOUT_DIRECTION_RTL
+                setPadding(dp(3), dp(5), dp(3), dp(4))
+                background = if (selected) GradientDrawable().apply {
+                    setColor(withAlpha(gold, 34))
+                    cornerRadius = dp(15).toFloat()
+                    setStroke(dp(1), withAlpha(gold, 95))
+                } else rounded(Color.TRANSPARENT, 15)
+                isClickable = true
+                isFocusable = true
+                setOnClickListener {
+                    if (key == "more") {
+                        showMoreSectionsDialog()
+                    } else {
+                        selectedHomeTab = key
+                        updateHomeTabs(tabs)
+                        renderHomeTab()
+                    }
+                }
+            }
+            item.addView(TextView(this).apply {
+                text = glyph
+                textSize = 20f
+                gravity = Gravity.CENTER
+                setTextColor(if (selected) gold else activeTheme.muted)
+                typeface = Typeface.DEFAULT_BOLD
+            }, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(30)))
+            item.addView(TextView(this).apply {
+                text = label
+                textSize = 10f
+                gravity = Gravity.CENTER
+                setTextColor(if (selected) activeTheme.text else activeTheme.muted)
+                typeface = if (selected) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
+                maxLines = 1
+            }, matchWrap())
+            tabs.addView(item, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f).apply {
+                marginStart = dp(2); marginEnd = dp(2)
+            })
+        }
+    }
+
+    private fun showMoreSectionsDialog() {
+        val sections = listOf(
+            "quality" to "مركز الجودة ومراجعة الترجمة",
+            "knowledge" to "المعجم وذاكرة الشخصيات",
+            "archive" to "أرشيف الأعمال والفصول",
+            "themes" to "الثيمات والألوان",
+            "settings" to "الإعدادات المتقدمة"
+        )
+        AlertDialog.Builder(this)
+            .setTitle("المزيد من أدوات Manga FOX")
+            .setItems(sections.map { it.second }.toTypedArray()) { _, which ->
+                selectedHomeTab = sections[which].first
+                homeNavBar?.let { updateHomeTabs(it) }
+                renderHomeTab()
+            }
+            .setNegativeButton("إغلاق", null)
+            .show()
+    }
+
+    private fun renderHomeTab() {
+        val content = homeContent ?: return
+        content.removeAllViews()
+        homeScrollView?.post { homeScrollView?.scrollTo(0, 0) }
+        when (selectedHomeTab) {
+            "home" -> addHomeDashboard(content)
+            "settings" -> addSettingsCard(content)
+            "themes" -> addThemesTab(content)
+            "library" -> addLibraryTab(content)
+            "studio" -> addPhantomStudioTab(content)
+            "quality" -> addQualityTab(content)
+            "knowledge" -> addKnowledgeTab(content)
+            "archive" -> addArchiveTab(content)
+            else -> addTranslationTab(content)
+        }
+        refreshHomeIndicators()
+    }
+
+    private fun addTranslationTab(root: LinearLayout) {
+        val intro = card()
+        intro.addView(text("ترجمة الفصل العمودي بالكامل", 19f, gold, true))
+        intro.addView(text("التقط لقطات متتابعة أثناء القراءة، ثم اجمع النصوص من أكثر من محرك OCR وحدد لغة كل كتلة بشكل مستقل قبل ترجمتها إلى العربية.", 13f, Color.LTGRAY))
+        intro.addView(text("تعمل المعالجة على الجهاز بعد تنزيل نماذج اللغات. يلزم الإنترنت لتنزيل النموذج أول مرة.", 12f, Color.rgb(195, 185, 165)))
+        root.addView(intro, matchWrap(dp(12)))
+        val onboarding = card()
+        onboarding.addView(text("دليل التفعيل والتحقق التلقائي", 17f, Color.WHITE, true))
+        onboarding.addView(text("فعّل الأذونات التالية. تتحدث علاماتها تلقائياً عند الرجوع إلى التطبيق.", 12f, Color.LTGRAY))
+        accessPermissionText = text("", 13f, Color.LTGRAY)
+        overlayPermissionText = text("", 13f, Color.LTGRAY)
+        notificationPermissionText = text("", 13f, Color.LTGRAY)
+        onboarding.addView(accessPermissionText, matchWrap())
+        onboarding.addView(actionButton("الخطوة 1 · فتح إعدادات خدمة إمكانية الوصول", true) {
+            startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+        }, matchWrap(dp(5)))
+        onboarding.addView(overlayPermissionText, matchWrap())
+        onboarding.addView(actionButton("الخطوة 2 · السماح بالظهور فوق التطبيقات", false) {
+            openOverlayPermission()
+        }, matchWrap(dp(5)))
+        onboarding.addView(notificationPermissionText, matchWrap())
+        onboarding.addView(actionButton("الخطوة 3 · تفعيل الإشعارات", false) {
+            requestNotificationPermission()
+        }, matchWrap(dp(5)))
+        root.addView(onboarding, matchWrap(dp(12)))
+
+        val metadataCard = card()
+        metadataCard.addView(text("تصنيف العمل والفصل", 17f, gold, true))
+        metadataCard.addView(text("يُحفظ كل فصل داخل العمل نفسه. أدخل اسم المانغا أو المانهوا ورقم الفصل قبل الالتقاط؛ ويمكنك تغيير رقم الفصل في المرة التالية دون فقد الفصول السابقة.", 12f, Color.LTGRAY), matchWrap(dp(6)))
+        val workNameInput = EditText(this).apply {
+            setText(preferences.getString(PREF_CURRENT_WORK_NAME, "").orEmpty())
+            hint = "اسم العمل · مثال: Solo Leveling"
+            setSingleLine(true)
+            textSize = 14f
+            setTextColor(Color.WHITE)
+            setHintTextColor(Color.GRAY)
+            setPadding(dp(12), dp(10), dp(12), dp(10))
+            background = rounded(panel, 12)
+            onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
+                if (!hasFocus) preferences.edit().putString(PREF_CURRENT_WORK_NAME, text.toString().trim()).apply()
+            }
+        }
+        val chapterNameInput = EditText(this).apply {
+            setText(preferences.getString(PREF_CURRENT_CHAPTER_NAME, "").orEmpty())
+            hint = "رقم / اسم الفصل · مثال: الفصل 01"
+            setSingleLine(true)
+            textSize = 14f
+            setTextColor(Color.WHITE)
+            setHintTextColor(Color.GRAY)
+            setPadding(dp(12), dp(10), dp(12), dp(10))
+            background = rounded(panel, 12)
+            onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
+                if (!hasFocus) preferences.edit().putString(PREF_CURRENT_CHAPTER_NAME, text.toString().trim()).apply()
+            }
+        }
+        metadataCard.addView(workNameInput, matchWrap(dp(6)))
+        metadataCard.addView(chapterNameInput, matchWrap(dp(6)))
+        metadataCard.addView(actionButton("حفظ اسم العمل والفصل", false) {
+            preferences.edit()
+                .putString(PREF_CURRENT_WORK_NAME, workNameInput.text.toString().trim())
+                .putString(PREF_CURRENT_CHAPTER_NAME, chapterNameInput.text.toString().trim())
+                .apply()
+            toast("تم حفظ تصنيف العمل والفصل")
+        }, matchWrap())
+        root.addView(metadataCard, matchWrap(dp(12)))
+
+        val actions = card()
+        actions.addView(text("الترجمة", 18f, Color.WHITE, true))
+        actions.addView(actionButton("ترجمة الشاشة الحالية", true) {
+            preferences.edit()
+                .putString(PREF_CURRENT_WORK_NAME, workNameInput.text.toString().trim())
+                .putString(PREF_CURRENT_CHAPTER_NAME, chapterNameInput.text.toString().trim()).apply()
+            val service = MangaFoxAccessibilityService.instance
+            if (service == null) toast("فعّل خدمة Manga Fox أولاً") else {
+                service.startSingleCapture(900L)
+                window.decorView.postDelayed({ moveTaskToBack(true) }, 120L)
+            }
+        }, matchWrap(dp(5)))
+        actions.addView(actionButton("ترجمة الفصل العمودي كاملاً", true) {
+            preferences.edit()
+                .putString(PREF_CURRENT_WORK_NAME, workNameInput.text.toString().trim())
+                .putString(PREF_CURRENT_CHAPTER_NAME, chapterNameInput.text.toString().trim()).apply()
+            val service = MangaFoxAccessibilityService.instance
+            if (service == null) toast("فعّل خدمة Manga Fox أولاً، ثم افتح فصل المانجا") else {
+                service.startFullChapterCapture(1300L)
+                window.decorView.postDelayed({ moveTaskToBack(true) }, 120L)
+            }
+        }, matchWrap(dp(5)))
+        actions.addView(actionButton("التقاط الفصل دون ترجمة · PDF", false) {
+            preferences.edit()
+                .putString(PREF_CURRENT_WORK_NAME, workNameInput.text.toString().trim())
+                .putString(PREF_CURRENT_CHAPTER_NAME, chapterNameInput.text.toString().trim()).apply()
+            val service = MangaFoxAccessibilityService.instance
+            if (service == null) toast("فعّل خدمة Manga Fox أولاً، ثم افتح فصل المانجا") else {
+                service.startFullChapterCaptureOnly(1300L)
+                window.decorView.postDelayed({ moveTaskToBack(true) }, 120L)
+            }
+        }, matchWrap(dp(5)))
+        actions.addView(actionButton("إيقاف الالتقاط الحالي", false) {
+            MangaFoxAccessibilityService.instance?.let { it.stopCaptureByUser() } ?: toast("خدمة Manga Fox غير متصلة")
+        }, matchWrap(dp(5)))
+        actions.addView(actionButton("عرض آخر نتيجة مترجمة", false) { showResults() }, matchWrap())
+        val autoNext = CheckBox(this).apply {
+            text = "الانتقال تلقائياً للفصل التالي عند العثور على زر (الفصل التالي)"
+            textSize = 11f
+            setTextColor(Color.LTGRAY)
+            buttonTintList = android.content.res.ColorStateList.valueOf(gold)
+            isChecked = preferences.getBoolean(PREF_AUTO_NEXT_CHAPTER, false)
+            setOnCheckedChangeListener { _, checked ->
+                preferences.edit().putBoolean(PREF_AUTO_NEXT_CHAPTER, checked).apply()
+                toast(if (checked) "سيبحث عن زر الفصل التالي فقط بعد اكتمال ترجمة الفصل" else "تم إيقاف الانتقال التلقائي")
+            }
+        }
+        actions.addView(autoNext, matchWrap(dp(4)))
+        root.addView(actions, matchWrap(dp(12)))
+
+        val progressCard = card()
+        progressCard.addView(text("تقدم المعالجة داخل التطبيق", 16f, Color.WHITE, true))
+        progressText = text("", 12f, Color.LTGRAY)
+        progressCard.addView(progressText, matchWrap(dp(5)))
+        homeProgress = ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal).apply {
+            max = 100
+            progress = MangaFoxRuntime.progressPercent.coerceIn(0, 100)
+            progressTintList = android.content.res.ColorStateList.valueOf(gold)
+            progressBackgroundTintList = android.content.res.ColorStateList.valueOf(Color.rgb(55, 55, 62))
+        }
+        progressCard.addView(homeProgress, matchWrap(dp(8)))
+        progressCard.addView(actionButton("حذف العملية الحالية", false) {
+            // @N5CR4 — Explicit two-choice cancellation dialog; avoids OEM setItems/message clipping.
+            var keepCompletedSelection = true
+            val dialogContent = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                layoutDirection = View.LAYOUT_DIRECTION_RTL
+                setPadding(dp(18), dp(4), dp(18), dp(12))
+                setBackgroundColor(Color.BLACK)
+            }
+
+            dialogContent.addView(
+                text("اختر طريقة الإلغاء. لن تتأثر نتائج الفصول السابقة.", 14f, Color.LTGRAY),
+                matchWrap(dp(12))
+            )
+
+            val keepCard = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                layoutDirection = View.LAYOUT_DIRECTION_RTL
+                setPadding(dp(14), dp(12), dp(14), dp(12))
+                isClickable = true
+                isFocusable = true
+            }
+            val keepHeader = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                layoutDirection = View.LAYOUT_DIRECTION_RTL
+            }
+            val keepMark = text("◉", 23f, Color.rgb(46, 190, 130), true).apply {
+                gravity = Gravity.CENTER
+                setPadding(0, 0, dp(10), 0)
+            }
+            val keepTitle = text("الاحتفاظ بالمكتمل", 17f, Color.WHITE, true).apply {
+                gravity = Gravity.RIGHT or Gravity.CENTER_VERTICAL
+            }
+            keepHeader.addView(keepMark, LinearLayout.LayoutParams(dp(34), dp(38)))
+            keepHeader.addView(keepTitle, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+            keepCard.addView(keepHeader, matchWrap())
+            keepCard.addView(
+                text("إيقاف العملية وحذف الملفات غير المكتملة، مع الاحتفاظ بالصفحات التي اكتملت معالجتها.", 14f, Color.LTGRAY),
+                matchWrap(dp(2))
+            )
+
+            val deleteCard = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                layoutDirection = View.LAYOUT_DIRECTION_RTL
+                setPadding(dp(14), dp(12), dp(14), dp(12))
+                isClickable = true
+                isFocusable = true
+            }
+            val deleteHeader = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                layoutDirection = View.LAYOUT_DIRECTION_RTL
+            }
+            val deleteMark = text("○", 23f, Color.rgb(235, 95, 105), true).apply {
+                gravity = Gravity.CENTER
+                setPadding(0, 0, dp(10), 0)
+            }
+            val deleteTitle = text("حذف الكل", 17f, Color.WHITE, true).apply {
+                gravity = Gravity.RIGHT or Gravity.CENTER_VERTICAL
+            }
+            deleteHeader.addView(deleteMark, LinearLayout.LayoutParams(dp(34), dp(38)))
+            deleteHeader.addView(deleteTitle, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+            deleteCard.addView(deleteHeader, matchWrap())
+            deleteCard.addView(
+                text("إيقاف العملية وحذف جميع ملفات هذه العملية، حتى الصفحات المكتملة.", 14f, Color.LTGRAY),
+                matchWrap(dp(2))
+            )
+
+            fun refreshCancelChoiceStyle() {
+                keepCard.background = GradientDrawable().apply {
+                    setColor(Color.rgb(24, 22, 28))
+                    cornerRadius = dp(18).toFloat()
+                    setStroke(dp(if (keepCompletedSelection) 2 else 1), if (keepCompletedSelection) Color.rgb(46, 190, 130) else Color.rgb(65, 58, 70))
+                }
+                deleteCard.background = GradientDrawable().apply {
+                    setColor(Color.rgb(24, 22, 28))
+                    cornerRadius = dp(18).toFloat()
+                    setStroke(dp(if (!keepCompletedSelection) 2 else 1), if (!keepCompletedSelection) Color.rgb(235, 95, 105) else Color.rgb(65, 58, 70))
+                }
+                keepMark.text = if (keepCompletedSelection) "☑" else "○"
+                deleteMark.text = if (!keepCompletedSelection) "☑" else "○"
+            }
+            keepCard.setOnClickListener {
+                keepCompletedSelection = true
+                refreshCancelChoiceStyle()
+            }
+            deleteCard.setOnClickListener {
+                keepCompletedSelection = false
+                refreshCancelChoiceStyle()
+            }
+            dialogContent.addView(keepCard, matchWrap(dp(12)))
+            dialogContent.addView(deleteCard, matchWrap(dp(16)))
+            refreshCancelChoiceStyle()
+
+            lateinit var cancelDialog: AlertDialog
+            val footer = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                layoutDirection = View.LAYOUT_DIRECTION_RTL
+                gravity = Gravity.CENTER_VERTICAL
+            }
+            val backButton = Button(this).apply {
+                text = "تراجع"
+                textSize = 16f
+                isAllCaps = false
+                setTextColor(Color.WHITE)
+                background = rounded(Color.rgb(48, 48, 48), 15)
+                setOnClickListener { cancelDialog.dismiss() }
+            }
+            val confirmButton = Button(this).apply {
+                text = "تأكيد الإلغاء"
+                textSize = 16f
+                isAllCaps = false
+                setTextColor(Color.rgb(255, 190, 195))
+                background = rounded(Color.rgb(75, 39, 57), 15)
+                setOnClickListener {
+                    val service = MangaFoxAccessibilityService.instance
+                    if (service == null) {
+                        cancelDialog.dismiss()
+                        toast("خدمة Manga FOX غير متصلة")
+                    } else {
+                        cancelDialog.dismiss()
+                        service.cancelCurrentOperation(keepCompletedSelection)
+                    }
+                }
+            }
+            footer.addView(backButton, LinearLayout.LayoutParams(0, dp(56), 1f).apply { marginEnd = dp(8) })
+            footer.addView(confirmButton, LinearLayout.LayoutParams(0, dp(56), 1f).apply { marginStart = dp(8) })
+            dialogContent.addView(footer, matchWrap())
+
+            cancelDialog = AlertDialog.Builder(this)
+                .setTitle("إلغاء العملية الحالية؟")
+                .setView(dialogContent)
+                .create()
+            cancelDialog.setOnShowListener {
+                cancelDialog.window?.setBackgroundDrawable(rounded(Color.BLACK, 22))
+                cancelDialog.window?.setLayout(
+                    (resources.displayMetrics.widthPixels * 0.96f).toInt(),
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+            }
+            cancelDialog.show()
+        }, matchWrap(dp(4)))
+        progressCard.addView(actionButton("إيقاف الترجمة مؤقتاً / استئناف", false) {
+            MangaFoxAccessibilityService.instance?.toggleTranslationPause()
+                ?: toast("خدمة Manga FOX غير متصلة")
+        }, matchWrap(dp(4)))
+        root.addView(progressCard, matchWrap(dp(12)))
+
+        val statusCard = card()
+        statusCard.addView(text("حالة التطبيق", 16f, Color.WHITE, true))
+        statusText = text("", 13f, Color.LTGRAY)
+        statusCard.addView(statusText, matchWrap())
+        root.addView(statusCard, matchWrap(dp(10)))
+    }
+
+    /** A compact, app-native side drawer with one-tap capture and export actions. */
+    private fun showQuickSidePanel() {
+        val dialog = android.app.Dialog(this)
+        val panelView = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutDirection = View.LAYOUT_DIRECTION_RTL
+            setPadding(dp(18), dp(22), dp(18), dp(18))
+            setBackgroundColor(Color.rgb(20, 20, 25))
+        }
+        panelView.addView(text("FOX · لوحة جانبية", 20f, gold, true), matchWrap(dp(12)))
+        panelView.addView(text("اختصارات سريعة دون التنقل بين التبويبات.", 12f, Color.LTGRAY), matchWrap(dp(12)))
+        fun item(label: String, action: () -> Unit) {
+            panelView.addView(actionButton(label, false) { dialog.dismiss(); action() }, matchWrap(dp(7)))
+        }
+        item("التقاط الشاشة الحالية · ترجمة") {
+            MangaFoxAccessibilityService.instance?.startSingleCapture(250L) ?: toast("فعّل خدمة Manga FOX أولاً")
+            moveTaskToBack(true)
+        }
+        item("التقاط الفصل · ترجمة") {
+            MangaFoxAccessibilityService.instance?.startFullChapterCapture(500L) ?: toast("فعّل خدمة Manga FOX أولاً")
+            moveTaskToBack(true)
+        }
+        item("التقاط الفصل · دون ترجمة") {
+            MangaFoxAccessibilityService.instance?.startFullChapterCaptureOnly(500L) ?: toast("فعّل خدمة Manga FOX أولاً")
+            moveTaskToBack(true)
+        }
+        item("إيقاف الالتقاط") { MangaFoxAccessibilityService.instance?.stopCaptureByUser() }
+        item("مركز الالتقاط") { showCaptureHub() }
+        item("انجذاب العدسة إلى وسط الشاشة") {
+            MangaFoxAccessibilityService.instance?.centerFloatingBubble()
+                ?: toast("خدمة Manga FOX غير متصلة")
+        }
+        item("فتح النتائج") { showResults() }
+        item("تصدير PDF") { exportResultsAsPdf() }
+        item("إعدادات العدسة") { selectedHomeTab = "settings"; showHome() }
+        item("الثيمات وتخصيص المظهر") { selectedHomeTab = "themes"; showHome() }
+        item("إغلاق") {}
+        dialog.setContentView(panelView)
+        dialog.window?.apply {
+            setBackgroundDrawableResource(android.R.color.transparent)
+            setLayout(dp(320), WindowManager.LayoutParams.MATCH_PARENT)
+            setGravity(Gravity.START)
+            attributes = attributes.apply { dimAmount = 0.55f; flags = flags or WindowManager.LayoutParams.FLAG_DIM_BEHIND }
+        }
+        dialog.show()
+        dialog.window?.setLayout(dp(320), WindowManager.LayoutParams.MATCH_PARENT)
+    }
+
+    private fun appStorageBytes(): Long {
+        return runCatching {
+            fun size(file: File): Long = if (!file.exists()) 0L else if (file.isFile) file.length()
+                else file.listFiles()?.sumOf(::size) ?: 0L
+            size(filesDir) + size(cacheDir)
+        }.getOrDefault(0L)
+    }
+
+    private fun formatBytes(bytes: Long): String {
+        if (bytes < 1024) return "$bytes B"
+        val units = arrayOf("KB", "MB", "GB", "TB")
+        var value = bytes.toDouble() / 1024.0
+        var unit = 0
+        while (value >= 1024 && unit < units.lastIndex) { value /= 1024.0; unit++ }
+        return String.format(java.util.Locale.US, "%.1f %s", value, units[unit])
+    }
+
+    private fun showStorageAnalyzer() {
+        val root = File(filesDir, ".")
+        val files = root.walkTopDown().filter { it.isFile }.toList()
+        val total = files.sumOf { it.length() }
+        val images = files.filter { it.extension.lowercase() in setOf("jpg", "jpeg", "png", "webp") }.sumOf { it.length() }
+        val pdf = files.filter { it.extension.equals("pdf", true) }.sumOf { it.length() }
+        val archives = files.filter { it.extension.equals("zip", true) }.sumOf { it.length() }
+        AlertDialog.Builder(this).setTitle("تحليل التخزين · FOX")
+            .setMessage("إجمالي ملفات التطبيق: ${formatBytes(total)}\nصور: ${formatBytes(images)}\nPDF: ${formatBytes(pdf)}\nZIP: ${formatBytes(archives)}\nعدد الملفات: ${files.size}")
+            .setPositiveButton("حسنًا", null).show()
+    }
+
+    private fun showCaptureHub() {
+        val pages = MangaFoxRuntime.resultPages
+        if (pages.isEmpty()) { toast("لا توجد صفحات في الجلسة الحالية"); return }
+        val labels = pages.mapIndexed { index, path ->
+            val file = File(path)
+            "${(index + 1).toString().padStart(3, '0')} · ${file.name} · ${formatBytes(file.length())}"
+        }.toTypedArray()
+        AlertDialog.Builder(this).setTitle("Capture Hub · ${pages.size} صفحة")
+            .setItems(labels) { _, index ->
+                val pageFile = File(pages[index])
+                val bitmap = BitmapFactory.decodeFile(pageFile.absolutePath)
+                if (bitmap == null) toast("تعذر فتح الصفحة")
+                else {
+                    val preview = ImageView(this).apply {
+                        setImageBitmap(bitmap)
+                        adjustViewBounds = true
+                        scaleType = ImageView.ScaleType.FIT_CENTER
+                        setBackgroundColor(Color.BLACK)
+                    }
+                    AlertDialog.Builder(this).setTitle("صفحة ${index + 1}")
+                        .setView(preview).setPositiveButton("إغلاق") { _, _ -> bitmap.recycle() }
+                        .setNeutralButton("فتح النتائج") { _, _ -> bitmap.recycle(); showResults() }
+                        .show()
+                }
+            }.setNegativeButton("إغلاق", null).show()
+    }
+
+    private fun addArchiveTab(root: LinearLayout) {
+        val chapters = MangaFoxChapterArchive.list(this)
+        val header = card()
+        header.addView(text("أرشيف الأعمال والفصول", 19f, gold, true))
+        header.addView(text("كل فصل محفوظ بصورة مستقلة داخل تصنيف العمل. يمكنك فتح أي فصل أو حذفه دون التأثير على الفصول الأخرى.", 12f, Color.LTGRAY))
+        header.addView(text("إجمالي الفصول المحفوظة: ${chapters.size}", 13f, Color.WHITE, true).apply { setPadding(0, dp(8), 0, 0) })
+        header.addView(actionButton("استيراد فصل من ZIP / CBZ", true) { pickImageArchive() }, matchWrap(dp(4)))
+        header.addView(actionButton("استيراد مجلد صور من الهاتف", false) { pickImageFolder() }, matchWrap(dp(4)))
+        if (chapters.isNotEmpty()) {
+            header.addView(actionButton("إنشاء طابور ترجمة لفصول متعددة في الخلفية", true) {
+                showChapterQueuePicker(chapters)
+            }, matchWrap(dp(5)))
+        }
+        root.addView(header, matchWrap(dp(10)))
+        if (chapters.isEmpty()) {
+            root.addView(text("لا توجد فصول محفوظة بعد. افتح قسم الترجمة، واكتب اسم العمل ورقم الفصل قبل بدء الالتقاط.", 14f, Color.LTGRAY)
+                .apply { setPadding(dp(10), dp(18), dp(10), dp(18)) }, matchWrap())
+            return
+        }
+        chapters.groupBy { it.workName }.forEach { (workName, workChapters) ->
+            val workCard = card()
+            workCard.addView(text("📚  $workName", 17f, gold, true))
+            workCard.addView(text("${workChapters.size} فصل محفوظ", 11f, Color.LTGRAY), matchWrap(dp(6)))
+            workChapters.sortedWith(compareBy<MangaFoxChapterArchive.ChapterInfo> { it.createdAt }.thenBy { it.chapterName })
+                .forEach { chapter ->
+                    val chapterCard = LinearLayout(this).apply {
+                        orientation = LinearLayout.VERTICAL
+                        layoutDirection = View.LAYOUT_DIRECTION_RTL
+                        setPadding(dp(10), dp(9), dp(10), dp(9))
+                        background = rounded(Color.rgb(34, 32, 42), 12)
+                    }
+                    chapterCard.addView(text("${chapter.chapterName}", 14f, Color.WHITE, true))
+                    chapterCard.addView(text("${chapter.pageCount} صورة  ·  ${if (chapter.captureOnly) "صور أصلية" else "مترجم"}", 11f, Color.LTGRAY), matchWrap(dp(5)))
+                    val buttons = LinearLayout(this).apply {
+                        orientation = LinearLayout.HORIZONTAL
+                        layoutDirection = View.LAYOUT_DIRECTION_RTL
+                    }
+                    buttons.addView(actionButton("فتح الفصل", true) {
+                        if (MangaFoxChapterArchive.open(this@MainActivity, chapter.id)) {
+                            preferences.edit().putBoolean(PREF_RESULTS_EDIT_MODE, false).apply()
+                            showResults()
+                        } else toast("تعذر فتح هذا الفصل؛ قد تكون بعض ملفاته مفقودة")
+                    }, LinearLayout.LayoutParams(0, dp(44), 1f).apply { marginEnd = dp(4) })
+                    buttons.addView(actionButton("حذف الفصل", false) {
+                        AlertDialog.Builder(this@MainActivity)
+                            .setTitle("حذف ${chapter.chapterName}؟")
+                            .setMessage("سيُحذف هذا الفصل فقط من تصنيف «$workName». بقية فصول العمل ستبقى محفوظة.")
+                            .setNegativeButton("إلغاء", null)
+                            .setPositiveButton("حذف الفصل") { _, _ ->
+                                val wasActive = MangaFoxRuntime.activeArchiveId == chapter.id
+                                MangaFoxChapterArchive.delete(this@MainActivity, chapter.id)
+                                if (wasActive) {
+                                    MangaFoxRuntime.activeArchiveId = ""
+                                    MangaFoxRuntime.resultPages = emptyList()
+                                    MangaFoxRuntime.sourcePages = emptyList()
+                                    MangaFoxRuntime.translationLayerFiles = emptyList()
+                                    MangaFoxRuntime.resultTitle = "لا يوجد فصل محدد"
+                                    MangaFoxRuntime.pendingEdits = false
+                                    MangaFoxRuntime.captureOnlyResult = false
+                                    MangaFoxRuntime.activeWorkName = "عمل غير مصنف"
+                                    MangaFoxRuntime.activeChapterName = "الفصل المترجم"
+                                    MangaFoxLayerHistory(this@MainActivity).reset()
+                                    MangaFoxRuntime.persist(this@MainActivity)
+                                }
+                                toast("تم حذف ${chapter.chapterName} فقط")
+                                renderHomeTab()
+                            }.show()
+                    }, LinearLayout.LayoutParams(0, dp(44), 1f).apply { marginStart = dp(4) })
+                    chapterCard.addView(buttons, matchWrap(dp(2)))
+                    workCard.addView(chapterCard, matchWrap(dp(7)))
+                }
+            root.addView(workCard, matchWrap(dp(10)))
+        }
+    }
+
+    private fun pickImageArchive() {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "*/*"
+            putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("application/zip", "application/x-cbz", "application/octet-stream"))
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        runCatching { startActivityForResult(intent, REQUEST_IMPORT_IMAGE_ARCHIVE) }
+            .onFailure { toast("تعذر فتح مدير الملفات") }
+    }
+
+    private fun pickImageFolder() {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
+        }
+        runCatching { startActivityForResult(intent, REQUEST_IMPORT_IMAGE_FOLDER) }
+            .onFailure { toast("مدير الملفات لا يدعم اختيار المجلدات") }
+    }
+
+    private data class ImportedImage(val relativeName: String, val file: File)
+
+    private fun startImageCollectionImport(uri: android.net.Uri, isFolder: Boolean) {
+        val progress = android.app.ProgressDialog(this).apply {
+            setTitle(if (isFolder) "استيراد مجلد الصور" else "استيراد ZIP / CBZ")
+            setMessage("فحص الملفات والصور…")
+            setProgressStyle(android.app.ProgressDialog.STYLE_SPINNER)
+            setCancelable(false)
+            show()
+        }
+        fontDownloadExecutor.execute {
+            val staging = File(filesDir, "mfox_import_staging_${System.currentTimeMillis()}")
+            val outcome = runCatching {
+                require(staging.mkdirs()) { "تعذر إنشاء مجلد الاستيراد" }
+                val available = filesDir.usableSpace
+                // Import temporarily holds staging plus permanent source and result copies (about 3x).
+                val maxTotalBytes = ((available - 256L * 1024L * 1024L).coerceAtLeast(0L) / 3L)
+                require(maxTotalBytes >= 32L * 1024L * 1024L) { "المساحة الحرة غير كافية للاستيراد؛ اترك 256MB احتياطاً مع حساب النسخ المؤقتة والأرشيف" }
+                val imported = if (isFolder) importImagesFromFolder(uri, staging, maxTotalBytes)
+                    else importImagesFromZip(uri, staging, maxTotalBytes)
+                require(imported.isNotEmpty()) { "لم يتم العثور على صور مانجا صالحة" }
+                val sorted = imported.sortedBy { naturalSortKey(it.relativeName) }
+                val pageFiles = sorted.mapIndexed { index, item ->
+                    val extension = item.file.extension.lowercase(Locale.ROOT).let { if (it in setOf("jpg", "jpeg", "png", "webp")) it else "jpg" }
+                    val destination = File(staging, "page_${(index + 1).toString().padStart(6, '0')}.$extension")
+                    if (item.file.absolutePath != destination.absolutePath) {
+                        if (!item.file.renameTo(destination)) item.file.copyTo(destination, overwrite = true).also { item.file.delete() }
+                    }
+                    destination
+                }
+                val sourceName = readDisplayName(uri).substringAfterLast('/').substringAfterLast('\\')
+                    .substringBeforeLast('.').trim().ifBlank { if (isFolder) "مجلد مستورد" else "فصل مستورد" }.take(80)
+                val workName = sourceName
+                val chapterName = "مستورد ${java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.ROOT).format(java.util.Date())}"
+                val paths = pageFiles.map { it.absolutePath }
+                val previousArchiveId = MangaFoxRuntime.activeArchiveId
+                val previousPendingEdits = MangaFoxRuntime.pendingEdits
+                val previousWorkName = MangaFoxRuntime.activeWorkName
+                val previousChapterName = MangaFoxRuntime.activeChapterName
+                MangaFoxRuntime.activeArchiveId = ""
+                MangaFoxRuntime.pendingEdits = false
+                val archiveId = MangaFoxChapterArchive.save(
+                    this, workName, chapterName, sourceName, paths, paths,
+                    List(paths.size) { "" }, true,
+                    "صور مستوردة · ${paths.size} صفحة · جاهزة للترجمة"
+                ) ?: run {
+                    MangaFoxRuntime.activeArchiveId = previousArchiveId
+                    MangaFoxRuntime.pendingEdits = previousPendingEdits
+                    MangaFoxRuntime.activeWorkName = previousWorkName
+                    MangaFoxRuntime.activeChapterName = previousChapterName
+                    error("تعذر حفظ الفصل داخل المكتبة")
+                }
+                if (!MangaFoxChapterArchive.open(this, archiveId)) {
+                    MangaFoxChapterArchive.delete(this, archiveId)
+                    MangaFoxRuntime.activeArchiveId = previousArchiveId
+                    MangaFoxRuntime.pendingEdits = previousPendingEdits
+                    MangaFoxRuntime.activeWorkName = previousWorkName
+                    MangaFoxRuntime.activeChapterName = previousChapterName
+                    error("تم التراجع عن الاستيراد لأن الفصل المحفوظ تعذر فتحه")
+                }
+                MangaFoxRuntime.persist(this)
+                paths.size to sourceName
+            }
+            staging.deleteRecursively()
+            if (isFolder) runCatching {
+                contentResolver.releasePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            runOnUiThread {
+                progress.dismiss()
+                outcome.onSuccess { (count, title) ->
+                    selectedHomeTab = "archive"
+                    showResults()
+                    toast("تم استيراد $count صورة من «$title» وحفظها في المكتبة")
+                }.onFailure { error ->
+                    toast("فشل استيراد الصور: ${error.localizedMessage ?: "ملف غير صالح"}")
+                }
+            }
+        }
+    }
+
+    private fun readDisplayName(uri: android.net.Uri): String {
+        return runCatching {
+            contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
+                val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                if (index >= 0 && cursor.moveToFirst()) cursor.getString(index) else null
+            }
+        }.getOrNull().orEmpty().ifBlank { "Manga FOX Import" }
+    }
+
+    private fun importImagesFromZip(uri: android.net.Uri, staging: File, maxTotalBytes: Long): List<ImportedImage> {
+        val output = ArrayList<ImportedImage>()
+        var totalBytes = 0L
+        var expandedBytes = 0L
+        var scannedEntries = 0
+        val maxExpandedBytes = maxTotalBytes + 128L * 1024L * 1024L
+        val stream = contentResolver.openInputStream(uri) ?: error("تعذر فتح ملف ZIP / CBZ")
+        ZipInputStream(stream.buffered()).use { zip ->
+            while (true) {
+                val entry = zip.nextEntry ?: break
+                scannedEntries++
+                require(scannedEntries <= 30000) { "الأرشيف يحتوي عدداً غير طبيعي من العناصر" }
+                val name = entry.name.replace('\\', '/')
+                require(!name.startsWith("/") && !name.split('/').any { it == ".." }) { "الأرشيف يحتوي مساراً غير آمن" }
+                val extension = name.substringAfterLast('.', "").lowercase(Locale.ROOT)
+                if (!entry.isDirectory && extension in setOf("jpg", "jpeg", "png", "webp")) {
+                    val target = File(staging, "raw_${output.size.toString().padStart(6, '0')}.$extension")
+                    val remaining = minOf(maxTotalBytes - totalBytes, maxExpandedBytes - expandedBytes)
+                    val size = copyBoundedImage(zip, target, remaining)
+                    totalBytes += size
+                    expandedBytes += size
+                    if (size > 0L && isReadableImage(target)) output.add(ImportedImage(name, target)) else target.delete()
+                } else {
+                    expandedBytes += drainZipEntryBounded(zip, maxExpandedBytes - expandedBytes)
+                }
+                require(expandedBytes <= maxExpandedBytes) { "محتوى الأرشيف بعد فك الضغط يتجاوز الحد الآمن" }
+                zip.closeEntry()
+            }
+        }
+        return output
+    }
+
+    private fun drainZipEntryBounded(input: InputStream, remainingBytes: Long): Long {
+        require(remainingBytes >= 0L) { "الأرشيف تجاوز حد البيانات المفكوكة" }
+        var countTotal = 0L
+        val buffer = ByteArray(32 * 1024)
+        while (true) {
+            val count = input.read(buffer)
+            if (count < 0) break
+            countTotal += count
+            require(countTotal <= remainingBytes) { "الأرشيف يحتوي ملفاً مضغوطاً بحجم غير آمن" }
+        }
+        return countTotal
+    }
+
+    private fun importImagesFromFolder(treeUri: android.net.Uri, staging: File, maxTotalBytes: Long): List<ImportedImage> {
+        runCatching {
+            contentResolver.takePersistableUriPermission(treeUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        data class FolderNode(val documentId: String, val relativePath: String, val depth: Int)
+        val pending = java.util.ArrayDeque<FolderNode>()
+        pending.add(FolderNode(DocumentsContract.getTreeDocumentId(treeUri), "", 0))
+        val files = ArrayList<Pair<String, android.net.Uri>>()
+        var visited = 0
+        while (pending.isNotEmpty()) {
+            val node = pending.removeFirst()
+            require(node.depth <= 20) { "المجلد متداخل بعمق غير مدعوم" }
+            val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, node.documentId)
+            contentResolver.query(
+                childrenUri,
+                arrayOf(
+                    DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+                    DocumentsContract.Document.COLUMN_DISPLAY_NAME,
+                    DocumentsContract.Document.COLUMN_MIME_TYPE
+                ), null, null, null
+            )?.use { cursor ->
+                val idIndex = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_DOCUMENT_ID)
+                val nameIndex = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_DISPLAY_NAME)
+                val typeIndex = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_MIME_TYPE)
+                require(idIndex >= 0 && nameIndex >= 0 && typeIndex >= 0) { "مدير الملفات لا يوفر بيانات المجلد المطلوبة" }
+                while (cursor.moveToNext()) {
+                    visited++
+                    require(visited <= 30000) { "المجلد يحتوي عدداً كبيراً جداً من العناصر" }
+                    val id = cursor.getString(idIndex)
+                    val name = cursor.getString(nameIndex).orEmpty()
+                    val mime = cursor.getString(typeIndex).orEmpty()
+                    val relative = if (node.relativePath.isBlank()) name else "${node.relativePath}/$name"
+                    if (mime == DocumentsContract.Document.MIME_TYPE_DIR) {
+                        pending.add(FolderNode(id, relative, node.depth + 1))
+                    } else {
+                        val extension = name.substringAfterLast('.', "").lowercase(Locale.ROOT)
+                        if (extension in setOf("jpg", "jpeg", "png", "webp")) {
+                            files.add(relative to DocumentsContract.buildDocumentUriUsingTree(treeUri, id))
+                        }
+                    }
+                }
+            } ?: error("تعذر قراءة محتويات المجلد")
+        }
+        val output = ArrayList<ImportedImage>()
+        var totalBytes = 0L
+        files.sortedBy { naturalSortKey(it.first) }.forEachIndexed { index, pair ->
+            val extension = pair.first.substringAfterLast('.', "jpg").lowercase(Locale.ROOT)
+            val target = File(staging, "folder_${index.toString().padStart(6, '0')}.$extension")
+            val input = contentResolver.openInputStream(pair.second) ?: return@forEachIndexed
+            val size = input.use { copyBoundedImage(it, target, maxTotalBytes - totalBytes) }
+            totalBytes += size
+            if (size > 0L && isReadableImage(target)) output.add(ImportedImage(pair.first, target)) else target.delete()
+        }
+        return output
+    }
+
+    private fun copyBoundedImage(input: InputStream, target: File, remainingTotalBytes: Long): Long {
+        require(remainingTotalBytes > 0L) { "المساحة المتاحة للاستيراد انتهت" }
+        var size = 0L
+        try {
+            FileOutputStream(target).use { out ->
+                val buffer = ByteArray(64 * 1024)
+                while (true) {
+                    val count = input.read(buffer)
+                    if (count < 0) break
+                    size += count
+                    require(size <= 128L * 1024L * 1024L) { "إحدى الصور أكبر من 128MB" }
+                    require(size <= remainingTotalBytes) { "لا توجد مساحة كافية لحفظ جميع الصور" }
+                    out.write(buffer, 0, count)
+                }
+                out.fd.sync()
+            }
+            if (size < 128L) { target.delete(); return 0L }
+            return size
+        } catch (error: Throwable) {
+            target.delete()
+            throw error
+        }
+    }
+
+    private fun isReadableImage(file: File): Boolean = runCatching {
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeFile(file.absolutePath, bounds)
+        if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return false
+        val sample = maxOf(1, bounds.outWidth / 160, bounds.outHeight / 160)
+        val bitmap = BitmapFactory.decodeFile(file.absolutePath, BitmapFactory.Options().apply {
+            inSampleSize = sample
+            inPreferredConfig = Bitmap.Config.RGB_565
+        }) ?: return false
+        bitmap.recycle()
+        true
+    }.getOrDefault(false)
+
+    private fun naturalSortKey(value: String): String =
+        value.lowercase(Locale.ROOT).replace(Regex("\\d+")) { it.value.padStart(18, '0') }
+
+    private fun restoreFontSelectionFromDisk() {
+        val savedPath = preferences.getString(PREF_FONT_FILE, null)?.takeIf { it.isNotBlank() } ?: return
+        val savedFile = File(savedPath)
+        val valid = savedFile.isFile && savedFile.length() >= 4096L &&
+            savedFile.extension.lowercase(Locale.ROOT) in setOf("ttf", "otf", "ttc") &&
+            runCatching { Typeface.createFromFile(savedFile); true }.getOrDefault(false)
+        if (valid) {
+            val canonical = runCatching { savedFile.canonicalPath }.getOrDefault(savedFile.absolutePath)
+            val label = preferences.getString(PREF_FONT_LABEL, null).takeUnless { it.isNullOrBlank() }
+                ?: savedFile.name
+            preferences.edit().putString(PREF_FONT_FILE, canonical).putString(PREF_FONT_LABEL, label).commit()
+        } else {
+            // A stale path must not shadow a valid system fallback after an interrupted import.
+            preferences.edit().remove(PREF_FONT_FILE).remove(PREF_FONT_LABEL).commit()
+        }
+    }
+
+    private fun showInstalledFontsDialog() {
+        val fontDir = File(filesDir, "fonts")
+        val installed = fontDir.listFiles()?.filter { file ->
+            file.isFile && file.length() >= 4096L && file.extension.lowercase(Locale.ROOT) in setOf("ttf", "otf", "ttc") &&
+                runCatching { Typeface.createFromFile(file); true }.getOrDefault(false)
+        }?.sortedBy { it.name.lowercase(Locale.ROOT) }.orEmpty()
+        if (installed.isEmpty()) {
+            AlertDialog.Builder(this).setTitle("الخطوط المثبتة")
+                .setMessage("لم يتم العثور على ملفات خطوط صالحة. نزّل خطاً أو استورده أولاً؛ سيُحفظ داخل مساحة التطبيق ويظل متاحاً بعد إغلاقه.")
+                .setPositiveButton("إغلاق", null).show()
+            return
+        }
+        val selectedPath = preferences.getString(PREF_FONT_FILE, null)
+        val labels = installed.map { file ->
+            val selected = file.absolutePath == selectedPath
+            "${if (selected) "✓  " else ""}${file.name}  ·  ${formatBytes(file.length())}"
+        }
+        AlertDialog.Builder(this).setTitle("الخطوط المثبتة (${installed.size})")
+            .setItems(labels.toTypedArray()) { _, which ->
+                val file = installed[which]
+                runCatching { Typeface.createFromFile(file) }.onSuccess {
+                    preferences.edit().putString(PREF_FONT_FILE, file.absolutePath)
+                        .putString(PREF_FONT_LABEL, file.name)
+                        .putString(PREF_FONT_FAMILY, "sans-serif")
+                        .commit()
+                    updateFontPreview()
+                    toast("تم تفعيل الخط المحفوظ: ${file.name}")
+                }.onFailure { toast("ملف الخط غير صالح: ${it.localizedMessage ?: "خطأ"}") }
+            }
+            .setNeutralButton("استخدام خط النظام") { _, _ ->
+                preferences.edit().remove(PREF_FONT_FILE).remove(PREF_FONT_LABEL).apply()
+                updateFontPreview()
+                toast("تمت العودة إلى خط النظام")
+            }
+            .setNegativeButton("إغلاق", null).show()
+    }
+
+    private fun addLibraryTab(root: LinearLayout) {
+        val chapters = MangaFoxChapterArchive.list(this)
+        val header = card()
+        header.addView(text("مكتبة Manga FOX", 19f, gold, true))
+        header.addView(text("أغلفة الأعمال مأخوذة من أول صفحة محفوظة، مع عدد الفصول داخل كل عمل. اضغط الغلاف لفتح فصوله.", 12f, Color.LTGRAY))
+        header.addView(text("${chapters.size} فصل محفوظ ضمن ${chapters.map { it.workName }.distinct().size} عمل", 12f, Color.WHITE, true))
+        root.addView(header, matchWrap(dp(10)))
+
+        if (chapters.isNotEmpty()) {
+            val grid = android.widget.GridLayout(this).apply {
+                columnCount = 2
+                orientation = android.widget.GridLayout.HORIZONTAL
+                layoutDirection = View.LAYOUT_DIRECTION_RTL
+                useDefaultMargins = false
+            }
+            val works = chapters.groupBy { it.workName }.toList().sortedByDescending { entry ->
+                entry.second.maxOfOrNull { it.createdAt } ?: 0L
+            }
+            works.forEachIndexed { index, entry ->
+                val workName = entry.first
+                val workChapters = entry.second.sortedByDescending { it.createdAt }
+                val coverPath = workChapters.firstOrNull()?.coverPath.orEmpty()
+                val tile = LinearLayout(this).apply {
+                    orientation = LinearLayout.VERTICAL
+                    layoutDirection = View.LAYOUT_DIRECTION_RTL
+                    setPadding(dp(8), dp(8), dp(8), dp(8))
+                    background = rounded(Color.rgb(30, 28, 37), 15)
+                    isClickable = true
+                    isFocusable = true
+                }
+                val cover = ImageView(this).apply {
+                    scaleType = ImageView.ScaleType.CENTER_CROP
+                    setBackgroundColor(Color.rgb(48, 43, 55))
+                    contentDescription = "غلاف $workName"
+                }
+                if (coverPath.isNotBlank() && File(coverPath).isFile) {
+                    val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                    BitmapFactory.decodeFile(coverPath, options)
+                    var sample = 1
+                    while (options.outWidth / sample > 420 || options.outHeight / sample > 620) sample *= 2
+                    val bitmap = BitmapFactory.decodeFile(coverPath, BitmapFactory.Options().apply { inSampleSize = sample })
+                    if (bitmap != null) cover.setImageBitmap(bitmap)
+                } else {
+                    cover.setImageDrawable(GradientDrawable().apply {
+                        colors = intArrayOf(Color.rgb(54, 38, 22), Color.rgb(20, 18, 28))
+                        orientation = GradientDrawable.Orientation.TL_BR
+                    })
+                }
+                tile.addView(cover, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(154)))
+                tile.addView(text(workName, 13f, Color.WHITE, true).apply { maxLines = 2; gravity = Gravity.CENTER }, matchWrap(dp(2)))
+                tile.addView(text("${workChapters.size} فصل", 11f, gold, true).apply { gravity = Gravity.CENTER }, matchWrap())
+                tile.setOnClickListener {
+                    val labels = workChapters.map { "${it.chapterName} · ${it.pageCount} صفحة" }.toTypedArray()
+                    AlertDialog.Builder(this).setTitle(workName)
+                        .setItems(labels) { _, which ->
+                            val chapter = workChapters.getOrNull(which) ?: return@setItems
+                            if (MangaFoxChapterArchive.open(this@MainActivity, chapter.id)) showResults()
+                            else toast("تعذر فتح الفصل")
+                        }
+                        .setNeutralButton("ترجم الفصل التالي") { _, _ ->
+                            val latestChapter = workChapters.first()
+                            val next = nextChapterLabel(latestChapter.chapterName)
+                            preferences.edit().putString(PREF_CURRENT_WORK_NAME, workName)
+                                .putString(PREF_CURRENT_CHAPTER_NAME, next).apply()
+                            MangaFoxRuntime.activeWorkName = workName
+                            MangaFoxRuntime.activeChapterName = next
+                            selectedHomeTab = "translation"
+                            showHome()
+                        }
+                        .setNegativeButton("إغلاق", null).show()
+                }
+                val params = android.widget.GridLayout.LayoutParams(
+                    android.widget.GridLayout.spec(index / 2),
+                    android.widget.GridLayout.spec(index % 2, 1f)
+                ).apply {
+                    width = 0
+                    height = dp(228)
+                    setMargins(dp(4), dp(4), dp(4), dp(4))
+                }
+                grid.addView(tile, params)
+            }
+            root.addView(grid, matchWrap(dp(12)))
+        } else {
+            root.addView(text("لا توجد أغلفة بعد. ترجم فصلاً واحداً على الأقل وسيظهر العمل هنا تلقائياً.", 13f, Color.LTGRAY), matchWrap(dp(12)))
+        }
+
+        val captureHub = card()
+        captureHub.addView(text("مركز الالتقاط والنسخ الاحتياطي", 16f, gold, true))
+        captureHub.addView(text("الصفحات الحالية: ${MangaFoxRuntime.resultPages.size}  •  ${if (MangaFoxRuntime.captureOnlyResult) "صور أصلية بلا ترجمة" else "نتيجة معالجة"}", 12f, Color.LTGRAY))
+        captureHub.addView(text("المساحة التقريبية: ${formatBytes(appStorageBytes())}", 11f, Color.rgb(190,190,200)))
+        captureHub.addView(actionButton("فتح آخر نتيجة", true) { showResults() }, matchWrap(dp(5)))
+        captureHub.addView(actionButton("معاينة قائمة الصفحات", false) { showCaptureHub() }, matchWrap(dp(5)))
+        captureHub.addView(actionButton("تحليل مساحة التخزين", false) { showStorageAnalyzer() }, matchWrap(dp(5)))
+        captureHub.addView(actionButton("تصدير آخر نتيجة إلى PDF", false) {
+            if (MangaFoxRuntime.resultPages.isEmpty()) toast("لا توجد نتيجة لتصديرها") else exportResultsAsPdf()
+        }, matchWrap(dp(5)))
+        captureHub.addView(actionButton("تحديث الخط والحجم دون OCR", false) {
+            MangaFoxAccessibilityService.instance?.rerenderLastResultsFromLayers { showResults() }
+                ?: toast("خدمة Manga Fox غير متصلة")
+        }, matchWrap(dp(5)))
+        captureHub.addView(actionButton("إعادة OCR والترجمة من الصور الأصلية", false) {
+            MangaFoxAccessibilityService.instance?.retranslateLastResults()
+                ?: toast("خدمة Manga Fox غير متصلة")
+        }, matchWrap(dp(5)))
+        captureHub.addView(actionButton("نسخ احتياطي كامل للمشروع", true) { launchProjectExport() }, matchWrap(dp(5)))
+        captureHub.addView(actionButton("استعادة مشروع من نسخة احتياطية", false) { launchProjectImport() }, matchWrap(dp(5)))
+        captureHub.addView(actionButton("فحص جودة الفصل قبل التصدير", false) { showQualityAudit() }, matchWrap())
+        root.addView(captureHub, matchWrap(dp(12)))
+    }
+
+    private fun addPhantomStudioTab(root: LinearLayout) {
+        val header = card()
+        header.addView(text("PHANTOM STUDIO · استوديو مانجا FOX", 19f, gold, true))
+        header.addView(text("مساحة موحدة للتحرير، إدارة المشروع، أنماط الكتابة، الترميم، والمعالجة الجماعية. لا تُغيّر الصورة الأصلية؛ تعديلاتك تحفظ كطبقات مستقلة.", 13f, Color.LTGRAY))
+        root.addView(header, matchWrap(dp(10)))
+
+        val project = card()
+        project.addView(text("إدارة المشروع", 16f, Color.WHITE, true))
+        project.addView(actionButton("نسخ احتياطي كامل للمشروع", true) { launchProjectExport() }, matchWrap(dp(5)))
+        project.addView(actionButton("استعادة مشروع من ZIP", false) { launchProjectImport() }, matchWrap(dp(5)))
+        project.addView(actionButton("فتح نتائج الفصل الحالية", false) { showResults() }, matchWrap(dp(5)))
+        project.addView(actionButton("تصدير PDF متصل الصفحات", false) { exportResultsAsPdf() }, matchWrap())
+        root.addView(project, matchWrap(dp(10)))
+
+        val editing = card()
+        editing.addView(text("محرر الصفحات والطبقات", 16f, Color.WHITE, true))
+        editing.addView(text("يمكنك تحديد منطقة يدوياً، إضافة فقاعة أو صندوق سرد، مسح نص، تعديل اتجاهه، وتحريك الطبقة. زر التراجع/الإعادة يظهر أسفل كل صفحة في شاشة النتائج.", 12f, Color.LTGRAY))
+        editing.addView(actionButton("فتح محرر آخر فصل", true) {
+            if (MangaFoxRuntime.resultPages.isEmpty()) toast("لا توجد صفحات محررة بعد") else showResults()
+        }, matchWrap(dp(5)))
+        editing.addView(actionButton("إعادة تطبيق الخط والحجم دون OCR", false) {
+            MangaFoxAccessibilityService.instance?.rerenderLastResultsFromLayers { showResults() }
+                ?: toast("خدمة Manga FOX غير متصلة")
+        }, matchWrap())
+        root.addView(editing, matchWrap(dp(10)))
+
+        val processing = card()
+        processing.addView(text("المعالجة الجماعية والمؤثرات", 16f, Color.WHITE, true))
+        processing.addView(text("ترجمة الفصل المتتابع متاحة من تبويب ترجمة. تفعيل ترجمة المؤثرات الصوتية يضيف قاموس SFX المعروف إلى المعالجة؛ الكلمات غير المعروفة تظل بحاجة للمراجعة.", 12f, Color.LTGRAY))
+        val sfx = CheckBox(this).apply {
+            text = "ترجمة المؤثرات الصوتية اليابانية والكورية المعروفة"
+            setTextColor(Color.LTGRAY)
+            isChecked = preferences.getBoolean(PREF_TRANSLATE_SFX, false)
+            setOnCheckedChangeListener { _, checked -> preferences.edit().putBoolean(PREF_TRANSLATE_SFX, checked).apply() }
+        }
+        processing.addView(sfx, matchWrap(dp(5)))
+        processing.addView(actionButton("إعادة ترجمة الفصل من الصور الأصلية", false) {
+            MangaFoxAccessibilityService.instance?.retranslateLastResults() ?: toast("خدمة Manga FOX غير متصلة")
+        }, matchWrap())
+        root.addView(processing, matchWrap(dp(10)))
+
+        val styles = card()
+        styles.addView(text("أنماط الترجمة المحفوظة", 16f, Color.WHITE, true))
+        styles.addView(text("احفظ إعدادات الخط الحالية كقالب ثم أعد تطبيقها على الفصول القادمة.", 12f, Color.LTGRAY))
+        styles.addView(actionButton("حفظ الإعدادات الحالية كقالب", true) { saveStyleProfileDialog() }, matchWrap(dp(5)))
+        styles.addView(actionButton("تطبيق قالب محفوظ", false) { applyStyleProfileDialog() }, matchWrap())
+        root.addView(styles, matchWrap(dp(10)))
+
+        val ai = card()
+        ai.addView(text("حزم نماذج الذكاء المحلي", 16f, Color.WHITE, true))
+        ai.addView(text("محرك ML Kit الحالي يقرأ اللغات التي توفرها recognizers المضافة. لإضافة تعرف عربي متخصص نحتاج تضمين نموذج Arabic recognition مع كاشف النص وSDK الاستدلال. لم تُضمّن أوزان نموذج غير موجودة داخل التطبيق.", 12f, Color.LTGRAY))
+        ai.addView(actionButton("تفاصيل حزمة OCR العربية واللغات", false) { showOcrModelInfo() }, matchWrap())
+        root.addView(ai, matchWrap(dp(10)))
+    }
+
+    private fun addQualityTab(root: LinearLayout) {
+        val panel = card()
+        panel.addView(text("FOX QUALITY GUARD", 19f, gold, true))
+        panel.addView(text("فحص تلقائي لإحداثيات الطبقات، التداخلات، النصوص الفارغة، والطبقات التي قد تحتفظ بحروف لاتينية. الفحص البنيوي لا يستبدل مراجعة الصورة ولا يدّعي فهم كل كلمة داخل الرسم.", 13f, Color.LTGRAY))
+        panel.addView(actionButton("فحص الفصل الحالي الآن", true) { showQualityAudit() }, matchWrap(dp(6)))
+        panel.addView(text("ملخص المحرك الحالي: ${MangaFoxRuntime.qualitySummary}", 12f, Color.rgb(235, 210, 160)), matchWrap())
+        root.addView(panel, matchWrap(dp(10)))
+        root.addView(text("الصفحة التي تحتوي خطأً حرجاً يجب مراجعتها قبل التصدير. تحذيرات النص اللاتيني مجرد إشارة مراجعة وليست دليلاً قاطعاً على فشل الترجمة؛ قد تكون اسماً أو مؤثراً صوتياً.", 12f, Color.LTGRAY), matchWrap())
+    }
+
+    private fun addKnowledgeTab(root: LinearLayout) {
+        val glossary = MangaFoxKnowledgeStore(this).glossary()
+        val characters = MangaFoxKnowledgeStore(this).characters()
+        val dictionaryCard = card()
+        dictionaryCard.addView(text("قاموس المصطلحات الموحد", 17f, gold, true))
+        dictionaryCard.addView(text("احفظ ترجمة ثابتة لعبارة كاملة لتستخدمها في الفصول التالية. التطابق الكامل يُطبّق كترجمة محفوظة؛ لا يتم استبدال أجزاء الكلمات عشوائياً.", 12f, Color.LTGRAY))
+        dictionaryCard.addView(text("عدد المصطلحات: ${glossary.size}", 13f, Color.WHITE))
+        dictionaryCard.addView(actionButton("إضافة / إدارة المصطلحات", true) { manageGlossary() }, matchWrap())
+        root.addView(dictionaryCard, matchWrap(dp(10)))
+
+        val characterCard = card()
+        characterCard.addView(text("ذاكرة الشخصيات وأسلوب الحوار", 17f, gold, true))
+        characterCard.addView(text("احفظ أسماء الشخصيات ونبرة كلامها وملاحظات الضمائر. هذه ذاكرة مرجعية محلية للمترجم والمراجع، ولا تدّعي تغيير أسلوب محرك ML Kit الآلي.", 12f, Color.LTGRAY))
+        characterCard.addView(text("عدد ملفات الشخصيات: ${characters.size}", 13f, Color.WHITE))
+        characterCard.addView(actionButton("إضافة / إدارة الشخصيات", true) { manageCharacters() }, matchWrap())
+        root.addView(characterCard, matchWrap(dp(10)))
+        root.addView(actionButton("تصدير المشروع مع المعجم وذاكرة الشخصيات", false) { launchProjectExport() }, matchWrap())
+    }
+
+    private fun showQualityAudit() {
+        if (MangaFoxRuntime.resultPages.isEmpty()) { toast("لا توجد صفحات لفحصها"); return }
+        val report = MangaFoxQualityGuard.inspect(MangaFoxRuntime.resultPages, MangaFoxRuntime.translationLayerFiles)
+        val message = report.toArabicText()
+        AlertDialog.Builder(this)
+            .setTitle("FOX QUALITY GUARD · ${report.errorCount} خطأ · ${report.warningCount} تحذير")
+            .setMessage(message)
+            .setPositiveButton("مفهوم", null)
+            .setNeutralButton("فتح النتائج") { _, _ -> showResults() }
+            .show()
+    }
+
+    private fun manageGlossary() {
+        val store = MangaFoxKnowledgeStore(this)
+        val entries = store.glossary()
+        val labels = entries.map { "${it.source}  ←  ${it.arabic}" }.toTypedArray()
+        AlertDialog.Builder(this)
+            .setTitle("قاموس المصطلحات · ${entries.size}")
+            .setItems(labels) { _, which ->
+                val entry = entries[which]
+                AlertDialog.Builder(this).setTitle(entry.source)
+                    .setMessage("الترجمة: ${entry.arabic}\n${entry.note}")
+                    .setPositiveButton("حذف") { _, _ -> store.deleteGlossaryEntry(entry.source); renderHomeTab() }
+                    .setNeutralButton("تعديل") { _, _ -> editGlossaryEntry(entry) }
+                    .setNegativeButton("إغلاق", null).show()
+            }
+            .setPositiveButton("إضافة مصطلح") { _, _ -> editGlossaryEntry(null) }
+            .setNegativeButton("إغلاق", null)
+            .show()
+    }
+
+    private fun editGlossaryEntry(initial: MangaFoxKnowledgeStore.GlossaryEntry?) {
+        val source = EditText(this).apply { hint = "المصطلح الأصلي"; setText(initial?.source.orEmpty()) }
+        val arabic = EditText(this).apply { hint = "المقابل العربي"; setText(initial?.arabic.orEmpty()) }
+        val note = EditText(this).apply { hint = "ملاحظة اختيارية"; setText(initial?.note.orEmpty()) }
+        val box = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(16), dp(8), dp(16), dp(4)); addView(source); addView(arabic); addView(note) }
+        AlertDialog.Builder(this).setTitle("مصطلح موحد").setView(box)
+            .setNegativeButton("إلغاء", null)
+            .setPositiveButton("حفظ") { _, _ ->
+                val a = source.text.toString().trim(); val b = arabic.text.toString().trim()
+                if (a.isBlank() || b.isBlank()) toast("أدخل المصطلح والترجمة")
+                else { MangaFoxKnowledgeStore(this).saveGlossaryEntry(MangaFoxKnowledgeStore.GlossaryEntry(a, b, note.text.toString().trim())); renderHomeTab(); toast("تم حفظ المصطلح") }
+            }.show()
+    }
+
+    private fun manageCharacters() {
+        val store = MangaFoxKnowledgeStore(this)
+        val entries = store.characters()
+        AlertDialog.Builder(this).setTitle("ذاكرة الشخصيات · ${entries.size}")
+            .setItems(entries.map { "${it.name} · ${it.voice}" }.toTypedArray()) { _, which ->
+                val item = entries[which]
+                AlertDialog.Builder(this).setTitle(item.name).setMessage("النبرة: ${item.voice}\nملاحظات: ${item.notes}")
+                    .setPositiveButton("حذف") { _, _ -> store.deleteCharacter(item.name); renderHomeTab() }
+                    .setNeutralButton("تعديل") { _, _ -> editCharacter(item) }.setNegativeButton("إغلاق", null).show()
+            }
+            .setPositiveButton("إضافة شخصية") { _, _ -> editCharacter(null) }
+            .setNegativeButton("إغلاق", null).show()
+    }
+
+    private fun editCharacter(initial: MangaFoxKnowledgeStore.CharacterEntry?) {
+        val name = EditText(this).apply { hint = "اسم الشخصية"; setText(initial?.name.orEmpty()) }
+        val voice = EditText(this).apply { hint = "نبرة الكلام: رسمية / ساخرة / حادة..."; setText(initial?.voice.orEmpty()) }
+        val notes = EditText(this).apply { hint = "الضمائر والملاحظات والسياق"; minLines = 3; setText(initial?.notes.orEmpty()) }
+        val box = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(16), dp(8), dp(16), dp(4)); addView(name); addView(voice); addView(notes) }
+        AlertDialog.Builder(this).setTitle("بطاقة شخصية").setView(box)
+            .setNegativeButton("إلغاء", null)
+            .setPositiveButton("حفظ") { _, _ ->
+                val n = name.text.toString().trim()
+                if (n.isBlank()) toast("اسم الشخصية مطلوب") else {
+                    MangaFoxKnowledgeStore(this).saveCharacter(MangaFoxKnowledgeStore.CharacterEntry(n, voice.text.toString().trim(), notes.text.toString().trim()))
+                    renderHomeTab(); toast("تم حفظ بطاقة الشخصية")
+                }
+            }.show()
+    }
+
+    private fun saveStyleProfileDialog() {
+        val input = EditText(this).apply { hint = "اسم القالب: رومانسي / أكشن / سرد..." }
+        AlertDialog.Builder(this).setTitle("حفظ نمط الترجمة").setMessage("سيتم حفظ حجم الخط واسمه ووزنه من إعدادات التطبيق الحالية.")
+            .setView(input).setNegativeButton("إلغاء", null)
+            .setPositiveButton("حفظ القالب") { _, _ ->
+                val name = input.text.toString().trim()
+                if (name.isBlank()) { toast("اكتب اسماً للقالب"); return@setPositiveButton }
+                val json = runCatching { org.json.JSONObject(preferences.getString("mfox_style_profiles_v1", "{}") ?: "{}") }.getOrElse { org.json.JSONObject() }
+                json.put(name, org.json.JSONObject()
+                    .put("fontSize", preferences.getInt(PREF_FONT_SIZE, 22))
+                    .put("fontFamily", preferences.getString(PREF_FONT_FAMILY, "sans-serif"))
+                    .put("fontBold", preferences.getBoolean(PREF_FONT_BOLD, false))
+                    .put("fontFile", preferences.getString(PREF_FONT_FILE, ""))
+                    .put("autoFit", preferences.getBoolean(PREF_AUTO_FONT_FIT, true)))
+                preferences.edit().putString("mfox_style_profiles_v1", json.toString()).apply()
+                toast("تم حفظ قالب $name")
+            }.show()
+    }
+
+    private fun applyStyleProfileDialog() {
+        val json = runCatching { org.json.JSONObject(preferences.getString("mfox_style_profiles_v1", "{}") ?: "{}") }.getOrElse { org.json.JSONObject() }
+        val names = ArrayList<String>()
+        val keyIterator = json.keys()
+        while (keyIterator.hasNext()) names.add(keyIterator.next())
+        if (names.isEmpty()) { toast("لا توجد قوالب محفوظة بعد"); return }
+        AlertDialog.Builder(this).setTitle("اختر قالب الترجمة").setItems(names.toTypedArray()) { _, which ->
+            val item = json.optJSONObject(names[which]) ?: return@setItems
+            preferences.edit()
+                .putInt(PREF_FONT_SIZE, item.optInt("fontSize", 22).coerceIn(10, 72))
+                .putString(PREF_FONT_FAMILY, item.optString("fontFamily", "sans-serif"))
+                .putBoolean(PREF_FONT_BOLD, item.optBoolean("fontBold", false))
+                .putString(PREF_FONT_FILE, item.optString("fontFile").takeIf { it.isNotBlank() })
+                .putBoolean(PREF_AUTO_FONT_FIT, item.optBoolean("autoFit", true))
+                .apply()
+            updateFontPreview()
+            toast("تم تطبيق القالب. أعد إخراج الطبقات لتحديث الصفحات الحالية.")
+        }.setNegativeButton("إغلاق", null).show()
+    }
+
+    private fun syncCurrentArchiveAfterLayerChange() {
+        if (MangaFoxRuntime.activeArchiveId.isNotBlank() && MangaFoxRuntime.resultPages.isNotEmpty()) {
+            MangaFoxChapterArchive.save(
+                this, MangaFoxRuntime.activeWorkName, MangaFoxRuntime.activeChapterName,
+                MangaFoxRuntime.resultTitle, MangaFoxRuntime.sourcePages, MangaFoxRuntime.resultPages,
+                MangaFoxRuntime.translationLayerFiles, MangaFoxRuntime.captureOnlyResult,
+                MangaFoxRuntime.qualitySummary, preserveExistingImages = true
+            )
+        }
+        MangaFoxRuntime.persist(this)
+        MangaFoxAccessibilityService.instance?.updateLensPendingEdits()
+    }
+
+    private fun showLayerHistoryDialog(pageIndex: Int) {
+        AlertDialog.Builder(this).setTitle("سجل التعديلات · الصفحة ${pageIndex + 1}")
+            .setMessage("يعمل التراجع بترتيب زمني على مستوى الفصل كله؛ كل ضغطة تعيد آخر تعديل واحد فقط، حتى لو كان في صورة أخرى.")
+            .setPositiveButton("تراجع عن آخر تعديل") { _, _ ->
+                val changed = MangaFoxLayerHistory(this).undoLatest(MangaFoxRuntime.translationLayerFiles)
+                if (changed) {
+                    MangaFoxRuntime.pendingEdits = true
+                    syncCurrentArchiveAfterLayerChange()
+                    showResults()
+                } else toast("لا توجد خطوة سابقة للتراجع")
+            }
+            .setNeutralButton("إعادة آخر تعديل") { _, _ ->
+                val changed = MangaFoxLayerHistory(this).redoLatest(MangaFoxRuntime.translationLayerFiles)
+                if (changed) {
+                    MangaFoxRuntime.pendingEdits = true
+                    syncCurrentArchiveAfterLayerChange()
+                    showResults()
+                } else toast("لا توجد خطوة لإعادتها")
+            }.setNegativeButton("إغلاق", null).show()
+    }
+
+    private fun showSaveNamedEditsDialog() {
+        val input = EditText(this).apply {
+            hint = "مثال: ترجمة معدلة - نسخة 1"
+            setSingleLine(true)
+            setTextColor(Color.WHITE)
+            setHintTextColor(Color.GRAY)
+        }
+        AlertDialog.Builder(this).setTitle("حفظ مجموعة التعديلات")
+            .setMessage("سيُحفظ ترتيب طبقات جميع الصور لهذا الفصل باسم تختاره، ويمكن استعادته لاحقاً دون المساس ببقية الفصول.")
+            .setView(input)
+            .setNegativeButton("إلغاء", null)
+            .setPositiveButton("حفظ المجموعة") { _, _ ->
+                val name = input.text.toString().trim()
+                if (name.isBlank()) {
+                    toast("اكتب اسماً لمجموعة التعديلات")
+                } else {
+                    val allLayerPaths = MangaFoxRuntime.resultPages.indices.mapNotNull { index -> layerFileForPage(index)?.absolutePath }
+                    val scopeKey = MangaFoxRuntime.activeArchiveId.ifBlank { "${MangaFoxRuntime.activeWorkName}::${MangaFoxRuntime.activeChapterName}" }
+                    val saved = allLayerPaths.size == MangaFoxRuntime.resultPages.size &&
+                        MangaFoxEditSetStore.save(this, name, MangaFoxRuntime.resultTitle, scopeKey, allLayerPaths)
+                    toast(if (saved) "تم حفظ مجموعة «$name»" else "تعذر حفظ مجموعة التعديلات")
+                }
+            }.show()
+    }
+
+    private fun showRestoreNamedEditsDialog() {
+        val scopeKey = MangaFoxRuntime.activeArchiveId.ifBlank { "${MangaFoxRuntime.activeWorkName}::${MangaFoxRuntime.activeChapterName}" }
+        val names = MangaFoxEditSetStore.list(this, MangaFoxRuntime.resultTitle, scopeKey)
+        if (names.isEmpty()) {
+            toast("لا توجد مجموعات محفوظة لهذا الفصل")
+            return
+        }
+        AlertDialog.Builder(this).setTitle("استعادة مجموعة التعديلات")
+            .setItems(names.map { it.name }.toTypedArray()) { _, which ->
+                val selected = names[which]
+                AlertDialog.Builder(this).setTitle("استعادة «${selected.name}»؟")
+                    .setMessage("سيُسجل الوضع الحالي أولاً في سجل التراجع، ثم تُستعاد طبقات المجموعة المحددة. لن تتغير الصورة حتى تضغط تطبيق جميع التعديلات.")
+                    .setNegativeButton("إلغاء", null)
+                    .setPositiveButton("استعادة") { _, _ ->
+                        val allLayerPaths = MangaFoxRuntime.resultPages.indices.mapNotNull { index -> layerFileForPage(index)?.absolutePath }
+                        val restored = allLayerPaths.size == MangaFoxRuntime.resultPages.size &&
+                            MangaFoxEditSetStore.restore(
+                                this, selected.fileName, MangaFoxRuntime.resultTitle, scopeKey,
+                                allLayerPaths, MangaFoxLayerHistory(this)
+                            )
+                        if (restored) {
+                            MangaFoxRuntime.pendingEdits = true
+                            syncCurrentArchiveAfterLayerChange()
+                            showResults()
+                            toast("تمت استعادة المجموعة؛ طبّقها على الصور عند الانتهاء")
+                        } else toast("لم يمكن استعادة المجموعة؛ تحقق من تطابق الفصل والصفحات")
+                    }.show()
+            }.setNegativeButton("إغلاق", null).show()
+    }
+
+    private fun launchProjectExport() {
+        if (MangaFoxRuntime.resultPages.isEmpty()) { toast("لا يوجد مشروع لحفظه"); return }
+        toast("جارٍ تجهيز نسخة المشروع...")
+        fontDownloadExecutor.execute {
+            var archive: File? = null
+            try {
+                val ready = File(cacheDir, "mfox_phantom_${System.currentTimeMillis()}.zip")
+                archive = ready
+                ready.outputStream().use { MangaFoxProjectArchive.export(this, it) }
+                runOnUiThread {
+                    if (isFinishing || isDestroyed) { ready.delete(); return@runOnUiThread }
+                    pendingProjectArchive = ready
+                    val title = MangaFoxRuntime.resultTitle.replace(Regex("[^\\p{L}\\p{N}_-]"), "_").take(48).ifBlank { "MangaFox_Project" }
+                    val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+                        addCategory(Intent.CATEGORY_OPENABLE); type = "application/zip"; putExtra(Intent.EXTRA_TITLE, "${title}_PHANTOM.zip")
+                    }
+                    runCatching { startActivityForResult(intent, REQUEST_EXPORT_PHANTOM_PROJECT) }
+                        .onFailure { pendingProjectArchive = null; ready.delete(); toast("تعذر فتح نافذة حفظ الملف") }
+                }
+            } catch (error: Exception) {
+                archive?.delete()
+                runOnUiThread { toast("فشل تجهيز النسخة: ${error.localizedMessage ?: "خطأ"}") }
+            }
+        }
+    }
+
+    private fun launchProjectImport() {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE); type = "application/zip"
+            putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("application/zip", "application/octet-stream"))
+        }
+        runCatching { startActivityForResult(intent, REQUEST_IMPORT_PHANTOM_PROJECT) }
+            .onFailure { toast("تعذر فتح مدير الملفات") }
+    }
+
+    private fun showOcrModelInfo() {
+        AlertDialog.Builder(this).setTitle("حزم OCR متعددة اللغات")
+            .setMessage("الأساس الحالي: ML Kit للغات التي تغطيها محركات المشروع. التوسعة العربية المقترحة تعتمد PP-OCRv5 Arabic recognition مع كاشف النص وSDK Android/ONNX.\n\nهذه النسخة لا تحتوي ملفات أوزان ONNX ولا تدّعي تشغيل OCR عربي متخصص بعد؛ لا بد من تنزيل ملفات النماذج الرسمية والتحقق من ترخيصها وحجمها ثم دمج مرحلة الاستدلال واختبارها على صور المانجا.")
+            .setPositiveButton("مفهوم", null).show()
+    }
+
+    private fun maybeShowOnboarding() {
+        if (isFinishing || intent?.action == ACTION_SHOW_RESULTS || preferences.getBoolean(PREF_ONBOARDING_SEEN, false)) return
+        AlertDialog.Builder(this)
+            .setTitle("مرحباً بك في Manga Fox")
+            .setMessage("قبل أول ترجمة، فعّل خدمة إمكانية الوصول وإذن الظهور فوق التطبيقات، ثم ارجع إلى تبويب ترجمة للتحقق من حالتهما. العدسة ستبقى ظاهرة ما دامت الخدمة والإذن يعملان.")
+            .setPositiveButton("عرض خطوات التفعيل") { _, _ ->
+                preferences.edit().putBoolean(PREF_ONBOARDING_SEEN, true).apply()
+                selectedHomeTab = "translation"
+                showHome()
+            }
+            .setNegativeButton("لاحقاً") { _, _ -> preferences.edit().putBoolean(PREF_ONBOARDING_SEEN, true).apply() }
+            .show()
+    }
+
+    private fun openOverlayPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+            val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION).apply {
+                data = android.net.Uri.parse("package:$packageName")
+            }
+            startActivity(intent)
+        } else toast("إذن الظهور فوق التطبيقات مفعّل")
+    }
+
+    private fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 701)
+        } else toast("إذن الإشعارات مفعّل أو غير مطلوب على هذا الإصدار")
+    }
+
+    private fun refreshHomeIndicators() {
+        val access = isAccessibilityEnabled()
+        val overlay = Build.VERSION.SDK_INT < 23 || Settings.canDrawOverlays(this)
+        val notifications = Build.VERSION.SDK_INT < 33 || checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+        accessPermissionText?.text = "${if (access) "✓" else "○"} خدمة إمكانية الوصول: ${if (access) "مفعّلة" else "غير مفعّلة"}"
+        overlayPermissionText?.text = "${if (overlay) "✓" else "○"} الظهور فوق التطبيقات: ${if (overlay) "مسموح" else "يحتاج إذناً"}"
+        notificationPermissionText?.text = "${if (notifications) "✓" else "○"} الإشعارات: ${if (notifications) "مفعّلة" else "غير مفعّلة"}"
+        statusText?.text = "خدمة الوصول: ${if (access) "مفعّلة" else "غير مفعّلة"}\n" +
+            "النافذة العائمة: ${if (overlay) "مسموح بها" else "تحتاج إذناً"}\n" +
+            "الحالة الحالية: ${MangaFoxRuntime.status}"
+        homeProgress?.progress = MangaFoxRuntime.progressPercent.coerceIn(0, 100)
+        progressText?.text = "${MangaFoxRuntime.progressPercent.coerceIn(0, 100)}% · ${MangaFoxRuntime.progressDetail.ifBlank { MangaFoxRuntime.status }}"
+    }
+
+    /** @N5CR4 — Theme gallery, safe theme-pack import and export. */
+    private fun addThemesTab(root: LinearLayout) {
+        val intro = card()
+        intro.addView(text("مركز الثيمات · MANGA FOX", 19f, gold, true))
+        intro.addView(text("اختر من 9 ثيمات مدمجة، أو استورد ملف ثيم جاهز بصيغة .mftheme أو .zip أو .json. تغيير الثيم لا يلمس الصور أو الطبقات أو إعدادات الترجمة.", 12f, Color.LTGRAY))
+        intro.addView(text("الثيم يغيّر ألوان واجهة التطبيق فقط؛ ألوان النص المترجم داخل الفقاعات تبقى كما حفظتها لكل طبقة.", 11f, gold))
+        root.addView(intro, matchWrap(dp(10)))
+
+        val current = card()
+        current.addView(text("الثيم النشط: ${activeTheme.name}", 16f, gold, true))
+        val preview = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+            setPadding(dp(4), dp(8), dp(4), dp(8))
+        }
+        listOf(activeTheme.background, activeTheme.panel, activeTheme.accent, activeTheme.surfaceAlt).forEach { swatch ->
+            preview.addView(View(this).apply {
+                background = rounded(swatch, 12)
+                layoutParams = LinearLayout.LayoutParams(0, dp(40), 1f).apply {
+                    marginStart = dp(4); marginEnd = dp(4)
+                }
+            })
+        }
+        current.addView(preview, matchWrap())
+        current.addView(actionButton("تصدير الثيم الحالي كملف جاهز", false) {
+            exportActiveThemePack()
+        }, matchWrap(dp(4)))
+        current.addView(actionButton("استيراد ثيم من الملفات · MFTHEME / ZIP / JSON", true) {
+            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                addCategory(Intent.CATEGORY_OPENABLE)
+                type = "*/*"
+                putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("application/zip", "application/octet-stream", "application/json", "text/json"))
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            runCatching { startActivityForResult(intent, REQUEST_IMPORT_THEME) }
+                .onFailure { toast("تعذر فتح مدير الملفات") }
+        }, matchWrap())
+        root.addView(current, matchWrap(dp(12)))
+
+        val allThemes = MangaFoxThemeStore.all(this)
+        allThemes.forEach { item ->
+            val itemCard = card()
+            val selected = item.id == activeTheme.id
+            itemCard.addView(text(item.name + if (selected) "  ✓ مُفعّل" else "", 15f, if (selected) gold else Color.WHITE, true))
+            itemCard.addView(text(if (item.isCustom) "ثيم مستورد من ملف" else "ثيم مدمج في Manga FOX", 10f, Color.LTGRAY))
+            val strip = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER
+                setPadding(0, dp(3), 0, dp(5))
+            }
+            listOf(item.background, item.panel, item.accent, item.surfaceAlt).forEach { color ->
+                strip.addView(View(this).apply {
+                    background = rounded(color, 10)
+                    layoutParams = LinearLayout.LayoutParams(0, dp(28), 1f).apply {
+                        marginStart = dp(3); marginEnd = dp(3)
+                    }
+                })
+            }
+            itemCard.addView(strip, matchWrap())
+            itemCard.addView(actionButton(if (selected) "الثيم مستخدم حالياً" else "تفعيل هذا الثيم", !selected) {
+                preferences.edit().putString(PREF_ACTIVE_THEME_ID, item.id).commit()
+                activeTheme = item
+                applySystemBars()
+                selectedHomeTab = "themes"
+                showHome()
+                toast("تم تفعيل ثيم ${item.name}")
+            }, matchWrap(dp(2)))
+            if (item.isCustom) {
+                itemCard.addView(actionButton("حذف الثيم المستورد", false) {
+                    AlertDialog.Builder(this)
+                        .setTitle("حذف ${item.name}؟")
+                        .setMessage("سيُحذف ملف الثيم من Manga FOX فقط. لن تتأثر الصور أو الفصول أو الترجمات.")
+                        .setNegativeButton("إلغاء", null)
+                        .setPositiveButton("حذف") { _, _ ->
+                            MangaFoxThemeStore.deleteCustom(this, item.id)
+                            if (activeTheme.id == item.id) {
+                                activeTheme = MangaFoxThemeStore.defaultTheme
+                                preferences.edit().putString(PREF_ACTIVE_THEME_ID, activeTheme.id).apply()
+                                applySystemBars()
+                            }
+                            showHome()
+                            toast("تم حذف الثيم المستورد")
+                        }.show()
+                }, matchWrap())
+            }
+            root.addView(itemCard, matchWrap(dp(9)))
+        }
+    }
+
+    private fun exportActiveThemePack() {
+        val prepared = File(cacheDir, "mfox_theme_${System.currentTimeMillis()}.mftheme")
+        runCatching {
+            FileOutputStream(prepared).use { MangaFoxThemeStore.exportPack(activeTheme, it) }
+            pendingThemeArchive = prepared
+            val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+                addCategory(Intent.CATEGORY_OPENABLE)
+                type = "application/zip"
+                putExtra(Intent.EXTRA_TITLE, "${activeTheme.id}.mftheme")
+            }
+            startActivityForResult(intent, REQUEST_EXPORT_THEME)
+        }.onFailure {
+            pendingThemeArchive = null
+            prepared.delete()
+            toast("تعذر تجهيز ملف الثيم: ${it.localizedMessage ?: "خطأ"}")
+        }
+    }
+
+    private fun addSettingsCard(root: LinearLayout) {
+        val settingsCard = card()
+        settingsCard.addView(text("إعدادات القراءة والترجمة", 18f, Color.WHITE, true))
+        settingsCard.addView(text("عاين شكل الحروف مباشرة، وغيّر الحجم ونوع الخط ووزنه الحقيقي عبر نمط الخط. يمكنك تنزيل خطوط عربية أو استيراد ملف TTF / OTF من هاتفك.", 12f, Color.LTGRAY))
+        settingsCard.addView(text("ملاحظة: بعد تعديل الخط افتح النتيجة واضغط «إعادة تطبيق الخط والحجم» لإعادة إخراجها من الطبقات دون تشغيل OCR.", 11f, gold))
+
+        val previewPanel = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            layoutDirection = View.LAYOUT_DIRECTION_RTL
+            setPadding(dp(12), dp(12), dp(12), dp(12))
+            background = rounded(Color.rgb(242, 239, 230), 14)
+        }
+        previewPanel.addView(TextView(this).apply {
+            text = "معاينة الخط"
+            textSize = 11f
+            setTextColor(Color.DKGRAY)
+            gravity = Gravity.CENTER
+        }, matchWrap())
+        fontPreview = TextView(this).apply {
+            text = "هذا مثال لمعاينة الخط العربي\nالقراءة والترجمة في Manga Fox"
+            textSize = preferences.getInt(PREF_FONT_SIZE, 22).toFloat()
+            setTextColor(Color.rgb(25, 25, 28))
+            gravity = Gravity.CENTER
+            textDirection = View.TEXT_DIRECTION_RTL
+            setPadding(dp(4), dp(8), dp(4), dp(8))
+            minHeight = dp(82)
+        }
+        previewPanel.addView(fontPreview, matchWrap())
+        settingsCard.addView(previewPanel, matchWrap(dp(10)))
+
+        addSettingSlider(
+            settingsCard, "حجم الخط العربي", 10, 72,
+            preferences.getInt(PREF_FONT_SIZE, 22), " sp"
+        ) { value ->
+            preferences.edit().putInt(PREF_FONT_SIZE, value).apply()
+            updateFontPreview()
+        }
+        val fontFamilies = listOf(
+            "sans-serif" to "نسخي حديث",
+            "serif" to "تقليدي",
+            "sans-serif-medium" to "متوسط",
+            "sans-serif-condensed" to "مضغوط",
+            "casual" to "يدوي"
+        )
+        val currentFamily = preferences.getString(PREF_FONT_FAMILY, "sans-serif") ?: "sans-serif"
+        val familyName = fontFamilies.firstOrNull { it.first == currentFamily }?.second ?: "خط مخصص"
+        val familyButton = actionButton("اختيار خط النظام: $familyName", false) { }
+        familyButton.setOnClickListener {
+            val labels = fontFamilies.map { it.second }.toTypedArray()
+            AlertDialog.Builder(this).setTitle("اختر نوع الخط")
+                .setItems(labels) { _, which ->
+                    val selected = fontFamilies[which]
+                    preferences.edit().remove(PREF_FONT_FILE).remove(PREF_FONT_LABEL)
+                        .putString(PREF_FONT_FAMILY, selected.first).apply()
+                    familyButton.text = "اختيار خط النظام: ${selected.second}"
+                    updateFontPreview()
+                }.show()
+        }
+        settingsCard.addView(familyButton, matchWrap(dp(4)))
+
+        val boldButton = actionButton(
+            if (preferences.getBoolean(PREF_FONT_BOLD, false)) "نمط الخط: عريض ✓" else "نمط الخط: عادي", false
+        ) { }
+        boldButton.setOnClickListener {
+            val enabled = !preferences.getBoolean(PREF_FONT_BOLD, false)
+            preferences.edit().putBoolean(PREF_FONT_BOLD, enabled).apply()
+            boldButton.text = if (enabled) "نمط الخط: عريض ✓" else "نمط الخط: عادي"
+            updateFontPreview()
+        }
+        settingsCard.addView(boldButton, matchWrap(dp(4)))
+
+        settingsCard.addView(text("ألوان النص وحجمه تُخصّص لكل فقاعة من شاشة المعاينة، حتى لا تتأثر الفقاعات ذات الخلفيات المختلفة.", 11f, Color.LTGRAY), matchWrap(dp(6)))
+
+        settingsCard.addView(text("خطوط عربية قابلة للتنزيل", 14f, gold, true).apply {
+            setPadding(0, dp(12), 0, dp(4))
+        }, matchWrap())
+        settingsCard.addView(actionButton("تنزيل Noto Kufi Arabic · كوفي", false) {
+            downloadArabicFont(
+                "Noto Kufi Arabic", "NotoKufiArabic-Regular.ttf",
+                "https://cdn.jsdelivr.net/gh/notofonts/notofonts.github.io/fonts/NotoKufiArabic/unhinted/ttf/NotoKufiArabic-Regular.ttf"
+            )
+        }, matchWrap(dp(4)))
+        settingsCard.addView(actionButton("تنزيل Noto Naskh Arabic · نسخي", false) {
+            downloadArabicFont(
+                "Noto Naskh Arabic", "NotoNaskhArabic-Regular.ttf",
+                "https://cdn.jsdelivr.net/gh/notofonts/notofonts.github.io/fonts/NotoNaskhArabic/hinted/ttf/NotoNaskhArabic-Regular.ttf"
+            )
+        }, matchWrap(dp(4)))
+        settingsCard.addView(actionButton("تنزيل Noto Sans Arabic · حديث", false) {
+            downloadArabicFont(
+                "Noto Sans Arabic", "NotoSansArabic-Regular.ttf",
+                "https://cdn.jsdelivr.net/gh/notofonts/notofonts.github.io/fonts/NotoSansArabic/unhinted/ttf/NotoSansArabic-Regular.ttf"
+            )
+        }, matchWrap(dp(4)))
+        settingsCard.addView(actionButton("تنزيل Amiri · أميري كلاسيكي", false) {
+            downloadArabicFont("Amiri", "Amiri-Regular.ttf", "https://raw.githubusercontent.com/google/fonts/main/ofl/amiri/Amiri-Regular.ttf")
+        }, matchWrap(dp(4)))
+        settingsCard.addView(actionButton("تنزيل Droid Arabic Kufi Bold · كوفي عريض", false) {
+            downloadDroidArabicKufiBold()
+        }, matchWrap(dp(4)))
+        settingsCard.addView(actionButton("استيراد GE SS Two Bold (نسخة مرخّصة)", false) {
+            AlertDialog.Builder(this)
+                .setTitle("استيراد GE SS Two Bold")
+                .setMessage("هذا خط تجاري من Boutros. استورد ملف TTF/OTF إذا كنت تملك ترخيص استخدامه. لن يضمّن التطبيق نسخة غير مرخّصة من الخط.")
+                .setNegativeButton("إلغاء", null)
+                .setPositiveButton("اختيار ملف الخط") { _, _ -> pickFontFromDevice("GE SS Two Bold · ملف المستخدم") }
+                .show()
+        }, matchWrap(dp(4)))
+        settingsCard.addView(text("الملاءمة التلقائية للنص داخل الفقاعة", 14f, gold, true).apply {
+            setPadding(0, dp(12), 0, dp(3))
+        }, matchWrap())
+        val autoFitCheck = CheckBox(this).apply {
+            text = "اختر أكبر حجم واضح يدخل بالكامل داخل الفقاعة"
+            setTextColor(Color.WHITE)
+            textSize = 13f
+            isChecked = preferences.getBoolean(PREF_AUTO_FONT_FIT, true)
+            buttonTintList = android.content.res.ColorStateList.valueOf(gold)
+            setOnCheckedChangeListener { _, checked ->
+                preferences.edit().putBoolean(PREF_AUTO_FONT_FIT, checked).apply()
+                toast(if (checked) "الملاءمة التلقائية مفعّلة للترجمات الجديدة" else "تم إيقاف الملاءمة التلقائية؛ سيُستخدم الحجم المحدد")
+            }
+        }
+        settingsCard.addView(autoFitCheck, matchWrap(dp(2)))
+        settingsCard.addView(text("الحجم في الأعلى هو الحد الأقصى عند تفعيل الملاءمة. يقيس التطبيق عرض الأسطر وارتفاعها مع تشكيل العربية، ثم يختار أكبر قياس ينجح داخل مساحة النص. إذا كان الكلام طويلاً جداً فسيظل بحاجة إلى تعديل يدوي أو توسيع منطقة النص.", 11f, Color.LTGRAY), matchWrap(dp(8)))
+        settingsCard.addView(actionButton("تنزيل Tajawal · تجوال", false) {
+            downloadArabicFont("Tajawal", "Tajawal-Regular.ttf", "https://raw.githubusercontent.com/google/fonts/main/ofl/tajawal/Tajawal-Regular.ttf")
+        }, matchWrap(dp(4)))
+        settingsCard.addView(actionButton("تنزيل Reem Kufi · ريم كوفي", false) {
+            downloadArabicFont("Reem Kufi", "ReemKufi-Regular.ttf", "https://raw.githubusercontent.com/google/fonts/main/ofl/reemkufi/ReemKufi%5Bwght%5D.ttf")
+        }, matchWrap(dp(4)))
+        settingsCard.addView(actionButton("استيراد خط من الهاتف · TTF / OTF / TTC", true) {
+            pickFontFromDevice()
+        }, matchWrap(dp(4)))
+        val fontStatus = text(
+            preferences.getString(PREF_FONT_LABEL, null)?.let { "الخط المحدد: $it" } ?: "الخط الحالي: $familyName",
+            12f, Color.LTGRAY
+        )
+        fontStatusText = fontStatus
+        settingsCard.addView(fontStatus, matchWrap())
+        settingsCard.addView(actionButton("إدارة الخطوط المثبتة واختيار خط محفوظ", true) {
+            showInstalledFontsDialog()
+        }, matchWrap(dp(6)))
+
+        settingsCard.addView(text("لغة النص الأصلي", 14f, gold, true).apply {
+            setPadding(0, dp(12), 0, dp(3))
+        }, matchWrap())
+        settingsCard.addView(text("الوضع التلقائي يحاول اكتشاف اللغة. عند الترجمة غير الدقيقة اختر لغة المانجا يدوياً.", 11f, Color.LTGRAY), matchWrap())
+        val sourceLanguages = listOf(
+            "auto" to "تلقائي",
+            "ja" to "اليابانية · مانجا",
+            "en" to "الإنجليزية",
+            "ko" to "الكورية · مانهوا",
+            "zh" to "الصينية · مانها"
+        )
+        fun sourceLanguageLabel(code: String): String = sourceLanguages.firstOrNull { it.first == code }?.second ?: "تلقائي"
+        val sourceLanguageButton = actionButton(
+            "اختيار لغة النص: ${sourceLanguageLabel(preferences.getString(PREF_SOURCE_LANGUAGE, "auto") ?: "auto")}",
+            false
+        ) { }
+        sourceLanguageButton.setOnClickListener {
+            AlertDialog.Builder(this).setTitle("اختر لغة النص الأصلي")
+                .setItems(sourceLanguages.map { it.second }.toTypedArray()) { _, which ->
+                    val selected = sourceLanguages[which]
+                    preferences.edit().putString(PREF_SOURCE_LANGUAGE, selected.first).apply()
+                    sourceLanguageButton.text = "اختيار لغة النص: ${selected.second}"
+                    toast("تم ضبط لغة النص: ${selected.second}")
+                }.show()
+        }
+        settingsCard.addView(sourceLanguageButton, matchWrap(dp(4)))
+        val chineseScriptModes = listOf(
+            "auto" to "اكتشاف تلقائي (مبسطة أو تقليدية)",
+            "Hans" to "الصينية المبسطة · 简体中文",
+            "Hant" to "الصينية التقليدية · 繁體中文"
+        )
+        val currentChineseScript = preferences.getString(PREF_ZH_SCRIPT, "auto") ?: "auto"
+        val chineseScriptButton = actionButton(
+            "نوع الكتابة الصينية: ${chineseScriptModes.firstOrNull { it.first == currentChineseScript }?.second ?: chineseScriptModes.first().second}",
+            false
+        ) { }
+        chineseScriptButton.setOnClickListener {
+            AlertDialog.Builder(this).setTitle("حدد نوع الكتابة الصينية")
+                .setItems(chineseScriptModes.map { it.second }.toTypedArray()) { _, which ->
+                    val selected = chineseScriptModes[which]
+                    preferences.edit().putString(PREF_ZH_SCRIPT, selected.first).apply()
+                    chineseScriptButton.text = "نوع الكتابة الصينية: ${selected.second}"
+                    toast("تم ضبط نوع الكتابة الصينية: ${selected.second}")
+                }.show()
+        }
+        settingsCard.addView(chineseScriptButton, matchWrap(dp(4)))
+        addChineseAiSettings(settingsCard)
+        val sfxOption = CheckBox(this).apply {
+            text = "ترجمة المؤثرات اليابانية الشائعة (SFX) عند اكتشافها"
+            textSize = 13f
+            setTextColor(Color.LTGRAY)
+            buttonTintList = android.content.res.ColorStateList.valueOf(gold)
+            isChecked = preferences.getBoolean(PREF_TRANSLATE_SFX, false)
+            setOnCheckedChangeListener { _, checked ->
+                preferences.edit().putBoolean(PREF_TRANSLATE_SFX, checked).apply()
+            }
+        }
+        settingsCard.addView(sfxOption, matchWrap(dp(4)))
+        settingsCard.addView(text("يمكنك اختيار عينة من تقرير الفشل وحفظ ترجمتك المصححة في قاموس محلي؛ سيُعاد استخدامها تلقائياً عند معالجة نفس النص.", 11f, Color.LTGRAY), matchWrap(dp(4)))
+
+        addSettingSlider(
+            settingsCard, "حجم العدسة العائمة", 42, 96,
+            preferences.getInt(PREF_LENS_SIZE, 58), " dp"
+        ) { value ->
+            preferences.edit().putInt(PREF_LENS_SIZE, value).apply()
+            MangaFoxAccessibilityService.instance?.applyLensSettings()
+        }
+        addSettingSlider(
+            settingsCard, "شفافية العدسة", 35, 100,
+            preferences.getInt(PREF_LENS_ALPHA, 100), "%"
+        ) { value ->
+            preferences.edit().putInt(PREF_LENS_ALPHA, value).apply()
+            MangaFoxAccessibilityService.instance?.applyLensSettings()
+        }
+        settingsCard.addView(text("العدسة العائمة", 14f, gold, true).apply {
+            setPadding(0, dp(12), 0, dp(3))
+        }, matchWrap())
+        settingsCard.addView(actionButton("فتح استوديو تصميم العدسة", true) {
+            openLensStudio()
+        }, matchWrap(dp(4)))
+        settingsCard.addView(actionButton("اختيار صورة من الاستوديو كخلفية للعدسة", false) {
+            pickLensBackgroundImage()
+        }, matchWrap(dp(4)))
+        settingsCard.addView(actionButton("إزالة صورة الخلفية والعودة إلى اللون", false) {
+            preferences.edit().remove(PREF_LENS_IMAGE_PATH).apply()
+            MangaFoxAccessibilityService.instance?.applyLensSettings()
+            toast("تمت إزالة صورة خلفية العدسة")
+        }, matchWrap(dp(4)))
+        settingsCard.addView(text("العدسة العائمة تعمل دائماً وتبقى ظاهرة فوق التطبيقات، بما فيها Manga FOX، ما دامت خدمة إمكانية الوصول وإذن الظهور فوق التطبيقات مفعّلين.", 11f, Color.LTGRAY), matchWrap(dp(6)))
+        updateFontPreview()
+        root.addView(settingsCard, matchWrap(dp(16)))
+    }
+
+    private fun addChineseAiSettings(root: LinearLayout) {
+        root.addView(text("محرك الترجمة السياقية المحلي · QWEN", 16f, gold, true).apply {
+            setPadding(0, dp(14), 0, dp(3))
+        }, matchWrap())
+        root.addView(text("في الوضع المحلي تُترجم الفقاعات على الجهاز دون API أو اشتراك. يحتاج النموذج إلى تنزيل أول مرة (قرابة 1GB) ومساحة حرة كافية؛ لا تُرسل الصور أو النصوص إلى خادم عند استخدام Qwen المحلي.", 11f, Color.LTGRAY), matchWrap(dp(6)))
+
+        val pageContext = CheckBox(this).apply {
+            text = "ترجمة الصفحة بسياق كامل (كل الفقاعات مرتبة معاً)"
+            textSize = 12f; setTextColor(Color.WHITE)
+            buttonTintList = android.content.res.ColorStateList.valueOf(gold)
+            isChecked = preferences.getBoolean(PREF_CONTEXT_PAGE_TRANSLATION, true)
+            setOnCheckedChangeListener { _, checked ->
+                preferences.edit().putBoolean(PREF_CONTEXT_PAGE_TRANSLATION, checked).apply()
+                toast(if (checked) "سيُستخدم سياق الصفحة عند توفر API أو Qwen" else "تم إيقاف الترجمة السياقية")
+            }
+        }
+        root.addView(pageContext, matchWrap(dp(5)))
+
+        val localEnabled = CheckBox(this).apply {
+            text = "استخدام Qwen المحلي لترجمة السياق"
+            textSize = 12f; setTextColor(Color.WHITE)
+            buttonTintList = android.content.res.ColorStateList.valueOf(gold)
+            isChecked = preferences.getBoolean(PREF_CONTEXT_LOCAL_ENGINE, true)
+            setOnCheckedChangeListener { _, checked ->
+                preferences.edit().putBoolean(PREF_CONTEXT_LOCAL_ENGINE, checked).apply()
+                toast(if (checked) "تم اختيار المحرك المحلي" else "سيعود التطبيق إلى مسار الترجمة الاحتياطي")
+            }
+        }
+        root.addView(localEnabled, matchWrap(dp(4)))
+
+        root.addView(text("محرك API السحابي · اختياري", 15f, gold, true).apply {
+            setPadding(0, dp(12), 0, dp(3))
+        }, matchWrap())
+        root.addView(text(
+            "اختر OpenAI أو DeepSeek أو وضعاً مخصصاً لأي مزود يدعم OpenAI Chat Completions. في الوضع المخصص أدخل عنوان Base URL ومعرّف النموذج ومفتاحه. تُرسل نصوص الفقاعات والقاموس وبيانات الشخصيات فقط؛ لا تُرسل صور الصفحات. بعد نجاح اختبار المفتاح يُفعّل API تلقائياً للترجمة السياقية.",
+            11f, Color.LTGRAY
+        ), matchWrap(dp(5)))
+
+        fun apiModelsFor(providerId: String): List<Pair<String, String>> = when (providerId) {
+            MangaFoxApiProvider.DEEPSEEK -> listOf(
+                "deepseek-flash" to "DeepSeek Flash · سريع ومتوازن",
+                "deepseek-v4-pro" to "DeepSeek V4 Pro · جودة أعلى وسياق أوسع"
+            )
+            MangaFoxApiProvider.CUSTOM -> {
+                val model = preferences.getString(PREF_CUSTOM_API_MODEL, "model-name")?.trim()
+                    ?.takeIf { it.isNotBlank() } ?: "model-name"
+                listOf(model to "نموذج مخصص · $model")
+            }
+            else -> listOf(
+                "gpt-6-astra" to "GPT-6 Astra · أعلى قدرة ترجمة سياقية",
+                "gpt-6.1-sol" to "GPT-6.1 Sol · متوازن",
+                "gpt-6-luna" to "GPT-6 Luna · أخف للطلبات المتكررة"
+            )
+        }
+        var selectedProviderId = MangaFoxApiProvider.selectedId(this)
+        var apiModels = apiModelsFor(selectedProviderId)
+        var currentApiModel = preferences.getString(
+            MangaFoxApiProvider.modelPreferenceKey(selectedProviderId),
+            MangaFoxApiProvider.defaultModel(selectedProviderId)
+        ) ?: MangaFoxApiProvider.defaultModel(selectedProviderId)
+        if (apiModels.none { it.first == currentApiModel }) {
+            currentApiModel = MangaFoxApiProvider.defaultModel(selectedProviderId)
+            preferences.edit().putString(
+                MangaFoxApiProvider.modelPreferenceKey(selectedProviderId), currentApiModel
+            ).apply()
+        }
+        val providerButton = actionButton(
+            "مزود API: ${MangaFoxApiProvider.displayName(selectedProviderId)}",
+            false
+        ) { }
+        root.addView(providerButton, matchWrap(dp(4)))
+        val apiModelButton = actionButton(
+            "نموذج API: ${apiModels.firstOrNull { it.first == currentApiModel }?.second ?: apiModels.first().second}",
+            false
+        ) { }
+        root.addView(apiModelButton, matchWrap(dp(4)))
+        val customBaseUrlButton = actionButton(
+            "عنوان API المخصص: ${preferences.getString(PREF_CUSTOM_API_BASE_URL, "https://api.example.com/v1")}",
+            false
+        ) { }
+        customBaseUrlButton.visibility = if (selectedProviderId == MangaFoxApiProvider.CUSTOM) View.VISIBLE else View.GONE
+        root.addView(customBaseUrlButton, matchWrap(dp(4)))
+
+        val cloudEnabled = CheckBox(this).apply {
+            text = "استخدام API السحابي أولاً لترجمة سياق الصفحة"
+            textSize = 12f; setTextColor(Color.WHITE)
+            buttonTintList = android.content.res.ColorStateList.valueOf(gold)
+            isChecked = preferences.getBoolean(PREF_AI_ZH_ENABLED, false)
+            setOnCheckedChangeListener { buttonView, checked ->
+                if (checked && MangaFoxSecureSecretStore.get(
+                        this@MainActivity, MangaFoxApiProvider.selectedId(this@MainActivity)
+                    ).isNullOrBlank()
+                ) {
+                    isChecked = false
+                    preferences.edit().putBoolean(PREF_AI_ZH_ENABLED, false)
+                        .putBoolean(PREF_CONTEXT_ONLINE_ENGINE, false).apply()
+                    toast("احفظ مفتاح API للمزود المحدد أولاً")
+                    showAiApiKeyDialog {
+                        pageContext.isChecked = true
+                        buttonView.isChecked = true
+                    }
+                    return@setOnCheckedChangeListener
+                }
+                if (checked) pageContext.isChecked = true
+                preferences.edit().putBoolean(PREF_AI_ZH_ENABLED, checked)
+                    .putBoolean(PREF_CONTEXT_ONLINE_ENGINE, checked).apply()
+                toast(if (checked) "تم تفعيل API؛ ستكون له الأولوية، ويُستخدم Qwen فقط لإكمال الفقاعات الناقصة" else "تم إيقاف API السحابي")
+            }
+        }
+        root.addView(cloudEnabled, matchWrap(dp(4)))
+
+        apiModelButton.setOnClickListener {
+            if (selectedProviderId == MangaFoxApiProvider.CUSTOM) {
+                val modelInput = EditText(this).apply {
+                    setText(currentApiModel.takeIf { it != "model-name" }.orEmpty())
+                    hint = "مثال: qwen-plus أو llama-3.3-70b"
+                    textSize = 14f
+                    setSingleLine(true)
+                    setPadding(dp(12), dp(10), dp(12), dp(10))
+                }
+                AlertDialog.Builder(this).setTitle("اسم النموذج لدى المزود")
+                    .setMessage("اكتب معرّف النموذج كما يقدمه مزود الخدمة، وليس اسماً تسويقياً.")
+                    .setView(modelInput)
+                    .setNegativeButton("إلغاء", null)
+                    .setPositiveButton("حفظ") { _, _ ->
+                        val model = modelInput.text.toString().trim()
+                        if (model.isBlank()) {
+                            toast("اكتب معرّف النموذج")
+                        } else {
+                            currentApiModel = model
+                            preferences.edit().putString(PREF_CUSTOM_API_MODEL, model).apply()
+                            apiModels = apiModelsFor(selectedProviderId)
+                            apiModelButton.text = "نموذج API: مخصص · $model"
+                            toast("تم حفظ معرّف النموذج المخصص")
+                        }
+                    }.show()
+            } else {
+                AlertDialog.Builder(this)
+                    .setTitle("اختيار نموذج ${MangaFoxApiProvider.displayName(selectedProviderId)}")
+                    .setItems(apiModels.map { it.second }.toTypedArray()) { _, which ->
+                        val selected = apiModels[which]
+                        preferences.edit().putString(
+                            MangaFoxApiProvider.modelPreferenceKey(selectedProviderId), selected.first
+                        ).apply()
+                        currentApiModel = selected.first
+                        apiModelButton.text = "نموذج API: ${selected.second}"
+                        toast("تم اختيار ${selected.second}")
+                    }.setNegativeButton("إغلاق", null).show()
+            }
+        }
+        customBaseUrlButton.setOnClickListener {
+            val baseInput = EditText(this).apply {
+                setText(preferences.getString(PREF_CUSTOM_API_BASE_URL, "https://api.example.com/v1"))
+                hint = "https://provider.example/v1"
+                textSize = 14f
+                inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_VARIATION_URI
+                setSingleLine(true)
+                setPadding(dp(12), dp(10), dp(12), dp(10))
+            }
+            AlertDialog.Builder(this).setTitle("عنوان واجهة API المخصصة")
+                .setMessage("أدخل Base URL المتوافق مع OpenAI Chat Completions، من دون /chat/completions في النهاية.")
+                .setView(baseInput)
+                .setNegativeButton("إلغاء", null)
+                .setPositiveButton("حفظ") { _, _ ->
+                    val candidate = baseInput.text.toString().trim().trimEnd('/')
+                    val valid = runCatching { URL(candidate).let { it.protocol.equals("https", true) && it.host.isNotBlank() } }.getOrDefault(false)
+                    if (!valid) {
+                        toast("العنوان غير صالح؛ استخدم رابط HTTPS كاملاً")
+                    } else {
+                        preferences.edit().putString(PREF_CUSTOM_API_BASE_URL, candidate).apply()
+                        customBaseUrlButton.text = "عنوان API المخصص: $candidate"
+                        toast("تم حفظ عنوان API المخصص")
+                    }
+                }.show()
+        }
+        providerButton.setOnClickListener {
+            val choices = listOf(
+                MangaFoxApiProvider.OPENAI to "OpenAI",
+                MangaFoxApiProvider.DEEPSEEK to "DeepSeek",
+                MangaFoxApiProvider.CUSTOM to "مخصص · أي مزود متوافق"
+            )
+            AlertDialog.Builder(this)
+                .setTitle("اختيار مزود الترجمة السحابي")
+                .setItems(choices.map { it.second }.toTypedArray()) { _, which ->
+                    selectedProviderId = choices[which].first
+                    apiModels = apiModelsFor(selectedProviderId)
+                    currentApiModel = preferences.getString(
+                        MangaFoxApiProvider.modelPreferenceKey(selectedProviderId),
+                        MangaFoxApiProvider.defaultModel(selectedProviderId)
+                    ) ?: MangaFoxApiProvider.defaultModel(selectedProviderId)
+                    if (apiModels.none { it.first == currentApiModel }) {
+                        currentApiModel = MangaFoxApiProvider.defaultModel(selectedProviderId)
+                    }
+                    preferences.edit().putString(PREF_CONTEXT_PROVIDER, selectedProviderId)
+                        .putString(MangaFoxApiProvider.modelPreferenceKey(selectedProviderId), currentApiModel)
+                        .apply()
+                    providerButton.text = "مزود API: ${MangaFoxApiProvider.displayName(selectedProviderId)}"
+                    apiModelButton.text = if (selectedProviderId == MangaFoxApiProvider.CUSTOM)
+                        "نموذج API: مخصص · $currentApiModel"
+                    else "نموذج API: ${apiModels.first { it.first == currentApiModel }.second}"
+                    customBaseUrlButton.visibility = if (selectedProviderId == MangaFoxApiProvider.CUSTOM) View.VISIBLE else View.GONE
+                    customBaseUrlButton.text = "عنوان API المخصص: ${preferences.getString(PREF_CUSTOM_API_BASE_URL, "https://api.example.com/v1")}"
+                    val providerHasKey = !MangaFoxSecureSecretStore.get(this, selectedProviderId).isNullOrBlank()
+                    cloudEnabled.isChecked = preferences.getBoolean(PREF_AI_ZH_ENABLED, false) && providerHasKey
+                    toast("تم اختيار ${MangaFoxApiProvider.displayName(selectedProviderId)}. مفاتيح المزودين محفوظة بشكل مستقل")
+                }.setNegativeButton("إغلاق", null).show()
+        }
+
+        root.addView(actionButton("إعداد مفتاح API أو استبداله", false) {
+            showAiApiKeyDialog {
+                pageContext.isChecked = true
+                cloudEnabled.isChecked = true
+            }
+        }, matchWrap(dp(4)))
+        root.addView(actionButton("اختبار اتصال API المحفوظ", false) {
+            val activeProvider = MangaFoxApiProvider.selectedId(this)
+            if (MangaFoxSecureSecretStore.get(this, activeProvider).isNullOrBlank()) {
+                toast("لا يوجد مفتاح ${MangaFoxApiProvider.displayName(activeProvider)} محفوظ")
+            } else {
+                toast("جارٍ اختبار اتصال ${MangaFoxApiProvider.displayName(activeProvider)}…")
+                Thread {
+                    val result = runCatching { MangaFoxAiTranslator.testConnection(this) }
+                    runOnUiThread {
+                        if (result.isSuccess) {
+                            preferences.edit()
+                                .putBoolean(PREF_CONTEXT_PAGE_TRANSLATION, true)
+                                .putBoolean(PREF_AI_ZH_ENABLED, true)
+                                .putBoolean(PREF_CONTEXT_ONLINE_ENGINE, true)
+                                .apply()
+                            pageContext.isChecked = true
+                            cloudEnabled.isChecked = true
+                            toast("نجح الاتصال بخدمة ${MangaFoxApiProvider.displayName(activeProvider)}؛ تم تفعيلها للترجمة")
+                        } else {
+                            preferences.edit().putBoolean(PREF_AI_ZH_ENABLED, false)
+                                .putBoolean(PREF_CONTEXT_ONLINE_ENGINE, false).apply()
+                            cloudEnabled.isChecked = false
+                            toast("فشل اختبار API: ${result.exceptionOrNull()?.message?.take(150) ?: "خطأ غير معروف"}")
+                        }
+                    }
+                }.start()
+            }
+        }, matchWrap(dp(4)))
+        root.addView(actionButton("إزالة مفتاح API المحفوظ", false) {
+            val activeProvider = MangaFoxApiProvider.selectedId(this)
+            AlertDialog.Builder(this)
+                .setTitle("إزالة مفتاح API")
+                .setMessage("سيُحذف مفتاح ${MangaFoxApiProvider.displayName(activeProvider)} المشفر من هذا الجهاز فقط، وسيتم إيقاف API السحابي.")
+                .setNegativeButton("إلغاء", null)
+                .setPositiveButton("إزالة") { _, _ ->
+                    MangaFoxSecureSecretStore.clear(this, activeProvider)
+                    preferences.edit().putBoolean(PREF_AI_ZH_ENABLED, false)
+                        .putBoolean(PREF_CONTEXT_ONLINE_ENGINE, false).apply()
+                    cloudEnabled.isChecked = false
+                    toast("تمت إزالة مفتاح API وإيقاف المحرك السحابي")
+                }.show()
+        }, matchWrap(dp(4)))
+
+        val qwenModes = listOf(
+            "quick" to "سريع · تقسيم أصغر وزمن أقل",
+            "balanced" to "متوازن · الإعداد الموصى به",
+            "precise" to "دقيق · سياق وتعليمات أغنى"
+        )
+        val currentMode = preferences.getString(PREF_QWEN_TRANSLATION_MODE, "balanced") ?: "balanced"
+        val modeButton = actionButton(
+            "أسلوب Qwen: ${qwenModes.firstOrNull { it.first == currentMode }?.second ?: qwenModes[1].second}",
+            false
+        ) { }
+        modeButton.setOnClickListener {
+            AlertDialog.Builder(this)
+                .setTitle("موازنة سرعة الترجمة وجودتها")
+                .setItems(qwenModes.map { it.second }.toTypedArray()) { _, which ->
+                    val chosen = qwenModes[which]
+                    preferences.edit().putString(PREF_QWEN_TRANSLATION_MODE, chosen.first).apply()
+                    modeButton.text = "أسلوب Qwen: ${chosen.second}"
+                    toast("تم ضبط أسلوب Qwen. سيُطبّق على الترجمة التالية")
+                }.show()
+        }
+        root.addView(modeButton, matchWrap(dp(4)))
+        root.addView(text("السريع يقلل حجم دفعة الحوار، والمتوازن يوازن الأداء والسياق، والدقيق يخصص مساحة أكبر للسياق والقاموس. لا يغيّر هذا الاختيار ملفات النموذج أو الترجمات المحفوظة.", 10f, Color.LTGRAY), matchWrap(dp(5)))
+
+
+
+        val modelStatus = text(
+            if (MangaFoxLocalLlm.isModelDownloaded(this)) "حالة النموذج: تم التنزيل · ${if (MangaFoxLocalLlm.isLoaded()) "محمّل في الذاكرة" else "جاهز للتحميل في الذاكرة"}"
+            else "حالة النموذج: لم يتم تنزيله بعد · ${MangaFoxLocalLlm.modelLabel(this)}",
+            11f, Color.rgb(232, 218, 184), true
+        )
+        root.addView(modelStatus, matchWrap(dp(5)))
+        val qwenDiagnostics = text(MangaFoxLocalLlm.diagnosticsSummary(this), 10f, Color.LTGRAY)
+        root.addView(qwenDiagnostics, matchWrap(dp(3)))
+
+        val modelSelectionButton = actionButton(
+            "النموذج: ${MangaFoxLocalLlm.modelChoices().firstOrNull { it.first == MangaFoxLocalLlm.modelSelection(this) }?.second ?: "تلقائي"}",
+            false
+        ) { }
+        modelSelectionButton.setOnClickListener {
+            val choices = MangaFoxLocalLlm.modelChoices()
+            val selectedId = MangaFoxLocalLlm.modelSelection(this)
+            AlertDialog.Builder(this)
+                .setTitle("اختيار نموذج الترجمة المحلي")
+                .setItems(choices.map { it.second }.toTypedArray()) { _, which ->
+                    val chosen = choices[which]
+                    MangaFoxLocalLlm.setModelSelection(this, chosen.first)
+                    modelSelectionButton.text = "النموذج: ${chosen.second}"
+                    modelStatus.text = if (MangaFoxLocalLlm.isModelDownloaded(this))
+                        "حالة النموذج: ${MangaFoxLocalLlm.modelLabel(this)} · تم التنزيل"
+                    else "حالة النموذج: ${MangaFoxLocalLlm.modelLabel(this)} · يحتاج إلى تنزيل"
+                    qwenDiagnostics.text = MangaFoxLocalLlm.diagnosticsSummary(this)
+                    toast("تم اختيار ${chosen.second}. قد يحتاج النموذج الجديد إلى تنزيل منفصل")
+                }
+                .setNegativeButton("إغلاق", null).show()
+        }
+        root.addView(modelSelectionButton, matchWrap(dp(5)))
+        root.addView(actionButton("تحديث قياس أداء Qwen والذاكرة", false) {
+            qwenDiagnostics.text = MangaFoxLocalLlm.diagnosticsSummary(this)
+            AlertDialog.Builder(this).setTitle("تشخيص محرك Qwen")
+                .setMessage(qwenDiagnostics.text)
+                .setPositiveButton("إغلاق", null).show()
+        }, matchWrap(dp(4)))
+        root.addView(actionButton("تنزيل نموذج Qwen المجاني (استئناف عند الانقطاع)", true) {
+            if (MangaFoxLocalLlm.isModelDownloaded(this)) {
+                toast("النموذج موجود بالفعل على الجهاز")
+                return@actionButton
+            }
+            val progress = android.app.ProgressDialog(this).apply {
+                setTitle("تنزيل نموذج Qwen")
+                setMessage("جارٍ الاتصال بمصدر النموذج…")
+                setProgressStyle(android.app.ProgressDialog.STYLE_HORIZONTAL)
+                isIndeterminate = true; setCancelable(false); show()
+            }
+            Thread {
+                val result = runCatching {
+                    MangaFoxLocalLlm.downloadModel(this, MangaFoxLocalLlm.selectedModelId(this)) { done, total ->
+                        runOnUiThread {
+                            if (total > 0) {
+                                progress.isIndeterminate = false
+                                progress.max = 1000
+                                progress.progress = ((done * 1000L) / total).toInt().coerceIn(0, 1000)
+                                progress.setMessage("${done / 1_000_000} / ${total / 1_000_000} MB")
+                            } else progress.setMessage("تم تنزيل ${done / 1_000_000} MB")
+                        }
+                    }
+                }
+                runOnUiThread {
+                    progress.dismiss()
+                    if (result.isSuccess) {
+                        modelStatus.text = "حالة النموذج: تم التنزيل · جاهز للتحميل"
+                        toast("اكتمل تنزيل Qwen. اضغط تحميل النموذج في الذاكرة")
+                    } else toast("فشل التنزيل: ${result.exceptionOrNull()?.message?.take(140)}")
+                }
+            }.start()
+        }, matchWrap(dp(4)))
+        root.addView(actionButton("تحميل Qwen في الذاكرة", false) {
+            if (!MangaFoxLocalLlm.isModelDownloaded(this)) {
+                toast("نزّل النموذج أولاً")
+                return@actionButton
+            }
+            toast("جارٍ تحميل النموذج محلياً…")
+            fontDownloadExecutor.execute {
+                val attempt = runCatching { MangaFoxLocalLlm.load(this, MangaFoxLocalLlm.selectedModelId(this)) }
+                val loaded = attempt.getOrDefault(false)
+                val failure = if (loaded) "" else (MangaFoxLocalLlm.lastLoadError().ifBlank {
+                    attempt.exceptionOrNull()?.message ?: "سبب غير محدد"
+                }).take(220)
+                runOnUiThread {
+                    modelStatus.text = if (loaded) "حالة النموذج: يعمل محلياً وجاهز" else "فشل تحميل Qwen: $failure"
+                    toast(if (loaded) "Qwen جاهز. الترجمة السياقية تعمل دون إنترنت" else "فشل تحميل Qwen: $failure")
+                }
+            }
+        }, matchWrap(dp(4)))
+        root.addView(text("النموذج 1.5B أو 3B بصيغة Q4_K_M · الاختيار التلقائي يعتمد على RAM المتاحة فعلياً. نموذج 3B يقارب 1.93GB للتنزيل ويحتاج مساحة وذاكرة تشغيل إضافيتين. عند تعذر تحميله يعود التطبيق إلى ML Kit.", 10f, Color.rgb(190, 185, 175)), matchWrap(dp(6)))
+    }
+
+    private fun showAiApiKeyDialog(onConnectionSuccess: (() -> Unit)? = null) {
+        val providerId = MangaFoxApiProvider.selectedId(this)
+        val providerName = MangaFoxApiProvider.displayName(providerId)
+        val keyInput = EditText(this).apply {
+            hint = "ألصق مفتاح API هنا"
+            textSize = 14f
+            inputType = android.text.InputType.TYPE_CLASS_TEXT or
+                android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD
+            setSingleLine(true)
+            setPadding(dp(12), dp(10), dp(12), dp(10))
+        }
+        AlertDialog.Builder(this)
+            .setTitle("حفظ مفتاح $providerName بأمان")
+            .setMessage("سيُخزّن مفتاح $providerName منفصلاً عن مفاتيح المزودين الآخرين، ومشفراً باستخدام Android Keystore. لا تضع المفتاح في المحادثات أو في ملفات المشروع.")
+            .setView(keyInput)
+            .setNegativeButton("إلغاء", null)
+            .setPositiveButton("حفظ وتجربة الاتصال") { _, _ ->
+                val candidate = keyInput.text.toString().trim()
+                if (candidate.isBlank()) {
+                    toast("لم يُكتب مفتاح API")
+                    return@setPositiveButton
+                }
+                val saveResult = runCatching { MangaFoxSecureSecretStore.put(this, candidate, providerId) }
+                if (saveResult.isFailure) {
+                    toast("تعذر حفظ المفتاح: ${saveResult.exceptionOrNull()?.message?.take(120) ?: "خطأ تشفير"}")
+                    return@setPositiveButton
+                }
+                // Do not leave a newly replaced/untested key silently active.
+                getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit()
+                    .putBoolean(PREF_AI_ZH_ENABLED, false)
+                    .putBoolean(PREF_CONTEXT_ONLINE_ENGINE, false)
+                    .apply()
+                toast("حُفظ مفتاح $providerName مشفراً؛ جارٍ اختبار الاتصال…")
+                Thread {
+                    val result = runCatching { MangaFoxAiTranslator.testConnection(this) }
+                    runOnUiThread {
+                        if (result.isSuccess) {
+                            getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit()
+                                .putBoolean(PREF_CONTEXT_PAGE_TRANSLATION, true)
+                                .putBoolean(PREF_AI_ZH_ENABLED, true)
+                                .putBoolean(PREF_CONTEXT_ONLINE_ENGINE, true)
+                                .apply()
+                            onConnectionSuccess?.invoke()
+                            toast("تم حفظ مفتاح $providerName والاتصال ناجح؛ API مفعّل للترجمة السياقية")
+                        } else {
+                            toast("حُفظ المفتاح لكن فشل الاتصال؛ بقي API متوقفاً: ${result.exceptionOrNull()?.message?.take(140) ?: "خطأ غير معروف"}")
+                        }
+                    }
+                }.start()
+            }.show()
+    }
+
+    private fun showLearnedTranslationDialog(sourceText: String) {
+        val input = EditText(this).apply {
+            setText("")
+            hint = "اكتب الترجمة العربية الصحيحة"
+            textSize = 16f
+            minLines = 2
+            setPadding(dp(10), dp(8), dp(10), dp(8))
+        }
+        AlertDialog.Builder(this)
+            .setTitle("تصحيح ترجمة محفوظ")
+            .setMessage("النص الأصلي:\n$sourceText")
+            .setView(input)
+            .setNegativeButton("إلغاء", null)
+            .setPositiveButton("حفظ في القاموس المحلي") { _, _ ->
+                val corrected = input.text.toString().trim()
+                if (corrected.isBlank()) {
+                    toast("اكتب الترجمة أولاً")
+                } else {
+                    val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+                    val dictionary = runCatching { org.json.JSONObject(prefs.getString(PREF_LEARNED_TRANSLATIONS, "{}") ?: "{}") }
+                        .getOrElse { org.json.JSONObject() }
+                    dictionary.put(sourceText.trim(), corrected)
+                    prefs.edit().putString(PREF_LEARNED_TRANSLATIONS, dictionary.toString()).apply()
+                    toast("حُفظ التصحيح وسيُستخدم تلقائياً مع النص نفسه")
+                }
+            }.show()
+    }
+
+    private fun pickLensBackgroundImage() {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "image/*"
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        runCatching { startActivityForResult(intent, REQUEST_PICK_LENS_IMAGE) }
+            .onFailure { toast("تعذر فتح الاستوديو لاختيار الصورة") }
+    }
+
+    private fun saveLensBackgroundImage(uri: android.net.Uri) {
+        var temp: File? = null
+        var target: File? = null
+        runCatching {
+            // Persist access when the document provider supports it; the copied file remains
+            // usable even after Android revokes the temporary URI grant.
+            runCatching {
+                contentResolver.takePersistableUriPermission(
+                    uri, Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+            }
+            val folder = File(filesDir, "lens_backgrounds").apply { mkdirs() }
+            temp = File(folder, "lens_${System.currentTimeMillis()}.tmp")
+            target = File(folder, "lens_${System.currentTimeMillis()}.img")
+            val input = contentResolver.openInputStream(uri) ?: error("تعذر فتح الصورة من مزود الملفات")
+            input.use { source -> FileOutputStream(temp!!).use { destination ->
+                val buffer = ByteArray(16 * 1024)
+                var total = 0L
+                while (true) {
+                    val count = source.read(buffer)
+                    if (count < 0) break
+                    total += count
+                    require(total <= 25L * 1024L * 1024L) { "حجم الصورة يتجاوز 25 ميغابايت" }
+                    destination.write(buffer, 0, count)
+                }
+            } }
+            require(temp!!.length() > 0L) { "ملف الصورة فارغ" }
+            val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            BitmapFactory.decodeFile(temp!!.absolutePath, bounds)
+            require(bounds.outWidth in 1..12000 && bounds.outHeight in 1..12000 && bounds.outMimeType != null) {
+                "صيغة الصورة غير مدعومة أو الملف تالف"
+            }
+            // Decode a sampled bitmap now to catch unsupported/corrupt image content before saving.
+            var sample = 1
+            while (bounds.outWidth / sample > 768 || bounds.outHeight / sample > 768) sample *= 2
+            val testBitmap = BitmapFactory.decodeFile(temp!!.absolutePath, BitmapFactory.Options().apply {
+                inSampleSize = sample.coerceAtLeast(1)
+            }) ?: error("تعذر فك ترميز الصورة")
+            testBitmap.recycle()
+            if (!temp!!.renameTo(target!!)) {
+                temp!!.copyTo(target!!, overwrite = true)
+                temp!!.delete()
+            }
+            preferences.edit().putString(PREF_LENS_IMAGE_PATH, target!!.absolutePath).apply()
+            MangaFoxAccessibilityService.instance?.applyLensSettings()
+            toast("تم حفظ صورة العدسة وتطبيقها كخلفية")
+        }.onFailure {
+            temp?.delete()
+            target?.delete()
+            toast("تعذر استخدام الصورة: ${it.localizedMessage ?: "ملف غير صالح"}")
+        }
+    }
+
+    private fun openLensStudio() {
+        // @N5CR4 — Direct palette, live preview and independent lens sizing.
+        val colors = arrayOf(
+            "ذهبي", "بنفسجي", "سماوي", "وردي", "أبيض", "أخضر",
+            "أحمر", "برتقالي", "أزرق", "نعناعي", "لافندر", "أسود"
+        )
+        val values = intArrayOf(
+            Color.rgb(255, 190, 65), Color.rgb(177, 107, 255), Color.rgb(90, 190, 255),
+            Color.rgb(255, 107, 176), Color.WHITE, Color.rgb(68, 220, 145),
+            Color.rgb(255, 75, 95), Color.rgb(255, 145, 55), Color.rgb(65, 115, 255),
+            Color.rgb(105, 245, 205), Color.rgb(195, 155, 255), Color.rgb(24, 24, 30)
+        )
+        var selected = values.indices.minByOrNull { index ->
+            kotlin.math.abs(values[index] - preferences.getInt(PREF_LENS_COLOR, values[0]))
+        } ?: 0
+        var lensSize = preferences.getInt(PREF_LENS_SIZE, 58).coerceIn(42, 96)
+        var lensAlpha = preferences.getInt(PREF_LENS_ALPHA, 100).coerceIn(35, 100)
+        val input = EditText(this).apply {
+            setSingleLine(true)
+            hint = "رمز العدسة مثل 狐 أو ◉ أو ✦"
+            setText(preferences.getString(PREF_LENS_GLYPH, "狐"))
+            textSize = 18f
+            gravity = Gravity.CENTER
+            setTextColor(activeTheme.text)
+            setHintTextColor(activeTheme.muted)
+            setPadding(dp(14), dp(12), dp(14), dp(12))
+            background = rounded(activeTheme.surfaceAlt, 14)
+        }
+        val preview = TextView(this).apply {
+            text = input.text.toString().ifBlank { "狐" }
+            textSize = (lensSize * 0.40f).coerceIn(18f, 38f)
+            alpha = lensAlpha / 100f
+            gravity = Gravity.CENTER
+            setTextColor(Color.BLACK)
+            background = GradientDrawable().apply {
+                setColor(values[selected])
+                cornerRadius = dp(100).toFloat()
+                setStroke(dp(3), withAlpha(Color.WHITE, 185))
+            }
+            elevation = dp(8).toFloat()
+        }
+        val previewFrame = FrameLayout(this).apply {
+            setPadding(dp(14), dp(14), dp(14), dp(14))
+            background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                intArrayOf(activeTheme.surfaceAlt, panel)).apply {
+                cornerRadius = dp(20).toFloat()
+                setStroke(dp(1), withAlpha(gold, 45))
+            }
+            addView(preview, FrameLayout.LayoutParams(dp(92), dp(92), Gravity.CENTER))
+        }
+        val sizeLabel = TextView(this).apply {
+            text = "حجم العدسة: $lensSize dp"
+            textSize = 12f
+            setTextColor(activeTheme.text)
+            gravity = Gravity.RIGHT
+        }
+        val sizeSeek = SeekBar(this).apply {
+            max = 54
+            progress = lensSize - 42
+            progressTintList = android.content.res.ColorStateList.valueOf(gold)
+            thumbTintList = android.content.res.ColorStateList.valueOf(gold)
+        }
+        sizeSeek.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                lensSize = (42 + progress).coerceIn(42, 96)
+                sizeLabel.text = "حجم العدسة: $lensSize dp"
+                preview.textSize = (lensSize * 0.40f).coerceIn(18f, 38f)
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) = Unit
+            override fun onStopTrackingTouch(seekBar: SeekBar?) = Unit
+        })
+        val alphaLabel = TextView(this).apply {
+            text = "شفافية العدسة: $lensAlpha%"
+            textSize = 12f
+            setTextColor(activeTheme.text)
+            gravity = Gravity.RIGHT
+        }
+        val alphaSeek = SeekBar(this).apply {
+            max = 65
+            progress = lensAlpha - 35
+            progressTintList = android.content.res.ColorStateList.valueOf(gold)
+            thumbTintList = android.content.res.ColorStateList.valueOf(gold)
+        }
+        alphaSeek.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                lensAlpha = (35 + progress).coerceIn(35, 100)
+                alphaLabel.text = "شفافية العدسة: $lensAlpha%"
+                preview.alpha = lensAlpha / 100f
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) = Unit
+            override fun onStopTrackingTouch(seekBar: SeekBar?) = Unit
+        })
+        val swatches = ArrayList<TextView>()
+        fun refreshPalette() {
+            preview.background = GradientDrawable().apply {
+                setColor(values[selected])
+                cornerRadius = dp(100).toFloat()
+                setStroke(dp(3), withAlpha(Color.WHITE, 185))
+            }
+            val luminance = (Color.red(values[selected]) * 299 + Color.green(values[selected]) * 587 + Color.blue(values[selected]) * 114) / 1000
+            preview.setTextColor(if (luminance > 150) Color.BLACK else Color.WHITE)
+            swatches.forEachIndexed { index, swatch ->
+                swatch.text = if (index == selected) "✓" else ""
+                swatch.setTextColor(if (index == 4 || index == 11) Color.BLACK else Color.WHITE)
+                swatch.background = GradientDrawable().apply {
+                    setColor(values[index])
+                    cornerRadius = dp(13).toFloat()
+                    setStroke(dp(if (index == selected) 3 else 1),
+                        if (index == selected) Color.WHITE else withAlpha(Color.WHITE, 75))
+                }
+                swatch.elevation = if (index == selected) dp(5).toFloat() else dp(1).toFloat()
+                swatch.contentDescription = "${colors[index]}${if (index == selected) "، محدد" else ""}"
+            }
+        }
+        colors.indices.forEach { index ->
+            val swatch = TextView(this).apply {
+                textSize = 17f
+                gravity = Gravity.CENTER
+                minHeight = dp(46)
+                isClickable = true
+                isFocusable = true
+                setOnClickListener {
+                    selected = index
+                    refreshPalette()
+                }
+            }
+            swatches.add(swatch)
+        }
+        val palette = android.widget.GridLayout(this).apply {
+            columnCount = 4
+            rowCount = 3
+            alignmentMode = android.widget.GridLayout.ALIGN_BOUNDS
+            useDefaultMargins = false
+        }
+        swatches.forEachIndexed { index, swatch ->
+            val item = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                gravity = Gravity.CENTER
+                setPadding(dp(3), dp(4), dp(3), dp(4))
+                addView(swatch, LinearLayout.LayoutParams(dp(48), dp(43)))
+                addView(TextView(this@MainActivity).apply {
+                    text = colors[index]
+                    textSize = 9f
+                    gravity = Gravity.CENTER
+                    setTextColor(activeTheme.muted)
+                    setPadding(0, dp(3), 0, 0)
+                }, matchWrap())
+            }
+            palette.addView(item, android.widget.GridLayout.LayoutParams(
+                android.widget.GridLayout.spec(index / 4, 1f),
+                android.widget.GridLayout.spec(index % 4, 1f)
+            ).apply {
+                width = 0
+                setMargins(dp(2), dp(2), dp(2), dp(2))
+            })
+        }
+        refreshPalette()
+        input.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                preview.text = s?.toString()?.trim()?.take(3).orEmpty().ifBlank { "狐" }
+            }
+            override fun afterTextChanged(s: android.text.Editable?) = Unit
+        })
+        val useColorInsteadOfImage = CheckBox(this).apply {
+            text = "استخدام اللون المختار بدلاً من صورة خلفية العدسة"
+            textSize = 11f
+            setTextColor(activeTheme.muted)
+            buttonTintList = android.content.res.ColorStateList.valueOf(gold)
+            isChecked = false
+        }
+        val content = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutDirection = View.LAYOUT_DIRECTION_RTL
+            setPadding(dp(18), dp(10), dp(18), dp(10))
+            addView(previewFrame, matchWrap(dp(12)))
+            addView(TextView(this@MainActivity).apply {
+                text = "رمز العدسة"
+                textSize = 12f
+                setTextColor(activeTheme.text)
+                typeface = Typeface.DEFAULT_BOLD
+            }, matchWrap(dp(4)))
+            addView(input, matchWrap(dp(10)))
+            addView(TextView(this@MainActivity).apply {
+                text = "اختر لونك"
+                textSize = 12f
+                setTextColor(activeTheme.text)
+                typeface = Typeface.DEFAULT_BOLD
+            }, matchWrap(dp(3)))
+            addView(palette, matchWrap(dp(8)))
+            addView(sizeLabel, matchWrap())
+            addView(sizeSeek, matchWrap(dp(7)))
+            addView(alphaLabel, matchWrap())
+            addView(alphaSeek, matchWrap(dp(5)))
+            addView(useColorInsteadOfImage, matchWrap())
+        }
+        val scroll = ScrollView(this).apply {
+            isFillViewport = false
+            addView(content)
+        }
+        AlertDialog.Builder(this)
+            .setTitle("استوديو تصميم العدسة")
+            .setMessage("خصّص الرمز واللون والحجم، وشاهد التغييرات مباشرة قبل الحفظ.")
+            .setView(scroll)
+            .setNegativeButton("إلغاء", null)
+            .setPositiveButton("حفظ التصميم") { _, _ ->
+                val glyph = input.text.toString().trim().take(3).ifBlank { "狐" }
+                val editor = preferences.edit()
+                    .putString(PREF_LENS_GLYPH, glyph)
+                    .putInt(PREF_LENS_COLOR, values[selected])
+                    .putInt(PREF_LENS_SIZE, lensSize)
+                    .putInt(PREF_LENS_ALPHA, lensAlpha)
+                if (useColorInsteadOfImage.isChecked) editor.remove(PREF_LENS_IMAGE_PATH)
+                editor.apply()
+                MangaFoxAccessibilityService.instance?.applyLensSettings()
+                toast("تم حفظ لون العدسة وحجمها ورمزها وتطبيقها")
+            }
+            .show()
+    }
+
+    private fun updateFontPreview() {
+        val preview = fontPreview ?: return
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        val size = prefs.getInt(PREF_FONT_SIZE, 22).coerceIn(10, 72)
+        preview.textSize = size.toFloat()
+        preview.typeface = resolveArabicTypeface(prefs)
+        preview.paint.style = Paint.Style.FILL
+        preview.paint.strokeWidth = 0f
+        preview.invalidate()
+        fontStatusText?.text = prefs.getString(PREF_FONT_LABEL, null)?.let { "الخط المحدد: $it" }
+            ?: "الخط الحالي: ${prefs.getString(PREF_FONT_FAMILY, "sans-serif")}"
+    }
+
+    private fun pickFontFromDevice(friendlyLabel: String? = null) {
+        requestedFontLabel = friendlyLabel
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "*/*"
+            putExtra(Intent.EXTRA_MIME_TYPES, arrayOf(
+                "font/ttf", "font/otf", "application/x-font-ttf", "application/x-font-otf",
+                "application/octet-stream"
+            ))
+        }
+        runCatching { startActivityForResult(intent, REQUEST_PICK_FONT) }
+            .onFailure { toast("تعذر فتح مدير الملفات") }
+    }
+
+    @Suppress("DEPRECATION")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_IMPORT_IMAGE_ARCHIVE || requestCode == REQUEST_IMPORT_IMAGE_FOLDER) {
+            val uri = data?.data
+            if (resultCode == RESULT_OK && uri != null) {
+                startImageCollectionImport(uri, requestCode == REQUEST_IMPORT_IMAGE_FOLDER)
+            } else if (resultCode != RESULT_CANCELED) {
+                toast("لم يتم اختيار ملف أو مجلد")
+            }
+            return
+        }
+        if (requestCode == REQUEST_IMPORT_THEME) {
+            val uri = data?.data
+            if (resultCode != RESULT_OK || uri == null) {
+                if (resultCode != RESULT_CANCELED) toast("لم يتم اختيار ملف ثيم")
+                return
+            }
+            fontDownloadExecutor.execute {
+                val imported = runCatching {
+                    val input = contentResolver.openInputStream(uri) ?: error("تعذر قراءة ملف الثيم")
+                    input.use { MangaFoxThemeStore.importTheme(this, it) }
+                }
+                runOnUiThread {
+                    imported.onSuccess { theme ->
+                        preferences.edit().putString(PREF_ACTIVE_THEME_ID, theme.id).commit()
+                        activeTheme = theme
+                        applySystemBars()
+                        selectedHomeTab = "themes"
+                        showHome()
+                        toast("تم استيراد وتفعيل الثيم: ${theme.name}")
+                    }.onFailure { error ->
+                        toast("رفض ملف الثيم: ${error.localizedMessage ?: "صيغة غير صالحة"}")
+                    }
+                }
+            }
+            return
+        }
+        if (requestCode == REQUEST_EXPORT_THEME) {
+            val prepared = pendingThemeArchive
+            pendingThemeArchive = null
+            val destination = data?.data
+            if (resultCode != RESULT_OK || destination == null || prepared == null || !prepared.isFile) {
+                prepared?.delete()
+                if (resultCode != RESULT_CANCELED) toast("تعذر حفظ ملف الثيم")
+                return
+            }
+            fontDownloadExecutor.execute {
+                val result = runCatching {
+                    val output = contentResolver.openOutputStream(destination, "w") ?: error("تعذر فتح ملف الوجهة")
+                    output.use { out -> prepared.inputStream().use { it.copyTo(out) } }
+                }
+                prepared.delete()
+                runOnUiThread {
+                    if (result.isSuccess) toast("تم تصدير ملف الثيم الجاهز")
+                    else toast("فشل تصدير الثيم: ${result.exceptionOrNull()?.localizedMessage ?: "خطأ"}")
+                }
+            }
+            return
+        }
+        if (requestCode == REQUEST_SAVE_PDF) {
+            val prepared = pendingPdfFile
+            pendingPdfFile = null
+            if (resultCode != RESULT_OK || data?.data == null || prepared == null || !prepared.isFile) {
+                prepared?.delete()
+                if (resultCode != RESULT_OK) toast("تم إلغاء حفظ ملف PDF")
+                return
+            }
+            val destination = data.data ?: run { prepared.delete(); return }
+            fontDownloadExecutor.execute {
+                try {
+                    val output = contentResolver.openOutputStream(destination, "w")
+                        ?: throw IllegalStateException("تعذر فتح ملف الوجهة")
+                    output.use { out -> prepared.inputStream().use { input -> input.copyTo(out) } }
+                    prepared.delete()
+                    runOnUiThread { toast("تم حفظ ملف PDF بنجاح") }
+                } catch (e: Exception) {
+                    prepared.delete()
+                    runOnUiThread { toast("تعذر حفظ PDF: ${e.localizedMessage ?: "خطأ في الملف"}") }
+                }
+            }
+            return
+        }
+        if (requestCode == REQUEST_EXPORT_PHANTOM_PROJECT) {
+            val prepared = pendingProjectArchive
+            pendingProjectArchive = null
+            val destination = data?.data
+            if (resultCode != RESULT_OK || destination == null || prepared == null || !prepared.isFile) {
+                prepared?.delete()
+                if (resultCode != RESULT_OK) toast("تم إلغاء النسخ الاحتياطي")
+                return
+            }
+            fontDownloadExecutor.execute {
+                runCatching {
+                    val output = contentResolver.openOutputStream(destination, "w") ?: error("تعذر فتح ملف الوجهة")
+                    output.use { out -> prepared.inputStream().use { it.copyTo(out) } }
+                }.onSuccess { runOnUiThread { toast("اكتمل حفظ نسخة المشروع الاحتياطية") } }
+                    .onFailure { error -> runOnUiThread { toast("تعذر حفظ النسخة: ${error.localizedMessage ?: "خطأ"}") } }
+                prepared.delete()
+            }
+            return
+        }
+        if (requestCode == REQUEST_IMPORT_PHANTOM_PROJECT) {
+            val uri = data?.data
+            if (resultCode != RESULT_OK || uri == null) { if (resultCode != RESULT_OK) toast("تم إلغاء الاستيراد"); return }
+            toast("جارٍ فحص النسخة واستعادة المشروع...")
+            fontDownloadExecutor.execute {
+                runCatching {
+                    val input = contentResolver.openInputStream(uri) ?: error("تعذر فتح ملف النسخة")
+                    input.use { MangaFoxProjectArchive.restore(this, it) }
+                }.onSuccess {
+                    runOnUiThread { toast("تم استعادة المشروع والطبقات والمعجم"); showResults() }
+                }.onFailure { error -> runOnUiThread { toast("فشل الاستيراد: ${error.localizedMessage ?: "نسخة غير صالحة"}") } }
+            }
+            return
+        }
+        if (requestCode == REQUEST_PICK_LENS_IMAGE) {
+            if (resultCode == RESULT_OK) {
+                val selectedImage = data?.data
+                if (selectedImage != null) saveLensBackgroundImage(selectedImage)
+                else toast("لم يتم اختيار صورة")
+            }
+            return
+        }
+        if (requestCode != REQUEST_PICK_FONT) return
+        if (resultCode != RESULT_OK) { requestedFontLabel = null; return }
+        val uri = data?.data ?: run { requestedFontLabel = null; return }
+        val friendlyFontLabel = requestedFontLabel
+        requestedFontLabel = null
+        runCatching {
+            val displayName = contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                if (index >= 0 && cursor.moveToFirst()) cursor.getString(index) else null
+            } ?: "font.ttf"
+            val extension = displayName.substringAfterLast('.', "").lowercase()
+            require(extension in setOf("ttf", "otf", "ttc")) { "اختر ملف خط TTF أو OTF أو TTC" }
+            val fontDir = File(filesDir, "fonts").apply { mkdirs() }
+            val safeName = displayName.replace(Regex("[^A-Za-z0-9._-]"), "_").take(80)
+            val target = File(fontDir, "import_${System.currentTimeMillis()}_$safeName")
+            val inputStream = requireNotNull(contentResolver.openInputStream(uri)) { "تعذر قراءة ملف الخط" }
+            inputStream.use { input ->
+                FileOutputStream(target).use { output ->
+                    val buffer = ByteArray(8192)
+                    var total = 0L
+                    while (true) {
+                        val read = input.read(buffer)
+                        if (read <= 0) break
+                        total += read
+                        require(total <= 15L * 1024L * 1024L) { "حجم الخط أكبر من 15 ميغابايت" }
+                        output.write(buffer, 0, read)
+                    }
+                }
+            }
+            Typeface.createFromFile(target)
+            preferences.edit().putString(PREF_FONT_FILE, target.absolutePath)
+                .putString(PREF_FONT_LABEL, if (friendlyFontLabel.isNullOrBlank()) displayName else "$friendlyFontLabel ($displayName)")
+                .commit()
+            updateFontPreview()
+            toast("تم استيراد الخط وتفعيله: ${friendlyFontLabel ?: displayName}")
+        }.onFailure { toast("تعذر استيراد الخط: ${it.localizedMessage ?: "ملف غير صالح"}") }
+    }
+
+    private fun exportResultsAsPdf() {
+        val allPaths = MangaFoxRuntime.resultPages
+        if (allPaths.isEmpty()) {
+            toast("لا توجد نتيجة لتصديرها")
+            return
+        }
+        val labels = allPaths.mapIndexed { index, path ->
+            val file = File(path)
+            "الصفحة ${index + 1} · ${if (file.isFile) "${file.length() / 1024} KB" else "ملف مفقود"}"
+        }.toTypedArray()
+        val selected = BooleanArray(allPaths.size) { true }
+        AlertDialog.Builder(this)
+            .setTitle("تحديد صفحات التصدير (${allPaths.size})")
+            .setMultiChoiceItems(labels, selected) { _, which, checked -> selected[which] = checked }
+            .setNeutralButton("إلغاء التحديد") { dialog, _ ->
+                // Keep the dialog open so the user can select a smaller subset.
+                (dialog as? AlertDialog)?.listView?.let { list ->
+                    for (i in selected.indices) {
+                        selected[i] = false
+                        list.setItemChecked(i, false)
+                    }
+                }
+            }
+            .setNegativeButton("إلغاء", null)
+            .setPositiveButton("تصدير المحدد") { _, _ ->
+                val indices = selected.indices.filter { selected[it] }
+                if (indices.isEmpty()) {
+                    toast("حدد صفحة واحدة على الأقل")
+                    return@setPositiveButton
+                }
+                val paths = indices.map { allPaths[it] }
+                val layers = indices.map { MangaFoxRuntime.translationLayerFiles.getOrNull(it).orEmpty() }
+                if (MangaFoxRuntime.captureOnlyResult) {
+                    exportResultsAsPdfAfterAudit(paths)
+                    return@setPositiveButton
+                }
+                val audit = MangaFoxQualityGuard.inspect(paths, layers)
+                if (audit.errorCount > 0 || audit.warningCount > 0) {
+                    AlertDialog.Builder(this)
+                        .setTitle("FOX QUALITY GUARD · مراجعة قبل التصدير")
+                        .setMessage(audit.toArabicText() + "\n\nهل تريد المتابعة رغم التحذيرات؟")
+                        .setNegativeButton("العودة للإصلاح", null)
+                        .setPositiveButton("متابعة التصدير") { _, _ -> exportResultsAsPdfAfterAudit(paths) }
+                        .show()
+                } else exportResultsAsPdfAfterAudit(paths)
+            }
+            .show()
+    }
+
+    private fun exportResultsAsPdfAfterAudit(selectedPaths: List<String>) {
+        val images = selectedPaths.map { File(it) }.filter { it.isFile && it.length() > 0L }
+        if (images.isEmpty()) {
+            toast("لا توجد صفحات صالحة لتصديرها")
+            return
+        }
+        toast("جارٍ تجهيز PDF من ${images.size} صفحة محددة...")
+        fontDownloadExecutor.execute {
+            var prepared: File? = null
+            try {
+                val readyFile = File(cacheDir, "mfox_export_${System.currentTimeMillis()}.pdf")
+                prepared = readyFile
+                createContinuousPdf(images, readyFile)
+                runOnUiThread {
+                    if (isFinishing || isDestroyed) {
+                        readyFile.delete()
+                        return@runOnUiThread
+                    }
+                    pendingPdfFile = readyFile
+                    val title = MangaFoxRuntime.resultTitle
+                        .replace(Regex("[^\\p{L}\\p{N} _-]"), "_")
+                        .trim().take(60).ifBlank { "Manga_Fox_Result" }
+                    val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+                        addCategory(Intent.CATEGORY_OPENABLE)
+                        type = "application/pdf"
+                        putExtra(Intent.EXTRA_TITLE, "${title}_${images.size}pages.pdf")
+                    }
+                    try {
+                        startActivityForResult(intent, REQUEST_SAVE_PDF)
+                    } catch (e: Exception) {
+                        pendingPdfFile = null
+                        readyFile.delete()
+                        toast("لا يوجد تطبيق لحفظ ملف PDF")
+                    }
+                }
+            } catch (e: Exception) {
+                prepared?.delete()
+                runOnUiThread { toast("تعذر إنشاء PDF: ${e.localizedMessage ?: "خطأ في الصور"}") }
+            }
+        }
+    }
+
+    /**
+     * Writes all translated strips as one uninterrupted vertical stream.
+     * The image sequence continues at the exact y-coordinate where the prior
+     * image ended; only the physical PDF page boundary divides the output.
+     */
+    private fun createContinuousPdf(images: List<File>, outputFile: File) {
+        val pdf = PdfDocument()
+        val pageWidth = 595
+        val pageHeight = 842
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG or Paint.DITHER_FLAG)
+        var page: PdfDocument.Page? = null
+        var yOnPage = 0f
+        var pageNumber = 0
+
+        fun startPageIfNeeded() {
+            if (page == null) {
+                pageNumber++
+                val info = PdfDocument.PageInfo.Builder(pageWidth, pageHeight, pageNumber).create()
+                page = pdf.startPage(info)
+                yOnPage = 0f
+                page!!.canvas.drawColor(Color.WHITE)
+            }
+        }
+
+        fun finishPage() {
+            val current = page ?: return
+            pdf.finishPage(current)
+            page = null
+            yOnPage = 0f
+        }
+
+        try {
+            for (file in images) {
+                val bitmap = BitmapFactory.decodeFile(file.absolutePath)
+                    ?: throw IllegalStateException("تعذر فتح صورة ${file.name}")
+                try {
+                    val scale = pageWidth.toFloat() / bitmap.width.toFloat()
+                    var consumedSourceY = 0f
+                    while (consumedSourceY < bitmap.height - 0.01f) {
+                        startPageIfNeeded()
+                        val availableOnPage = pageHeight.toFloat() - yOnPage
+                        val remainingSource = bitmap.height.toFloat() - consumedSourceY
+                        val sourceChunkHeight = min(remainingSource, availableOnPage / scale)
+                        if (sourceChunkHeight <= 0.01f) {
+                            finishPage()
+                            continue
+                        }
+                        val sourceTop = consumedSourceY.toInt().coerceIn(0, bitmap.height - 1)
+                        val sourceBottom = (consumedSourceY + sourceChunkHeight)
+                            .toInt().coerceIn(sourceTop + 1, bitmap.height)
+                        val actualSourceHeight = (sourceBottom - sourceTop).toFloat()
+                        val destHeight = actualSourceHeight * scale
+                        val src = Rect(0, sourceTop, bitmap.width, sourceBottom)
+                        val dst = RectF(0f, yOnPage, pageWidth.toFloat(), yOnPage + destHeight)
+                        page!!.canvas.drawBitmap(bitmap, src, dst, paint)
+                        consumedSourceY = sourceBottom.toFloat()
+                        yOnPage += destHeight
+                        if (yOnPage >= pageHeight - 0.5f) finishPage()
+                    }
+                } finally {
+                    if (!bitmap.isRecycled) bitmap.recycle()
+                }
+            }
+            if (page != null) finishPage()
+            if (pageNumber == 0) throw IllegalStateException("لا توجد صور صالحة في النتيجة")
+            FileOutputStream(outputFile).use { pdf.writeTo(it) }
+        } finally {
+            runCatching { page?.let { pdf.finishPage(it) } }
+            pdf.close()
+        }
+    }
+
+    private fun downloadArabicFont(label: String, fileName: String, sourceUrl: String) {
+        toast("بدأ تنزيل $label")
+        fontDownloadExecutor.execute {
+            val fontDir = File(filesDir, "fonts").apply { mkdirs() }
+            val target = File(fontDir, fileName)
+            val temp = File(fontDir, "$fileName.part.${fileName.substringAfterLast('.', "ttf")}")
+            try {
+                val connection = (URL(sourceUrl).openConnection() as HttpURLConnection).apply {
+                    connectTimeout = 20000
+                    readTimeout = 30000
+                    requestMethod = "GET"
+                    setRequestProperty("User-Agent", "MangaFox-Android")
+                }
+                try {
+                    connection.connect()
+                    if (connection.responseCode !in 200..299) throw IllegalStateException("HTTP ${connection.responseCode}")
+                    connection.inputStream.use { input ->
+                        FileOutputStream(temp).use { output ->
+                            val buffer = ByteArray(8192)
+                            var total = 0L
+                            while (true) {
+                                val read = input.read(buffer)
+                                if (read <= 0) break
+                                total += read
+                                if (total > 15L * 1024L * 1024L) throw IllegalStateException("ملف الخط كبير جداً")
+                                output.write(buffer, 0, read)
+                            }
+                        }
+                    }
+                } finally {
+                    connection.disconnect()
+                }
+                if (!temp.isFile || temp.length() < 4096L) throw IllegalStateException("ملف الخط غير مكتمل أو ليس ملف خط صالحاً")
+                // Parsing the actual font before activation prevents corrupt or HTML error pages being selected.
+                Typeface.createFromFile(temp)
+                if (target.exists() && !target.delete()) throw IllegalStateException("تعذر استبدال ملف الخط السابق")
+                if (!temp.renameTo(target)) throw IllegalStateException("تعذر حفظ الخط")
+                runOnUiThread {
+                    preferences.edit().putString(PREF_FONT_FILE, target.absolutePath)
+                        .putString(PREF_FONT_LABEL, label).commit()
+                    updateFontPreview()
+                    toast("تم تنزيل $label وتفعيله")
+                }
+            } catch (e: Exception) {
+                temp.delete()
+                runOnUiThread { toast("فشل تنزيل الخط: ${e.localizedMessage ?: "تحقق من الإنترنت"}") }
+            }
+        }
+    }
+    /** Downloads Droid Kufi Bold from the Android Open Source Project Gitiles endpoint.
+     * Gitiles serves binary blobs as Base64 when format=TEXT is requested.
+     */
+    private fun downloadDroidArabicKufiBold() {
+        val source = "https://android.googlesource.com/platform/frameworks/base/+/e7beae3/data/fonts/DroidKufi-Bold.ttf?format=TEXT"
+        toast("جارٍ تنزيل Droid Arabic Kufi Bold من مصدر Android المفتوح")
+        fontDownloadExecutor.execute {
+            val fontDir = File(filesDir, "fonts").apply { mkdirs() }
+            val target = File(fontDir, "DroidKufi-Bold.ttf")
+            val temp = File(fontDir, "DroidKufi-Bold.ttf.part")
+            try {
+                val connection = (URL(source).openConnection() as HttpURLConnection).apply {
+                    connectTimeout = 20000
+                    readTimeout = 30000
+                    requestMethod = "GET"
+                    setRequestProperty("User-Agent", "MangaFox-Android")
+                }
+                val encoded = try {
+                    if (connection.responseCode !in 200..299) throw IllegalStateException("HTTP ${connection.responseCode}")
+                    connection.inputStream.use { input ->
+                        val output = java.io.ByteArrayOutputStream()
+                        val buffer = ByteArray(8192)
+                        var total = 0
+                        while (true) {
+                            val count = input.read(buffer)
+                            if (count < 0) break
+                            total += count
+                            require(total <= 24 * 1024 * 1024) { "استجابة مصدر الخط كبيرة جداً" }
+                            output.write(buffer, 0, count)
+                        }
+                        output.toByteArray()
+                    }
+                } finally { connection.disconnect() }
+                val ascii = encoded.toString(Charsets.US_ASCII).filterNot { it.isWhitespace() }
+                val fontBytes = android.util.Base64.decode(ascii, android.util.Base64.DEFAULT)
+                require(fontBytes.size in 4096..(15 * 1024 * 1024)) { "حجم ملف الخط غير صالح" }
+                FileOutputStream(temp).use { it.write(fontBytes) }
+                // Validate the TTF before replacing an existing font.
+                val parsed = Typeface.createFromFile(temp)
+                require(parsed != null) { "تعذر قراءة ملف الخط" }
+                if (target.exists() && !target.delete()) error("تعذر استبدال الخط القديم")
+                if (!temp.renameTo(target)) error("تعذر حفظ الخط الجديد")
+                runOnUiThread {
+                    preferences.edit().putString(PREF_FONT_FILE, target.absolutePath)
+                        .putString(PREF_FONT_LABEL, "Droid Arabic Kufi Bold · Apache-2.0")
+                        .putBoolean(PREF_FONT_BOLD, true).commit()
+                    updateFontPreview()
+                    toast("تم تنزيل Droid Arabic Kufi Bold وتفعيله")
+                }
+            } catch (e: Exception) {
+                temp.delete()
+                runOnUiThread { toast("تعذر تنزيل الخط: ${e.localizedMessage ?: "تحقق من الاتصال"}") }
+            }
+        }
+    }
+
+    private fun addSettingSlider(
+        parent: LinearLayout, label: String, minValue: Int, maxValue: Int,
+        initialValue: Int, suffix: String, onChanged: (Int) -> Unit
+    ) {
+        val labelView = text("$label: ${initialValue.coerceIn(minValue, maxValue)}$suffix", 13f, Color.LTGRAY, true)
+        parent.addView(labelView, matchWrap())
+        val slider = SeekBar(this).apply {
+            max = maxValue - minValue
+            progress = initialValue.coerceIn(minValue, maxValue) - minValue
+            setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                    val value = minValue + progress
+                    labelView.text = "$label: $value$suffix"
+                    if (fromUser) onChanged(value)
+                }
+                override fun onStartTrackingTouch(seekBar: SeekBar?) = Unit
+                override fun onStopTrackingTouch(seekBar: SeekBar?) = Unit
+            })
+        }
+        parent.addView(slider, matchWrap(dp(8)))
+    }
+
+    private fun openRegionSelection(sourcePath: String, resultPath: String) {
+        val original = BitmapFactory.decodeFile(sourcePath)
+        if (original == null) {
+            toast("تعذر فتح الصورة الأصلية لتحديد المنطقة")
+            return
+        }
+        val maxWidth = min(resources.displayMetrics.widthPixels - dp(56), dp(360)).coerceAtLeast(dp(220))
+        var viewWidth = maxWidth
+        var viewHeight = (original.height * (viewWidth.toFloat() / original.width)).toInt().coerceAtLeast(dp(180))
+        if (viewHeight > dp(620)) {
+            viewHeight = dp(620)
+            viewWidth = (original.width * (viewHeight.toFloat() / original.height)).toInt().coerceAtLeast(dp(180))
+        }
+        val image = ImageView(this).apply {
+            setImageBitmap(original)
+            scaleType = ImageView.ScaleType.FIT_XY
+            setBackgroundColor(Color.BLACK)
+        }
+        val selector = RegionSelectionView(this)
+        val frame = FrameLayout(this).apply {
+            addView(image, FrameLayout.LayoutParams(viewWidth, viewHeight))
+            addView(selector, FrameLayout.LayoutParams(viewWidth, viewHeight))
+        }
+        val container = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            setPadding(dp(12), dp(8), dp(12), dp(8))
+            addView(text("اسحب إصبعك لرسم مستطيل حول الفقاعة أو النص الذي لم تتم ترجمته.", 12f, Color.LTGRAY), matchWrap(dp(8)))
+            addView(frame, LinearLayout.LayoutParams(viewWidth, viewHeight))
+        }
+        val dialog = AlertDialog.Builder(this)
+            .setTitle("إعادة OCR لمنطقة محددة")
+            .setView(container)
+            .setNegativeButton("إلغاء", null)
+            .setPositiveButton("إعادة القراءة والترجمة", null)
+            .create()
+        dialog.setOnShowListener {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                val area = selector.toSourceRect(original.width, original.height)
+                if (area == null || area.width() < 8 || area.height() < 8) {
+                    toast("حدد منطقة أكبر حول النص أولاً")
+                    return@setOnClickListener
+                }
+                val service = MangaFoxAccessibilityService.instance
+                if (service == null) {
+                    toast("خدمة Manga Fox غير متصلة")
+                    return@setOnClickListener
+                }
+                dialog.dismiss()
+                service.retryManualRegion(sourcePath, resultPath, area) { success, message ->
+                    toast(message)
+                    if (success) showResults()
+                }
+            }
+        }
+        dialog.setOnDismissListener {
+            image.setImageDrawable(null)
+            if (!original.isRecycled) original.recycle()
+        }
+        dialog.show()
+    }
+
+    private fun decodeComparisonPreview(path: String): Bitmap? {
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeFile(path, bounds)
+        if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
+        var sample = 1
+        while (bounds.outWidth / sample > 1100 || bounds.outHeight / sample > 1800) sample *= 2
+        return BitmapFactory.decodeFile(path, BitmapFactory.Options().apply {
+            inSampleSize = sample
+            inPreferredConfig = Bitmap.Config.RGB_565
+        })
+    }
+
+    private fun showBeforeAfterComparison(originalPath: String, resultPath: String) {
+        val loading = ProgressBar(this).apply { isIndeterminate = true }
+        val loadingDialog = AlertDialog.Builder(this).setTitle("إعداد المقارنة").setView(loading).setNegativeButton("إلغاء", null).show()
+        fontDownloadExecutor.execute {
+            var original: Bitmap? = null
+            var translated: Bitmap? = null
+            try {
+                original = decodeComparisonPreview(originalPath)
+                translated = decodeComparisonPreview(resultPath)
+                val originalBitmap = original
+                val translatedBitmap = translated
+                runOnUiThread {
+                    loadingDialog.dismiss()
+                    if (isFinishing || isDestroyed || originalBitmap == null || translatedBitmap == null) {
+                        originalBitmap?.recycle(); translatedBitmap?.recycle()
+                        if (!isFinishing && !isDestroyed) toast("تعذر إنشاء معاينة المقارنة")
+                        return@runOnUiThread
+                    }
+                    val frame = FrameLayout(this).apply {
+                        setBackgroundColor(Color.BLACK)
+                        clipToPadding = true
+                        clipChildren = true
+                    }
+                    val beforeView = ImageView(this).apply {
+                        setImageBitmap(originalBitmap)
+                        scaleType = ImageView.ScaleType.FIT_CENTER
+                        contentDescription = "الصورة الأصلية"
+                    }
+                    val afterView = ImageView(this).apply {
+                        setImageBitmap(translatedBitmap)
+                        scaleType = ImageView.ScaleType.FIT_CENTER
+                        contentDescription = "الصورة المترجمة"
+                    }
+                    frame.addView(beforeView, FrameLayout.LayoutParams(-1, dp(420)))
+                    frame.addView(afterView, FrameLayout.LayoutParams(-1, dp(420)))
+                    val label = text("اسحب المؤشر: 0٪ الأصل · 100٪ الترجمة", 12f, Color.LTGRAY)
+                    val slider = SeekBar(this).apply {
+                        max = 100
+                        progress = 100
+                        progressTintList = android.content.res.ColorStateList.valueOf(gold)
+                        thumbTintList = android.content.res.ColorStateList.valueOf(gold)
+                        setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                            override fun onProgressChanged(seekBar: SeekBar?, value: Int, fromUser: Boolean) {
+                                afterView.alpha = value / 100f
+                                label.text = "${100 - value}٪ الأصل · $value٪ الترجمة"
+                            }
+                            override fun onStartTrackingTouch(seekBar: SeekBar?) = Unit
+                            override fun onStopTrackingTouch(seekBar: SeekBar?) = Unit
+                        })
+                    }
+                    val panel = LinearLayout(this).apply {
+                        orientation = LinearLayout.VERTICAL
+                        setPadding(dp(12), dp(8), dp(12), dp(4))
+                        addView(frame, LinearLayout.LayoutParams(-1, dp(420)))
+                        addView(label, matchWrap(dp(6)))
+                        addView(slider, matchWrap())
+                    }
+                    val dialog = AlertDialog.Builder(this)
+                        .setTitle("مقارنة الأصل والترجمة")
+                        .setView(panel)
+                        .setPositiveButton("إغلاق", null)
+                        .create()
+                    dialog.setOnDismissListener {
+                        beforeView.setImageDrawable(null)
+                        afterView.setImageDrawable(null)
+                        if (!originalBitmap.isRecycled) originalBitmap.recycle()
+                        if (!translatedBitmap.isRecycled) translatedBitmap.recycle()
+                    }
+                    dialog.show()
+                }
+            } catch (error: Exception) {
+                original?.let { if (!it.isRecycled) it.recycle() }
+                translated?.let { if (!it.isRecycled) it.recycle() }
+                runOnUiThread {
+                    loadingDialog.dismiss()
+                    toast("تعذرت المقارنة: ${error.localizedMessage ?: "خطأ في الصورة"}")
+                }
+            }
+        }
+    }
+
+    private data class ReviewEditorRow(
+        val pageIndex: Int,
+        val layerIndex: Int,
+        val layerFile: File,
+        val editor: EditText,
+        val status: String
+    )
+
+    private fun countReviewLayers(): Int {
+        var total = 0
+        MangaFoxRuntime.translationLayerFiles.forEach { path ->
+            val file = File(path)
+            if (!file.isFile) return@forEach
+            val layers = runCatching { JSONArray(file.readText(Charsets.UTF_8)) }.getOrNull() ?: return@forEach
+            for (i in 0 until layers.length()) {
+                val status = layers.optJSONObject(i)?.optString("status", "translated") ?: continue
+                if (status == "review" || status == "failed") total++
+            }
+        }
+        return total
+    }
+
+    private fun showReviewQueue() {
+        val rows = ArrayList<ReviewEditorRow>()
+        val scroll = ScrollView(this)
+        val content = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(12), dp(8), dp(12), dp(8))
+        }
+        MangaFoxRuntime.translationLayerFiles.forEachIndexed { pageIndex, path ->
+            val file = File(path)
+            if (!file.isFile) return@forEachIndexed
+            val layers = runCatching { JSONArray(file.readText(Charsets.UTF_8)) }.getOrNull() ?: return@forEachIndexed
+            for (layerIndex in 0 until layers.length()) {
+                val item = layers.optJSONObject(layerIndex) ?: continue
+                val status = item.optString("status", "translated")
+                if (status != "review" && status != "failed") continue
+                val sourceText = item.optString("source").trim()
+                val translatedText = item.optString("translated")
+                val card = LinearLayout(this).apply {
+                    orientation = LinearLayout.VERTICAL
+                    setPadding(dp(10), dp(9), dp(10), dp(9))
+                    background = rounded(Color.rgb(35, 32, 43), 12)
+                }
+                val statusLabel = if (status == "failed") "🔴 فشلت" else "🟡 تحتاج مراجعة"
+                card.addView(text("صفحة ${pageIndex + 1} · فقاعة ${layerIndex + 1} · $statusLabel", 12f, if (status == "failed") Color.rgb(255, 110, 110) else Color.rgb(255, 205, 85), true))
+                card.addView(text(sourceText.ifBlank { "لا يوجد نص أصلي محفوظ" }, 12f, Color.LTGRAY).apply { setPadding(0, dp(5), 0, dp(5)) }, matchWrap())
+                val editor = EditText(this).apply {
+                    setText(translatedText)
+                    hint = "اكتب الترجمة العربية المصححة"
+                    textSize = 15f
+                    minLines = 2
+                    setTextColor(Color.WHITE)
+                    setHintTextColor(Color.GRAY)
+                    setPadding(dp(9), dp(7), dp(9), dp(7))
+                    background = rounded(Color.rgb(22, 20, 29), 8)
+                }
+                card.addView(editor, matchWrap(dp(6)))
+                content.addView(card, matchWrap(dp(8)))
+                rows.add(ReviewEditorRow(pageIndex, layerIndex, file, editor, status))
+            }
+        }
+        if (rows.isEmpty()) {
+            content.addView(text("ممتاز! لا توجد فقاعات صفراء أو حمراء محفوظة للمراجعة.", 14f, Color.LTGRAY).apply {
+                setPadding(dp(12), dp(18), dp(12), dp(18))
+            }, matchWrap())
+        }
+        scroll.addView(content)
+        AlertDialog.Builder(this)
+            .setTitle("مراجعة سريعة · ${rows.size} فقاعة")
+            .setView(scroll)
+            .setNegativeButton("إغلاق", null)
+            .setPositiveButton("حفظ التعديلات وإعادة الرسم") { _, _ ->
+                if (rows.isEmpty()) return@setPositiveButton
+                val byFile = rows.groupBy { it.layerFile.absolutePath }
+                var saved = 0
+                byFile.forEach fileGroup@{ (_, fileRows) ->
+                    val file = fileRows.first().layerFile
+                    val layers = runCatching { JSONArray(file.readText(Charsets.UTF_8)) }.getOrNull() ?: return@fileGroup
+                    fileRows.forEach rowLoop@{ row ->
+                        val item = layers.optJSONObject(row.layerIndex) ?: return@rowLoop
+                        val value = row.editor.text.toString().trim()
+                        if (value.isBlank()) {
+                            item.put("translated", "").put("status", "failed")
+                        } else {
+                            val hasArabic = value.any { it in '\u0600'..'\u06FF' || it in '\u0750'..'\u077F' }
+                            item.put("translated", value).put("status", if (hasArabic) "translated" else "review")
+                        }
+                        saved++
+                    }
+                    val tmp = File(file.parentFile, file.name + ".review.tmp")
+                    runCatching {
+                        tmp.writeText(layers.toString(), Charsets.UTF_8)
+                        if (!tmp.renameTo(file)) {
+                            tmp.copyTo(file, overwrite = true)
+                            tmp.delete()
+                        }
+                    }.onFailure { toast("تعذر حفظ طبقة: ${it.message}") }
+                }
+                if (saved > 0) {
+                    MangaFoxRuntime.pendingEdits = true
+                    syncCurrentArchiveAfterLayerChange()
+                    val service = MangaFoxAccessibilityService.instance
+                    if (service != null) service.rerenderLastResultsFromLayers { showResults() }
+                    else {
+                        toast("حُفظت $saved تعديلات. فعّل خدمة Manga FOX لتطبيقها على الصور")
+                        showResults()
+                    }
+                }
+            }.show()
+    }
+
+    private fun recurringNameCandidates(): List<Pair<String, Int>> {
+        val counts = LinkedHashMap<String, Int>()
+        val stop = setOf("This", "That", "What", "When", "Where", "How", "You", "Your", "They", "Them", "Then", "But", "The", "And", "For", "Not", "Yes", "No", "Why", "Who", "She", "Her", "His", "Him", "Have", "Has", "Was", "Are", "Can", "Will", "Lord", "Master", "Miss", "Sir")
+        val latinName = Regex("(?<![A-Za-z])[A-Z][a-z]{2,15}(?:[-'][A-Z]?[a-z]{2,12})?(?![A-Za-z])")
+        val cjkName = Regex("[\\u4E00-\\u9FFF]{2,4}")
+        MangaFoxRuntime.translationLayerFiles.forEach { path ->
+            val file = File(path)
+            if (!file.isFile) return@forEach
+            val layers = runCatching { JSONArray(file.readText(Charsets.UTF_8)) }.getOrNull() ?: return@forEach
+            for (i in 0 until layers.length()) {
+                val sourceText = layers.optJSONObject(i)?.optString("source").orEmpty()
+                latinName.findAll(sourceText).forEach { match ->
+                    val name = match.value.trim()
+                    if (name !in stop) counts[name] = (counts[name] ?: 0) + 1
+                }
+                cjkName.findAll(sourceText).forEach { match ->
+                    val name = match.value.trim()
+                    if (name.isNotBlank()) counts[name] = (counts[name] ?: 0) + 1
+                }
+            }
+        }
+        return counts.entries.filter { it.value >= 2 }
+            .sortedWith(compareByDescending<Map.Entry<String, Int>> { it.value }.thenBy { it.key })
+            .take(24).map { it.key to it.value }
+    }
+
+    private fun showRecurringNameSuggestions() {
+        val candidates = recurringNameCandidates()
+        if (candidates.isEmpty()) {
+            AlertDialog.Builder(this).setTitle("اقتراح الأسماء")
+                .setMessage("لم أجد أسماء متكررة بوضوح في نصوص الفقاعات المحفوظة. قد تحتوي نتائج OCR على كلمات عادية، لذلك لن أضيفها تلقائياً دون مراجعتك.")
+                .setPositiveButton("إغلاق", null).show()
+            return
+        }
+        val progress = android.app.ProgressDialog(this).apply {
+            setTitle("اقتراح الأسماء بالعربية")
+            setMessage("يفحص Qwen الأسماء المتكررة ويقترح نقلها صوتياً إلى العربية…")
+            setCancelable(false)
+        }
+        progress.show()
+        Thread {
+            val store = MangaFoxKnowledgeStore(this)
+            val suggestions = runCatching {
+                if (!MangaFoxLocalLlm.isModelDownloaded(this)) emptyMap()
+                else MangaFoxLocalLlm.suggestArabicNames(
+                    this,
+                    candidates.mapIndexed { index, pair -> index to pair.first },
+                    store.glossary(),
+                    store.characters()
+                )
+            }.getOrElse { error ->
+                runOnUiThread { toast("تعذر توليد المقابلات عبر Qwen: ${error.message?.take(100).orEmpty()}") }
+                emptyMap()
+            }
+            runOnUiThread {
+                if (isFinishing || isDestroyed) {
+                    runCatching { progress.dismiss() }
+                    return@runOnUiThread
+                }
+                runCatching { progress.dismiss() }
+                val scroll = ScrollView(this)
+                val content = LinearLayout(this).apply {
+                    orientation = LinearLayout.VERTICAL
+                    setPadding(dp(12), dp(6), dp(12), dp(6))
+                }
+                val inputs = ArrayList<Pair<String, EditText>>()
+                candidates.forEachIndexed { index, (name, count) ->
+                    val line = LinearLayout(this).apply {
+                        orientation = LinearLayout.VERTICAL
+                        setPadding(0, dp(4), 0, dp(6))
+                    }
+                    line.addView(text("$name · تكرر $count مرات", 12f, Color.WHITE, true))
+                    val arabic = EditText(this).apply {
+                        hint = "الاسم بالعربية"
+                        textSize = 14f
+                        setTextColor(Color.WHITE)
+                        suggestions[index]?.let { setText(it) }
+                    }
+                    line.addView(arabic, matchWrap(dp(3)))
+                    content.addView(line, matchWrap(dp(3)))
+                    inputs.add(name to arabic)
+                }
+                scroll.addView(content)
+                val aiCount = suggestions.size
+                AlertDialog.Builder(this)
+                    .setTitle("أسماء متكررة · ${if (aiCount > 0) "اقتراحات Qwen جاهزة" else "أدخل المقابل عند الحاجة"}")
+                    .setMessage(
+                        if (aiCount > 0) "اقترح Qwen نقلاً صوتياً عربياً لـ $aiCount اسم. راجع النتائج وعدّلها، ثم احفظ الأسماء المكتملة بضغطة واحدة."
+                        else "لم تتوفر اقتراحات آلية (النموذج غير منزّل أو غير متاح). يمكنك إدخال المقابل العربي يدوياً، ولن يُحفظ أي اسم فارغ."
+                    )
+                    .setView(scroll)
+                    .setNegativeButton("إلغاء", null)
+                    .setPositiveButton("حفظ الأسماء المكتملة في المعجم") { _, _ ->
+                        var added = 0
+                        inputs.forEach { (source, editor) ->
+                            val arabic = editor.text.toString().trim()
+                            if (arabic.isNotBlank()) {
+                                store.saveGlossaryEntry(
+                                    MangaFoxKnowledgeStore.GlossaryEntry(
+                                        source, arabic,
+                                        "اقتراح اسم متكرر بمساعدة Qwen · ${MangaFoxRuntime.activeChapterName}"
+                                    )
+                                )
+                                added++
+                            }
+                        }
+                        toast(if (added > 0) "أُضيف $added اسم إلى المعجم" else "لم تُضف أسماء؛ لا توجد مقابلات عربية مكتملة")
+                    }.show()
+            }
+        }.start()
+    }
+
+    private fun showChapterQueuePicker(chapters: List<MangaFoxChapterArchive.ChapterInfo>) {
+        if (MangaFoxAccessibilityService.instance == null) {
+            toast("فعّل خدمة Manga FOX أولاً لتشغيل طابور الترجمة")
+            return
+        }
+        val queueable = chapters.filter { it.pageCount > 0 && it.sourcePageCount == it.pageCount }
+        if (queueable.isEmpty()) {
+            toast("لا توجد فصول بأصول الصور محفوظة. لا يمكن إعادة ترجمة النتائج وحدها دون الصورة الأصلية.")
+            return
+        }
+        val selected = BooleanArray(queueable.size)
+        val labels = queueable.map { "${it.workName} · ${it.chapterName} · ${it.sourcePageCount} صورة أصلية" }.toTypedArray()
+        AlertDialog.Builder(this).setTitle("اختر الفصول التي تريد ترجمتها")
+            .setMultiChoiceItems(labels, selected) { _, which, checked -> selected[which] = checked }
+            .setNegativeButton("إلغاء", null)
+            .setPositiveButton("إضافة إلى الطابور") { _, _ ->
+                val ids = queueable.indices.filter { selected[it] }.map { queueable[it].id }
+                if (ids.isEmpty()) toast("لم تختر أي فصل")
+                else {
+                    runCatching { MangaFoxChapterQueueService.enqueue(this, ids) }
+                        .onSuccess { toast("أُضيف ${ids.size} فصل إلى طابور الخلفية") }
+                        .onFailure { toast("تعذر بدء طابور الترجمة: ${it.message}") }
+                }
+            }.show()
+    }
+
+    private fun showResults() {
+        setReadingFullscreen(true)
+        val editMode = preferences.getBoolean(PREF_RESULTS_EDIT_MODE, false)
+        val scroll = ScrollView(this).apply {
+            setBackgroundColor(dark)
+            isFillViewport = true
+            clipToPadding = false
+        }
+        val root = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutDirection = View.LAYOUT_DIRECTION_RTL
+            setPadding(if (editMode) dp(12) else 0, if (editMode) dp(8) else 0,
+                if (editMode) dp(12) else 0, if (editMode) dp(12) else 0)
+            setBackgroundColor(Color.BLACK)
+        }
+        val pages = MangaFoxRuntime.resultPages
+        val pageViews = ArrayList<ZoomableImageView>()
+        val readerChrome = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutDirection = View.LAYOUT_DIRECTION_RTL
+            setPadding(if (editMode) 0 else dp(5), dp(3), if (editMode) 0 else dp(5), dp(5))
+            background = studioSurface()
+            elevation = dp(5).toFloat()
+        }
+        val topBar = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+            layoutDirection = View.LAYOUT_DIRECTION_RTL
+        }
+        fun compactButton(label: String, action: () -> Unit): Button = actionButton(label, false, action).apply {
+            textSize = 11f
+            minHeight = dp(44)
+            minWidth = 0
+            layoutParams = LinearLayout.LayoutParams(0, dp(46), 1f).apply {
+                marginStart = dp(3); marginEnd = dp(3); topMargin = dp(3); bottomMargin = dp(5)
+            }
+        }
+        topBar.addView(compactButton("الرئيسية") { showHome() })
+        topBar.addView(compactButton("PDF") { exportResultsAsPdf() })
+        topBar.addView(compactButton("صوت") { speakResultsAloud() })
+        topBar.addView(compactButton("سطوع") { showReaderBrightnessDialog() })
+        topBar.addView(compactButton(if (editMode) "قراءة" else "تحرير") {
+            preferences.edit().putBoolean(PREF_RESULTS_EDIT_MODE, !editMode).apply()
+            showResults()
+        })
+        readerChrome.addView(topBar, matchWrap(dp(3)))
+        readerChrome.addView(actionButton("☰  القائمة الجانبية", false) { showQuickSidePanel() }, matchWrap(dp(5)))
+        val reviewCount = countReviewLayers()
+        readerChrome.addView(actionButton("مراجعة الفقاعات الصفراء والحمراء · $reviewCount", false) {
+            showReviewQueue()
+        }, matchWrap(dp(4)))
+        readerChrome.addView(actionButton("اقتراح الأسماء المتكررة وإضافتها للمعجم", false) {
+            showRecurringNameSuggestions()
+        }, matchWrap(dp(4)))
+        if (MangaFoxRuntime.captureOnlyResult && MangaFoxRuntime.sourcePages.any { it.isNotBlank() && File(it).isFile }) {
+            readerChrome.addView(actionButton("ترجمة الصور المستوردة الآن", true) {
+                MangaFoxAccessibilityService.instance?.retranslateLastResults()
+                    ?: toast("فعّل خدمة Manga FOX أولاً")
+            }, matchWrap(dp(4)))
+        }
+        readerChrome.addView(text(
+            if (editMode) "MANGA FOX · وضع التحرير المباشر" else "MANGA FOX · قارئ متصل",
+            15f, gold, true
+        ).apply { gravity = Gravity.CENTER; setPadding(0, dp(2), 0, dp(4)) }, matchWrap())
+        readerChrome.addView(text(
+            if (editMode) "${pages.size} صفحة · اضغط على أي فقاعة لتعديل ترجمتها مباشرة." 
+            else "${pages.size} صفحة · لمسة واحدة لإخفاء الأدوات أو إظهارها · ضغطتان للتكبير · ضغط مطوّل لمقارنة الأصل.",
+            11f, Color.LTGRAY
+        ).apply { gravity = Gravity.CENTER }, matchWrap(dp(4)))
+
+        val pageLabel = text("صفحة ${if (pages.isEmpty()) 0 else 1} من ${pages.size}", 12f, gold, true)
+            .apply { gravity = Gravity.CENTER; setPadding(0, dp(3), 0, 0) }
+        val pageSeek = SeekBar(this).apply {
+            max = (pages.size - 1).coerceAtLeast(0)
+            progress = 0
+            isEnabled = pages.size > 1
+            progressTintList = android.content.res.ColorStateList.valueOf(gold)
+            thumbTintList = android.content.res.ColorStateList.valueOf(gold)
+        }
+        pageSeek.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                pageLabel.text = "صفحة ${if (pages.isEmpty()) 0 else progress + 1} من ${pages.size}"
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) = Unit
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                val target = pageViews.getOrNull(pageSeek.progress) ?: return
+                scroll.post { scroll.smoothScrollTo(0, root.top + target.top) }
+            }
+        })
+        readerChrome.addView(pageLabel, matchWrap())
+        readerChrome.addView(pageSeek, matchWrap(dp(4)))
+
+        if (editMode) {
+            readerChrome.addView(text("${pages.size} صورة · ${MangaFoxRuntime.resultTitle}", 12f, Color.LTGRAY).apply { gravity = Gravity.CENTER }, matchWrap(dp(3)))
+            readerChrome.addView(text(
+                if (MangaFoxRuntime.pendingEdits) "✎ توجد تعديلات غير مطبقة؛ ستظهر بعد تطبيق الطبقات." else "لا توجد تعديلات معلّقة.",
+                11f, if (MangaFoxRuntime.pendingEdits) gold else Color.LTGRAY, true
+            ).apply { gravity = Gravity.CENTER }, matchWrap(dp(4)))
+            readerChrome.addView(actionButton("تطبيق جميع تعديلات الصور دفعة واحدة", true) {
+                val service = MangaFoxAccessibilityService.instance
+                if (MangaFoxRuntime.sourcePages.isEmpty()) toast("الصور الأصلية غير متوفرة لهذه النتيجة")
+                else if (service == null) toast("فعّل خدمة Manga Fox لإعادة تنسيق الطبقات")
+                else service.rerenderLastResultsFromLayers { showResults() }
+            }, matchWrap(dp(4)))
+            val historyActions = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; layoutDirection = View.LAYOUT_DIRECTION_RTL }
+            historyActions.addView(actionButton("↶ تراجع", false) {
+                val changed = MangaFoxLayerHistory(this).undoLatest(MangaFoxRuntime.translationLayerFiles)
+                if (changed) { MangaFoxRuntime.pendingEdits = true; syncCurrentArchiveAfterLayerChange(); showResults(); toast("تم التراجع عن آخر تعديل") }
+                else toast("لا توجد تعديلات سابقة للتراجع عنها")
+            }, LinearLayout.LayoutParams(0, dp(43), 1f).apply { marginEnd = dp(3) })
+            historyActions.addView(actionButton("↷ إعادة", false) {
+                val changed = MangaFoxLayerHistory(this).redoLatest(MangaFoxRuntime.translationLayerFiles)
+                if (changed) { MangaFoxRuntime.pendingEdits = true; syncCurrentArchiveAfterLayerChange(); showResults(); toast("تمت إعادة آخر تعديل") }
+                else toast("لا توجد خطوة متراجَع عنها")
+            }, LinearLayout.LayoutParams(0, dp(43), 1f).apply { marginStart = dp(3) })
+            readerChrome.addView(historyActions, matchWrap(dp(4)))
+            readerChrome.addView(actionButton("حفظ مجموعة التعديلات باسم...", false) { showSaveNamedEditsDialog() }, matchWrap(dp(4)))
+            readerChrome.addView(actionButton("استعادة مجموعة تعديلات محفوظة", false) { showRestoreNamedEditsDialog() }, matchWrap(dp(4)))
+            readerChrome.addView(actionButton("إعادة OCR وترجمة الصور الأصلية من جديد", false) {
+                MangaFoxAccessibilityService.instance?.retranslateLastResults() ?: toast("فعّل خدمة Manga Fox لإعادة المعالجة")
+            }, matchWrap(dp(4)))
+            readerChrome.addView(text("FOX QUALITY GUARD · ${MangaFoxRuntime.qualitySummary}", 11f, Color.LTGRAY), matchWrap(dp(4)))
+            readerChrome.addView(actionButton("عرض النصوص التي فشلت ترجمتها", false) {
+                val samples = MangaFoxRuntime.failedBlockSamples.take(25)
+                if (samples.isEmpty()) AlertDialog.Builder(this).setTitle("نتائج الفشل").setMessage("لا توجد عينات فشل مسجلة حالياً.").setPositiveButton("إغلاق", null).show()
+                else AlertDialog.Builder(this).setTitle("اختر نصاً لتصحيح ترجمته").setItems(samples.toTypedArray()) { _, which -> showLearnedTranslationDialog(samples[which]) }.setNegativeButton("إغلاق", null).show()
+            }, matchWrap(dp(4)))
+        } else {
+            readerChrome.addView(text("وضع القراءة: اضغط مطولاً على الصفحة للتبديل بين الأصل والترجمة. أدوات التحرير مخفية حتى لا تقطع القراءة.", 11f, Color.LTGRAY).apply { gravity = Gravity.CENTER }, matchWrap(dp(5)))
+        }
+
+        val showBounds = CheckBox(this).apply {
+            text = "إظهار حدود الفقاعات · 🟢 مترجمة  🔴 فشلت  🟡 تحتاج مراجعة"
+            textSize = 11f
+            setTextColor(Color.LTGRAY)
+            buttonTintList = android.content.res.ColorStateList.valueOf(gold)
+            isChecked = preferences.getBoolean(PREF_SHOW_BUBBLE_BOUNDS, true)
+            setOnCheckedChangeListener { _, checked ->
+                preferences.edit().putBoolean(PREF_SHOW_BUBBLE_BOUNDS, checked).apply()
+                pageViews.forEach { page -> page.setBubbleOverlay(page.currentBubbleOverlay(), checked) }
+            }
+        }
+        readerChrome.addView(showBounds, matchWrap(dp(3)))
+        readerChrome.addView(text("مفتاح الحدود: الأخضر = ترجمة محفوظة · الأحمر = فشل · الأصفر = راجع النص أو شكل OCR.", 10f, Color.rgb(175, 170, 160)), matchWrap(dp(3)))
+        root.addView(readerChrome, matchWrap(dp(5)))
+
+        if (pages.isEmpty()) {
+            root.addView(text(
+                if (MangaFoxRuntime.lastError.isNotBlank()) MangaFoxRuntime.lastError
+                else "لا توجد نتيجة بعد. افتح فصلاً واضغط العدسة العائمة، ثم اختر ترجمة الفصل العمودي كاملاً.",
+                15f, Color.LTGRAY
+            ).apply { setPadding(dp(12), dp(30), dp(12), dp(30)) }, matchWrap())
+        } else {
+            pages.forEachIndexed { index, filePath ->
+                val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                BitmapFactory.decodeFile(filePath, bounds)
+                val sourceWidth = bounds.outWidth.coerceAtLeast(1)
+                val sourceHeight = bounds.outHeight.coerceAtLeast(1)
+                val originalPath = MangaFoxRuntime.sourcePages.getOrNull(index)?.takeIf { File(it).isFile }
+                var showingOriginal = false
+                val image = ZoomableImageView(this).apply {
+                    setImageFile(filePath)
+                    contentDescription = "الصورة ${index + 1} من ${pages.size}"
+                    setPadding(0, 0, 0, 0)
+                    minimumHeight = 0
+                    minimumWidth = 0
+                    setBackgroundColor(Color.BLACK)
+                    val layerArray = MangaFoxRuntime.translationLayerFiles.getOrNull(index)?.takeIf { it.isNotBlank() }
+                        ?.let { path -> runCatching { JSONArray(File(path).readText(Charsets.UTF_8)) }.getOrNull() }
+                    val overlay = ArrayList<MangaFoxOverlayRegion>()
+                    if (layerArray != null) for (layerIndex in 0 until layerArray.length()) {
+                        val layer = layerArray.optJSONObject(layerIndex) ?: continue
+                        if (layer.optBoolean("eraseOnly", false)) continue
+                        if (!layer.has("left") || !layer.has("top") || !layer.has("right") || !layer.has("bottom")) continue
+                        val rect = Rect(layer.optInt("left"), layer.optInt("top"), layer.optInt("right"), layer.optInt("bottom"))
+                        if (rect.width() <= 0 || rect.height() <= 0) continue
+                        val status = layer.optString("status", if (layer.optString("translated").isBlank()) "failed" else "translated")
+                        overlay.add(MangaFoxOverlayRegion(rect, status, layer.optString("shape", "rect"), layerIndex))
+                    }
+                    setBubbleOverlay(overlay, preferences.getBoolean(PREF_SHOW_BUBBLE_BOUNDS, true))
+                    setOnImageTapListener { viewX, viewY ->
+                        if (editMode) {
+                            val sourcePoint = mapPointToSource(viewX, viewY)
+                            val hit = sourcePoint?.let { point ->
+                                overlay.withIndex().filter { it.value.bounds.contains(point.x.toInt(), point.y.toInt()) }
+                                    .minByOrNull { it.value.bounds.width().toLong() * it.value.bounds.height().toLong() }
+                            }
+                            if (hit != null) editLayerInlineDialog(index, hit.value.layerIndex)
+                            else readerChrome.visibility = if (readerChrome.visibility == View.VISIBLE) View.GONE else View.VISIBLE
+                        } else {
+                            readerChrome.visibility = if (readerChrome.visibility == View.VISIBLE) View.GONE else View.VISIBLE
+                        }
+                    }
+                    setOnLongClickListener {
+                        if (originalPath == null) toast("الصورة الأصلية غير متوفرة لهذه الصفحة")
+                        else {
+                            showingOriginal = !showingOriginal
+                            setImageFile(if (showingOriginal) originalPath else filePath)
+                            loadPage()
+                            toast(if (showingOriginal) "الأصل · اضغط مطولاً للعودة" else "الترجمة العربية")
+                        }
+                        true
+                    }
+                }
+                val displayWidth = if (editMode) resources.displayMetrics.widthPixels - dp(24) else resources.displayMetrics.widthPixels
+                val displayHeight = kotlin.math.ceil(sourceHeight * (displayWidth.toFloat() / sourceWidth)).toInt().coerceAtLeast(1)
+                root.addView(image, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, displayHeight).apply {
+                    bottomMargin = 0; topMargin = 0
+                })
+                pageViews.add(image)
+
+                if (editMode) {
+                    root.addView(text("الصورة ${index + 1} / ${pages.size}", 11f, gold, true), matchWrap(dp(3)))
+                    if (originalPath != null) {
+                        root.addView(actionButton("مقارنة الأصل والترجمة بمزلاج", false) { showBeforeAfterComparison(originalPath, filePath) }, matchWrap(dp(4)))
+                        root.addView(actionButton("إعادة OCR لمنطقة من هذه الصورة", false) { openRegionSelection(originalPath, filePath) }, matchWrap(dp(4)))
+                    }
+                    root.addView(actionButton("إدارة الفقاعات والطبقات", false) { editTranslationLayer(index) }, matchWrap(dp(4)))
+                    root.addView(actionButton("تراجع / إعادة آخر تعديل", false) { showLayerHistoryDialog(index) }, matchWrap(dp(4)))
+                    root.addView(actionButton("حذف هذه الصورة من الفصل", false) {
+                        AlertDialog.Builder(this).setTitle("حذف الصورة ${index + 1}؟")
+                            .setMessage("سيتم حذف الصورة المترجمة وأصلها وطبقاتها. لا يمكن التراجع عن الحذف.")
+                            .setNegativeButton("إلغاء", null)
+                            .setPositiveButton("حذف الصورة") { _, _ -> MangaFoxRuntime.removePage(this, index); showResults(); toast("تم حذف الصورة من الفصل") }
+                            .show()
+                    }, matchWrap(dp(10)))
+                }
+            }
+            pageSeek.max = (pages.size - 1).coerceAtLeast(0)
+            scroll.setOnScrollChangeListener { _, _, scrollY, _, _ ->
+                updateVisiblePageImages(pageViews)
+                val currentIndex = pageViews.indices.minByOrNull { idx ->
+                    abs((root.top + pageViews[idx].top) - scrollY)
+                } ?: 0
+                if (currentIndex in 0 until pages.size) {
+                    if (!pageSeek.isPressed) pageSeek.progress = currentIndex
+                    pageLabel.text = "صفحة ${currentIndex + 1} من ${pages.size}"
+                    if (MangaFoxRuntime.activeArchiveId.isNotBlank() &&
+                        (preferences.getString(PREF_READER_LAST_CHAPTER_ID, "") != MangaFoxRuntime.activeArchiveId ||
+                            preferences.getInt(PREF_READER_LAST_PAGE, -1) != currentIndex)) {
+                        preferences.edit()
+                            .putString(PREF_READER_LAST_CHAPTER_ID, MangaFoxRuntime.activeArchiveId)
+                            .putInt(PREF_READER_LAST_PAGE, currentIndex)
+                            .apply()
+                    }
+                }
+            }
+            scroll.post {
+                updateVisiblePageImages(pageViews)
+                val savedChapterId = preferences.getString(PREF_READER_LAST_CHAPTER_ID, "")
+                val resumeIndex = if (MangaFoxRuntime.activeArchiveId.isNotBlank() &&
+                    savedChapterId == MangaFoxRuntime.activeArchiveId) {
+                    preferences.getInt(PREF_READER_LAST_PAGE, 0).coerceIn(0, (pageViews.size - 1).coerceAtLeast(0))
+                } else 0
+                if (resumeIndex > 0 && pageViews.getOrNull(resumeIndex) != null) {
+                    pageSeek.progress = resumeIndex
+                    pageLabel.text = "صفحة ${resumeIndex + 1} من ${pages.size}"
+                    scroll.scrollTo(0, pageViews[resumeIndex].top)
+                    updateVisiblePageImages(pageViews)
+                }
+            }
+        }
+        scroll.addView(root)
+        setContentView(scroll)
+        val savedBrightness = preferences.getFloat(PREF_READER_BRIGHTNESS, -1f)
+        if (savedBrightness >= 0f) window.attributes = window.attributes.apply { screenBrightness = savedBrightness.coerceIn(0.1f, 1f) }
+    }
+
+    private fun layerFileForPage(pageIndex: Int): File? {
+        if (pageIndex !in MangaFoxRuntime.resultPages.indices) return null
+        val current = MangaFoxRuntime.translationLayerFiles.getOrNull(pageIndex)
+            ?.takeIf { it.isNotBlank() }?.let { path -> File(path) }?.takeIf { it.isFile }
+        if (current != null) return current
+        val created = File(filesDir, "mfox_layers_editor_${System.currentTimeMillis()}_$pageIndex.json")
+        runCatching { created.writeText(org.json.JSONArray().toString(), Charsets.UTF_8) }.getOrElse { return null }
+        val updated = MangaFoxRuntime.translationLayerFiles.toMutableList()
+        while (updated.size < MangaFoxRuntime.resultPages.size) updated.add("")
+        updated[pageIndex] = created.absolutePath
+        MangaFoxRuntime.translationLayerFiles = updated
+        MangaFoxRuntime.persist(this)
+        return created
+    }
+
+    private fun readLayerArray(pageIndex: Int): Pair<File, org.json.JSONArray>? {
+        val file = layerFileForPage(pageIndex) ?: return null
+        val array = runCatching { org.json.JSONArray(file.readText(Charsets.UTF_8)) }.getOrNull() ?: return null
+        return file to array
+    }
+
+        private fun saveLayerChanges(file: File, layers: org.json.JSONArray, refresh: Boolean = true) {
+        runCatching {
+            val historyPageIndex = MangaFoxRuntime.translationLayerFiles.indexOf(file.absolutePath)
+            if (historyPageIndex >= 0) MangaFoxLayerHistory(this).push(historyPageIndex, file)
+            val temp = File(file.parentFile, file.name + ".tmp")
+            temp.writeText(layers.toString(), Charsets.UTF_8)
+            if (!temp.renameTo(file)) {
+                temp.copyTo(file, overwrite = true)
+                temp.delete()
+            }
+            MangaFoxRuntime.pendingEdits = true
+            if (MangaFoxRuntime.activeArchiveId.isNotBlank()) {
+                MangaFoxChapterArchive.save(
+                    this, MangaFoxRuntime.activeWorkName, MangaFoxRuntime.activeChapterName,
+                    MangaFoxRuntime.resultTitle, MangaFoxRuntime.sourcePages,
+                    MangaFoxRuntime.resultPages, MangaFoxRuntime.translationLayerFiles,
+                    MangaFoxRuntime.captureOnlyResult, MangaFoxRuntime.qualitySummary,
+                    preserveExistingImages = true
+                )
+            }
+            MangaFoxRuntime.persist(this)
+        }.onSuccess {
+            MangaFoxAccessibilityService.instance?.updateLensPendingEdits()
+            toast("تم تسجيل التعديل. أكمل تعديل بقية الصور ثم اضغط «تطبيق جميع تعديلات الصور دفعة واحدة»")
+        }.onFailure { toast("تعذر حفظ الطبقة: ${it.localizedMessage ?: "خطأ في الملف"}") }
+    }
+
+    private fun editTranslationLayer(pageIndex: Int) {
+        val pair = readLayerArray(pageIndex)
+        if (pair == null) {
+            toast("تعذر فتح طبقات هذا الجزء")
+            return
+        }
+        val (file, layers) = pair
+        val visibleIndexes = (0 until layers.length()).filter { index ->
+            val item = layers.optJSONObject(index)
+            item != null && item.has("left") && item.has("top")
+        }
+        val labels = visibleIndexes.map { index ->
+            val item = layers.optJSONObject(index)
+            val translated = item?.optString("translated").orEmpty().take(50)
+            val source = item?.optString("source").orEmpty().take(35)
+            val mode = when {
+                item?.optBoolean("eraseOnly", false) == true -> " · مسح"
+                item?.optBoolean("vertical", false) == true -> " · عمودي"
+                else -> ""
+            }
+            "${index + 1}. ${translated.ifBlank { source.ifBlank { "طبقة يدوية" } }}$mode"
+        }.toTypedArray()
+        AlertDialog.Builder(this)
+            .setTitle("إدارة طبقات الجزء ${pageIndex + 1}")
+            .setItems(labels) { _, selected ->
+                val actualIndex = visibleIndexes.getOrNull(selected) ?: return@setItems
+                val item = layers.optJSONObject(actualIndex) ?: return@setItems
+                val actions = arrayOf(
+                    "تعديل النص العربي",
+                    if (item.optBoolean("vertical", false)) "تحويل إلى أفقي" else "عرض العربية عمودياً من الأعلى للأسفل",
+                    "إخفاء النص الأصلي داخل المنطقة (مسح)",
+                    "تغيير موضع وحجم المنطقة",
+                    "تبديل شكل الفقاعة (بيضاوي / مستطيل)",
+                    "تخصيص لون النص والإطار وحجمه لهذه الفقاعة",
+                    "دمج هذه الفقاعة مع فقاعة أخرى",
+                    "تقسيم هذه الفقاعة إلى جزأين",
+                    "حذف هذه الطبقة"
+                )
+                AlertDialog.Builder(this)
+                    .setTitle("الطبقة ${actualIndex + 1}")
+                    .setItems(actions) { _, action ->
+                        when (action) {
+                            0 -> {
+                                val edit = EditText(this).apply {
+                                    setText(item.optString("translated"))
+                                    hint = "اكتب الترجمة العربية"
+                                    minLines = 2
+                                    textSize = 16f
+                                    setPadding(dp(10), dp(8), dp(10), dp(8))
+                                }
+                                AlertDialog.Builder(this).setTitle("تعديل النص")
+                                    .setMessage("النص الأصلي: ${item.optString("source")}")
+                                    .setView(edit).setNegativeButton("إلغاء", null)
+                                    .setPositiveButton("حفظ") { _, _ ->
+                                        val corrected = edit.text.toString().trim()
+                                        if (corrected.isBlank()) {
+                                            toast("النص فارغ؛ استخدم خيار المسح بدلاً من ذلك")
+                                        } else {
+                                            item.put("translated", corrected).put("eraseOnly", false)
+                                            val sourceText = item.optString("source").trim()
+                                            if (sourceText.isNotBlank()) {
+                                                val dictionary = runCatching {
+                                                    org.json.JSONObject(preferences.getString(PREF_LEARNED_TRANSLATIONS, "{}") ?: "{}")
+                                                }.getOrElse { org.json.JSONObject() }
+                                                dictionary.put(normalizeDictionaryKey(sourceText), corrected)
+                                                preferences.edit().putString(PREF_LEARNED_TRANSLATIONS, dictionary.toString()).apply()
+                                            }
+                                            saveLayerChanges(file, layers)
+                                        }
+                                    }.show()
+                            }
+                            1 -> {
+                                item.put("vertical", !item.optBoolean("vertical", false))
+                                saveLayerChanges(file, layers)
+                            }
+                            2 -> {
+                                AlertDialog.Builder(this).setTitle("مسح النص داخل الفقاعة؟")
+                                    .setMessage("سيُغطّى النص الأصلي داخل المستطيل المحدد بلون قريب من الخلفية، دون حذف بقية الصورة.")
+                                    .setNegativeButton("إلغاء", null)
+                                    .setPositiveButton("مسح النص") { _, _ ->
+                                        item.put("eraseOnly", true).put("translated", "")
+                                        saveLayerChanges(file, layers)
+                                    }.show()
+                            }
+                            3 -> openLayerRegionSelection(pageIndex, actualIndex, false)
+                            4 -> {
+                                val shapeOptions = arrayOf("بيضاوي", "مسنن / صرخة", "صندوق سرد", "مستطيل")
+                                val shapeValues = arrayOf("oval", "spiky", "narration", "rect")
+                                val selected = shapeValues.indexOf(item.optString("shape", "rect")).coerceAtLeast(0)
+                                AlertDialog.Builder(this)
+                                    .setTitle("شكل الفقاعة")
+                                    .setSingleChoiceItems(shapeOptions, selected) { dialog, which ->
+                                        item.put("shape", shapeValues[which])
+                                        saveLayerChanges(file, layers)
+                                        dialog.dismiss()
+                                    }
+                                    .setNegativeButton("إغلاق", null)
+                                    .show()
+                            }
+                            5 -> openLayerTextStyleEditor(file, layers, actualIndex)
+                            6 -> mergeLayerWithAnother(pageIndex, file, layers, actualIndex)
+                            7 -> splitLayerIntoTwo(pageIndex, file, layers, actualIndex)
+                            8 -> AlertDialog.Builder(this).setTitle("حذف الطبقة؟")
+                                .setMessage("سيتم حذف هذه الطبقة من قائمة التعديلات. لحذف النص الأصلي من الصورة استخدم أداة المسح.")
+                                .setNegativeButton("إلغاء", null)
+                                .setPositiveButton("حذف") { _, _ ->
+                                    val updated = org.json.JSONArray()
+                                    for (i in 0 until layers.length()) if (i != actualIndex) updated.put(layers.optJSONObject(i))
+                                    saveLayerChanges(file, updated)
+                                }.show()
+                        }
+                    }.setNegativeButton("إغلاق", null).show()
+            }
+            .setPositiveButton("إضافة فقاعة / مستطيل") { _, _ -> openLayerRegionSelection(pageIndex, null, false) }
+            .setNeutralButton("مسح نص من الصورة") { _, _ -> openLayerRegionSelection(pageIndex, null, true) }
+            .setNegativeButton("إغلاق", null)
+            .show()
+    }
+
+    private fun editLayerInlineDialog(pageIndex: Int, layerIndex: Int) {
+        val (file, layers) = readLayerArray(pageIndex) ?: run { toast("تعذر فتح طبقة الفقاعة"); return }
+        val item = layers.optJSONObject(layerIndex) ?: return
+        val input = EditText(this).apply {
+            setText(item.optString("translated"))
+            hint = "اكتب الترجمة العربية"
+            minLines = 2
+            textSize = 17f
+            setPadding(dp(12), dp(10), dp(12), dp(10))
+        }
+        val source = item.optString("source").ifBlank { "نص يدوي" }
+        AlertDialog.Builder(this).setTitle("تحرير مباشر · الفقاعة ${layerIndex + 1}")
+            .setMessage(source)
+            .setView(input)
+            .setNegativeButton("إلغاء", null)
+            .setPositiveButton("حفظ النص في مكانه") { _, _ ->
+                val value = input.text.toString().trim()
+                if (value.isBlank()) {
+                    toast("النص فارغ؛ استخدم أداة مسح النص إذا كان هذا مقصوداً")
+                } else {
+                    item.put("translated", value).put("eraseOnly", false).put("status", "translated")
+                    if (source.isNotBlank() && source != "نص يدوي") {
+                        val dictionary = runCatching {
+                            JSONObject(preferences.getString(PREF_LEARNED_TRANSLATIONS, "{}") ?: "{}")
+                        }.getOrElse { JSONObject() }
+                        dictionary.put(normalizeDictionaryKey(source), value)
+                        preferences.edit().putString(PREF_LEARNED_TRANSLATIONS, dictionary.toString()).apply()
+                    }
+                    saveLayerChanges(file, layers)
+                    homeUiHandler.post { showResults() }
+                }
+            }.show()
+    }
+
+    private fun mergeLayerWithAnother(pageIndex: Int, file: File, layers: JSONArray, sourceIndex: Int) {
+        val choices = (0 until layers.length()).filter { it != sourceIndex }.mapNotNull { index ->
+            val item = layers.optJSONObject(index) ?: return@mapNotNull null
+            if (!item.has("left") || !item.has("top")) return@mapNotNull null
+            val label = item.optString("translated").ifBlank { item.optString("source") }.take(36)
+            index to "${index + 1}. $label"
+        }
+        if (choices.isEmpty()) { toast("لا توجد فقاعة أخرى للدمج معها"); return }
+        AlertDialog.Builder(this).setTitle("اختر الفقاعة الثانية")
+            .setItems(choices.map { it.second }.toTypedArray()) { _, selected ->
+                val targetIndex = choices.getOrNull(selected)?.first ?: return@setItems
+                val first = layers.optJSONObject(sourceIndex) ?: return@setItems
+                val second = layers.optJSONObject(targetIndex) ?: return@setItems
+                val firstRect = Rect(first.optInt("left"), first.optInt("top"), first.optInt("right"), first.optInt("bottom"))
+                val secondRect = Rect(second.optInt("left"), second.optInt("top"), second.optInt("right"), second.optInt("bottom"))
+                if (firstRect.width() <= 0 || firstRect.height() <= 0 || secondRect.width() <= 0 || secondRect.height() <= 0) {
+                    toast("إحداثيات إحدى الفقاعتين غير صالحة"); return@setItems
+                }
+                val order = listOf(first to firstRect, second to secondRect).sortedWith(
+                    compareBy<Pair<JSONObject, Rect>> { it.second.centerY() }.thenByDescending { it.second.centerX() }
+                )
+                val merged = JSONObject(first.toString())
+                    .put("left", min(firstRect.left, secondRect.left))
+                    .put("top", min(firstRect.top, secondRect.top))
+                    .put("right", max(firstRect.right, secondRect.right))
+                    .put("bottom", max(firstRect.bottom, secondRect.bottom))
+                    .put("source", order.joinToString(" ") { it.first.optString("source").trim() }.trim())
+                    .put("translated", order.joinToString(" ") { it.first.optString("translated").trim() }.trim())
+                    .put("shape", if (first.optString("shape") == second.optString("shape")) first.optString("shape") else "rect")
+                    .put("status", "review")
+                listOf("containerLeft", "containerTop", "containerRight", "containerBottom").forEach { merged.remove(it) }
+                val remove = setOf(sourceIndex, targetIndex)
+                val insertAt = min(sourceIndex, targetIndex)
+                val updated = JSONArray()
+                for (i in 0 until layers.length()) {
+                    if (i == insertAt) updated.put(merged)
+                    if (i !in remove) updated.put(layers.optJSONObject(i))
+                }
+                saveLayerChanges(file, updated)
+                homeUiHandler.post { showResults() }
+                toast("تم دمج الفقاعتين في طبقة واحدة؛ راجع حدود النص قبل التطبيق")
+            }.setNegativeButton("إلغاء", null).show()
+    }
+
+    private fun splitLayerIntoTwo(pageIndex: Int, file: File, layers: JSONArray, layerIndex: Int) {
+        val item = layers.optJSONObject(layerIndex) ?: return
+        val bounds = Rect(item.optInt("left"), item.optInt("top"), item.optInt("right"), item.optInt("bottom"))
+        if (bounds.width() < 24 || bounds.height() < 24) { toast("الفقاعة صغيرة جداً للتقسيم"); return }
+        val currentText = item.optString("translated")
+        val sourceText = item.optString("source")
+        fun splitAtMiddle(value: String): Pair<String, String> {
+            if (value.isBlank()) return "" to ""
+            val midpoint = value.length / 2
+            val breakAt = (midpoint downTo max(1, midpoint - 18)).firstOrNull { value[it].isWhitespace() || value[it] in "،؛,.!?؟" }
+                ?: midpoint.coerceAtLeast(1)
+            return value.substring(0, breakAt).trim() to value.substring(breakAt).trim()
+        }
+        val defaultTranslated = splitAtMiddle(currentText)
+        val defaultSource = splitAtMiddle(sourceText)
+        val firstText = EditText(this).apply { setText(defaultTranslated.first); hint = "نص الجزء الأول"; minLines = 2 }
+        val secondText = EditText(this).apply { setText(defaultTranslated.second); hint = "نص الجزء الثاني"; minLines = 2 }
+        val direction = CheckBox(this).apply { text = "تقسيم عمودي إلى يمين ويسار (بدون تحديد: أعلى وأسفل)"; isChecked = false }
+        val box = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(16), dp(8), dp(16), dp(4))
+            addView(firstText, matchWrap(dp(5)))
+            addView(secondText, matchWrap(dp(5)))
+            addView(direction, matchWrap())
+        }
+        AlertDialog.Builder(this).setTitle("تقسيم الفقاعة إلى منطقتين")
+            .setMessage("راجع تقسيم النصين، ثم اختر اتجاه حدود التقسيم.")
+            .setView(box).setNegativeButton("إلغاء", null)
+            .setPositiveButton("تقسيم وحفظ") { _, _ ->
+                val a = firstText.text.toString().trim()
+                val b = secondText.text.toString().trim()
+                if (a.isBlank() || b.isBlank()) { toast("اكتب نصاً في الجزأين"); return@setPositiveButton }
+                val firstRect: Rect
+                val secondRect: Rect
+                if (direction.isChecked) {
+                    val mid = bounds.centerX()
+                    firstRect = Rect(mid, bounds.top, bounds.right, bounds.bottom) // right-to-left reading: first on right
+                    secondRect = Rect(bounds.left, bounds.top, mid, bounds.bottom)
+                } else {
+                    val mid = bounds.centerY()
+                    firstRect = Rect(bounds.left, bounds.top, bounds.right, mid)
+                    secondRect = Rect(bounds.left, mid, bounds.right, bounds.bottom)
+                }
+                val originalStatus = item.optString("status", "review")
+                val one = JSONObject(item.toString()).put("left", firstRect.left).put("top", firstRect.top)
+                    .put("right", firstRect.right).put("bottom", firstRect.bottom)
+                    .put("translated", a).put("source", defaultSource.first).put("shape", "rect").put("status", if (originalStatus == "failed") "review" else originalStatus)
+                val two = JSONObject(item.toString()).put("left", secondRect.left).put("top", secondRect.top)
+                    .put("right", secondRect.right).put("bottom", secondRect.bottom)
+                    .put("translated", b).put("source", defaultSource.second).put("shape", "rect").put("status", if (originalStatus == "failed") "review" else originalStatus)
+                listOf("containerLeft", "containerTop", "containerRight", "containerBottom").forEach { one.remove(it); two.remove(it) }
+                val updated = JSONArray()
+                for (i in 0 until layers.length()) {
+                    if (i == layerIndex) { updated.put(one); updated.put(two) }
+                    else updated.put(layers.optJSONObject(i))
+                }
+                saveLayerChanges(file, updated)
+                homeUiHandler.post { showResults() }
+                toast("تم تقسيم الفقاعة؛ اضبط موضع كل جزء إن لزم")
+            }.show()
+    }
+
+    private fun openLayerTextStyleEditor(file: File, layers: org.json.JSONArray, layerIndex: Int) {
+        val item = layers.optJSONObject(layerIndex) ?: return
+        if (item.optBoolean("eraseOnly", false) || item.optString("translated").isBlank()) {
+            toast("هذه الطبقة لا تحتوي على نص مترجم لتخصيصه")
+            return
+        }
+        var textColor = if (item.has("textColor")) item.optInt("textColor") else Color.WHITE
+        var outlineColor = if (item.has("outlineColor")) item.optInt("outlineColor") else Color.BLACK
+        val automaticTextColor = CheckBox(this).apply {
+            text = "اختيار لون النص تلقائياً حسب لون هذه الفقاعة"
+            isChecked = !item.has("textColor")
+            setTextColor(Color.WHITE)
+        }
+        val sizeSeek = SeekBar(this).apply { max = 150; progress = ((item.optDouble("fontScale", 1.0) * 100).toInt() - 50).coerceIn(0, 150) }
+        val outlineSeek = SeekBar(this).apply { max = 8; progress = item.optInt("outlineWidth", 2).coerceIn(0, 8) }
+        val sizeLabel = text("حجم النص: ${sizeSeek.progress + 50}%", 13f, Color.WHITE, true)
+        val outlineLabel = text("سُمك الإطار: ${outlineSeek.progress} dp", 13f, Color.WHITE, true)
+        val textColorButton = actionButton(
+            if (item.has("textColor")) "لون النص: ${colorLabel(textColor)}" else "لون النص: تلقائي",
+            false
+        ) { }
+        val outlineColorButton = actionButton("لون الإطار: ${colorLabel(outlineColor)}", false) { }
+        textColorButton.setOnClickListener {
+            showTranslationColorPicker("لون نص هذه الفقاعة", textColor) { selected ->
+                textColor = selected
+                automaticTextColor.isChecked = false
+                textColorButton.text = "لون النص: ${colorLabel(selected)}"
+            }
+        }
+        outlineColorButton.setOnClickListener {
+            showTranslationColorPicker("لون إطار هذه الفقاعة", outlineColor) { selected ->
+                outlineColor = selected
+                outlineColorButton.text = "لون الإطار: ${colorLabel(selected)}"
+            }
+        }
+        sizeSeek.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) { sizeLabel.text = "حجم النص: ${progress + 50}%" }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) = Unit
+            override fun onStopTrackingTouch(seekBar: SeekBar?) = Unit
+        })
+        outlineSeek.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) { outlineLabel.text = "سُمك الإطار: $progress dp" }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) = Unit
+            override fun onStopTrackingTouch(seekBar: SeekBar?) = Unit
+        })
+        val reset = actionButton("استعادة القيم الافتراضية لهذه الفقاعة", false) {
+            automaticTextColor.isChecked = true
+            textColor = Color.WHITE
+            outlineColor = Color.BLACK
+            textColorButton.text = "لون النص: تلقائي"
+            outlineColorButton.text = "لون الإطار: ${colorLabel(Color.BLACK)}"
+            sizeSeek.progress = 50
+            outlineSeek.progress = 2
+        }
+        val content = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(16), dp(8), dp(16), dp(4))
+            addView(automaticTextColor, matchWrap(dp(4)))
+            addView(textColorButton, matchWrap(dp(4)))
+            addView(outlineColorButton, matchWrap(dp(4)))
+            addView(sizeLabel, matchWrap())
+            addView(sizeSeek, matchWrap(dp(8)))
+            addView(outlineLabel, matchWrap())
+            addView(outlineSeek, matchWrap(dp(8)))
+            addView(reset, matchWrap())
+        }
+        AlertDialog.Builder(this).setTitle("مظهر الفقاعة ${layerIndex + 1}")
+            .setMessage("هذه الإعدادات تخص الفقاعة المحددة فقط. بقية الفقاعات تحتفظ بألوانها وأحجامها.")
+            .setView(content).setNegativeButton("إلغاء", null)
+            .setPositiveButton("حفظ وتطبيق") { _, _ ->
+                if (automaticTextColor.isChecked) item.remove("textColor") else item.put("textColor", textColor)
+                item.put("outlineColor", outlineColor)
+                    .put("outlineWidth", outlineSeek.progress.coerceIn(0, 8))
+                    .put("fontScale", ((sizeSeek.progress + 50) / 100.0).coerceIn(0.5, 2.0))
+                saveLayerChanges(file, layers)
+            }.show()
+    }
+
+    /** Selects an editable rectangle on the original page, then adds an overlay/mask or resizes one. */
+    private fun openLayerRegionSelection(pageIndex: Int, layerIndex: Int?, eraseOnly: Boolean) {
+        val sourcePath = MangaFoxRuntime.sourcePages.getOrNull(pageIndex)
+        val original = sourcePath?.let { BitmapFactory.decodeFile(it) }
+        if (original == null) {
+            toast("الصورة الأصلية غير متوفرة")
+            return
+        }
+        val maxWidth = min(resources.displayMetrics.widthPixels - dp(56), dp(360)).coerceAtLeast(dp(220))
+        var viewWidth = maxWidth
+        var viewHeight = (original.height * (viewWidth.toFloat() / original.width)).toInt().coerceAtLeast(dp(180))
+        if (viewHeight > dp(620)) {
+            viewHeight = dp(620)
+            viewWidth = (original.width * (viewHeight.toFloat() / original.height)).toInt().coerceAtLeast(dp(180))
+        }
+        val image = ImageView(this).apply { setImageBitmap(original); scaleType = ImageView.ScaleType.FIT_XY; setBackgroundColor(Color.BLACK) }
+        val selector = RegionSelectionView(this)
+        val frame = FrameLayout(this).apply {
+            addView(image, FrameLayout.LayoutParams(viewWidth, viewHeight))
+            addView(selector, FrameLayout.LayoutParams(viewWidth, viewHeight))
+        }
+        val container = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            setPadding(dp(12), dp(8), dp(12), dp(8))
+            addView(text("اسحب لتحديد حدود الفقاعة أو المستطيل. يمكنك إعادة السحب لتعديل الحجم والموضع.", 12f, Color.LTGRAY), matchWrap(dp(8)))
+            addView(frame, LinearLayout.LayoutParams(viewWidth, viewHeight))
+        }
+        val dialog = AlertDialog.Builder(this)
+            .setTitle(if (layerIndex != null) "تغيير موضع وحجم الطبقة" else if (eraseOnly) "تحديد نص للمسح" else "إضافة فقاعة أو مستطيل")
+            .setView(container).setNegativeButton("إلغاء", null)
+            .setPositiveButton("متابعة", null).create()
+        dialog.setOnShowListener {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                val rect = selector.toSourceRect(original.width, original.height)
+                if (rect == null || rect.width() < 8 || rect.height() < 8) {
+                    toast("حدد منطقة أكبر قليلاً")
+                    return@setOnClickListener
+                }
+                dialog.dismiss()
+                val pair = readLayerArray(pageIndex)
+                if (pair == null) {
+                    toast("تعذر فتح ملف الطبقات")
+                    return@setOnClickListener
+                }
+                val (file, layers) = pair
+                if (layerIndex != null) {
+                    val item = layers.optJSONObject(layerIndex)
+                    if (item == null) return@setOnClickListener
+                    item.put("left", rect.left).put("top", rect.top).put("right", rect.right).put("bottom", rect.bottom)
+                    saveLayerChanges(file, layers)
+                } else if (eraseOnly) {
+                    layers.put(org.json.JSONObject()
+                        .put("left", rect.left).put("top", rect.top).put("right", rect.right).put("bottom", rect.bottom)
+                        .put("source", "").put("translated", "").put("language", "manual")
+                        .put("vertical", false).put("eraseOnly", true).put("shape", "rect"))
+                    saveLayerChanges(file, layers)
+                } else {
+                    val input = EditText(this).apply {
+                        hint = "النص العربي داخل المنطقة"
+                        minLines = 2
+                        textSize = 16f
+                    }
+                    val vertical = CheckBox(this).apply { text = "عرض النص العربي عمودياً من الأعلى إلى الأسفل" }
+                    val oval = CheckBox(this).apply { text = "شكل بيضاوي (فقاعة)؛ اتركه دون تحديد للمستطيل" }
+                    val content = LinearLayout(this).apply {
+                        orientation = LinearLayout.VERTICAL
+                        setPadding(dp(16), dp(8), dp(16), dp(4))
+                        addView(input, matchWrap(dp(8)))
+                        addView(vertical, matchWrap(dp(4)))
+                        addView(oval, matchWrap())
+                    }
+                    AlertDialog.Builder(this).setTitle("محتوى الطبقة الجديدة")
+                        .setView(content).setNegativeButton("إلغاء", null)
+                        .setPositiveButton("إضافة وحفظ") { _, _ ->
+                            val value = input.text.toString().trim()
+                            if (value.isBlank()) {
+                                toast("اكتب نصاً أو اختر مسح النص من الصورة")
+                            } else {
+                                layers.put(org.json.JSONObject()
+                                    .put("left", rect.left).put("top", rect.top).put("right", rect.right).put("bottom", rect.bottom)
+                                    .put("source", "").put("translated", value).put("language", "manual")
+                                    .put("vertical", vertical.isChecked).put("eraseOnly", false)
+                                    .put("shape", if (oval.isChecked) "oval" else "rect"))
+                                saveLayerChanges(file, layers)
+                            }
+                        }.show()
+                }
+            }
+        }
+        dialog.setOnDismissListener {
+            image.setImageDrawable(null)
+            if (!original.isRecycled) original.recycle()
+        }
+        dialog.show()
+    }
+
+    private fun showReaderBrightnessDialog() {
+        val original = window.attributes.screenBrightness
+        val saved = preferences.getFloat(PREF_READER_BRIGHTNESS, -1f)
+        val brightness = SeekBar(this).apply {
+            max = 100
+            progress = if (saved < 0f) 85 else (saved * 100f).roundToInt().coerceIn(10, 100)
+            setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                    val value = progress.coerceIn(10, 100) / 100f
+                    window.attributes = window.attributes.apply { screenBrightness = value }
+                }
+                override fun onStartTrackingTouch(seekBar: SeekBar?) = Unit
+                override fun onStopTrackingTouch(seekBar: SeekBar?) = Unit
+            })
+        }
+        val container = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(18), dp(12), dp(18), dp(8))
+            addView(text("اختر سطوع شاشة القراءة", 13f, Color.LTGRAY), matchWrap(dp(6)))
+            addView(brightness, matchWrap())
+        }
+        AlertDialog.Builder(this).setTitle("سطوع القارئ")
+            .setView(container)
+            .setNeutralButton("افتراضي النظام") { _, _ ->
+                preferences.edit().putFloat(PREF_READER_BRIGHTNESS, -1f).apply()
+                window.attributes = window.attributes.apply { screenBrightness = -1f }
+            }
+            .setNegativeButton("إلغاء") { _, _ -> window.attributes = window.attributes.apply { screenBrightness = original } }
+            .setPositiveButton("حفظ") { _, _ ->
+                val value = brightness.progress.coerceIn(10, 100) / 100f
+                preferences.edit().putFloat(PREF_READER_BRIGHTNESS, value).apply()
+                window.attributes = window.attributes.apply { screenBrightness = value }
+            }.show()
+    }
+
+    private fun normalizeDictionaryKey(source: String): String =
+        source.lowercase(java.util.Locale.ROOT).filter { it.isLetterOrDigit() }
+
+    private fun updateVisiblePageImages(pages: List<ZoomableImageView>) {
+        val visibleBounds = android.graphics.Rect()
+        pages.forEach { page ->
+            if (page.getLocalVisibleRect(visibleBounds)) page.loadPage() else page.releasePage()
+        }
+    }
+
+    private fun isAccessibilityEnabled(): Boolean {
+        val enabled = Settings.Secure.getString(contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES) ?: return false
+        return enabled.contains("$packageName/${MangaFoxAccessibilityService::class.java.name}") ||
+            enabled.contains("$packageName/.MangaFoxAccessibilityService")
+    }
+
+    private fun card(): LinearLayout = LinearLayout(this).apply {
+        orientation = LinearLayout.VERTICAL
+        layoutDirection = View.LAYOUT_DIRECTION_RTL
+        setPadding(dp(17), dp(16), dp(17), dp(16))
+        background = studioSurface()
+        elevation = dp(2).toFloat()
+        clipToPadding = false
+    }
+
+    private fun text(value: String, size: Float, color: Int, bold: Boolean = false): TextView = TextView(this).apply {
+        text = value
+        textSize = size
+        setTextColor(when (color) {
+            Color.WHITE -> activeTheme.text
+            Color.LTGRAY -> activeTheme.muted
+            else -> color
+        })
+        gravity = Gravity.RIGHT
+        setPadding(0, dp(5), 0, dp(6))
+        if (bold) typeface = Typeface.create("sans-serif", Typeface.BOLD)
+    }
+
+    private fun actionButton(label: String, primary: Boolean, action: () -> Unit): Button = Button(this).apply {
+        text = label
+        textSize = 13f
+        isAllCaps = false
+        minHeight = dp(48)
+        minimumHeight = dp(48)
+        setTextColor(if (primary) activeTheme.onAccent else activeTheme.text)
+        background = if (primary) GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
+            intArrayOf(gold, blendColors(gold, Color.WHITE, 0.10f))).apply {
+            cornerRadius = dp(14).toFloat()
+            setStroke(dp(1), withAlpha(Color.WHITE, 45))
+        } else GradientDrawable().apply {
+            setColor(activeTheme.surfaceAlt)
+            cornerRadius = dp(14).toFloat()
+            setStroke(dp(1), withAlpha(gold, 55))
+        }
+        setPadding(dp(10), dp(8), dp(10), dp(8))
+        elevation = if (primary) dp(3).toFloat() else dp(1).toFloat()
+        setOnClickListener { action() }
+        layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(50)).apply {
+            topMargin = dp(6)
+            bottomMargin = dp(3)
+        }
+    }
+
+    private fun rounded(color: Int, radius: Int): GradientDrawable = GradientDrawable().apply {
+        setColor(color)
+        cornerRadius = dp(radius).toFloat()
+    }
+
+    private fun matchWrap(bottom: Int = 0): LinearLayout.LayoutParams =
+        LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+            if (bottom > 0) bottomMargin = bottom
+        }
+
+    private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
+    private fun colorLabel(color: Int): String = String.format(Locale.US, "#%06X", 0xFFFFFF and color)
+
+    private fun showTranslationColorPicker(title: String, current: Int, onSelected: (Int) -> Unit) {
+        val labels = arrayOf("أبيض", "أسود", "أحمر", "برتقالي", "أصفر", "أخضر", "سماوي", "أزرق", "بنفسجي", "وردي", "رمادي", "لون مخصص (HEX)")
+        val colors = intArrayOf(
+            Color.WHITE, Color.BLACK, Color.RED, Color.rgb(255, 125, 35), Color.YELLOW,
+            Color.rgb(40, 190, 100), Color.CYAN, Color.BLUE, Color.rgb(150, 85, 220),
+            Color.rgb(255, 105, 180), Color.GRAY
+        )
+        AlertDialog.Builder(this).setTitle(title).setItems(labels) { _, which ->
+            if (which < colors.size) {
+                onSelected(colors[which])
+            } else {
+                val hexInput = EditText(this).apply {
+                    setSingleLine(true)
+                    hint = "#RRGGBB أو #AARRGGBB"
+                    setText(colorLabel(current))
+                    inputType = android.text.InputType.TYPE_CLASS_TEXT
+                    setSelection(text.length)
+                }
+                AlertDialog.Builder(this).setTitle("لون مخصص")
+                    .setView(hexInput)
+                    .setNegativeButton("إلغاء", null)
+                    .setPositiveButton("تطبيق") { _, _ ->
+                        val raw = hexInput.text.toString().trim().removePrefix("#")
+                        val parsed = runCatching {
+                            when (raw.length) {
+                                6 -> Color.parseColor("#$raw")
+                                8 -> Color.parseColor("#$raw")
+                                else -> throw IllegalArgumentException("صيغة اللون غير صحيحة")
+                            }
+                        }.getOrNull()
+                        if (parsed == null) toast("صيغة اللون غير صحيحة. استخدم #RRGGBB")
+                        else onSelected(parsed)
+                    }.show()
+            }
+        }.show()
+    }
+
+
+    private fun toast(message: String) = Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+}
+
+private class LensImageBackgroundDrawable(
+    private val bitmap: Bitmap,
+    private val borderColor: Int
+) : Drawable() {
+    private val imagePaint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
+    private val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = borderColor
+        style = Paint.Style.STROKE
+        strokeWidth = 2.5f
+    }
+    override fun draw(canvas: Canvas) {
+        val b = bounds
+        if (b.width() <= 0 || b.height() <= 0 || bitmap.isRecycled) return
+        val side = min(bitmap.width, bitmap.height)
+        val left = (bitmap.width - side) / 2
+        val top = (bitmap.height - side) / 2
+        val source = Rect(left, top, left + side, top + side)
+        val target = RectF(b)
+        val save = canvas.save()
+        val clip = Path().apply { addOval(target, Path.Direction.CW) }
+        canvas.clipPath(clip)
+        canvas.drawBitmap(bitmap, source, target, imagePaint)
+        canvas.restoreToCount(save)
+        val half = borderPaint.strokeWidth / 2f
+        canvas.drawOval(RectF(b.left + half, b.top + half, b.right - half, b.bottom - half), borderPaint)
+    }
+    override fun setAlpha(alpha: Int) { imagePaint.alpha = alpha; borderPaint.alpha = alpha; invalidateSelf() }
+    override fun setColorFilter(colorFilter: ColorFilter?) { imagePaint.colorFilter = colorFilter; invalidateSelf() }
+    @Suppress("DEPRECATION")
+    override fun getOpacity(): Int = PixelFormat.TRANSLUCENT
+}
+
+internal fun resolveArabicTypeface(prefs: SharedPreferences): Typeface {
+    val boldPreferred = prefs.getBoolean(PREF_FONT_BOLD, false)
+    val customPath = prefs.getString(PREF_FONT_FILE, null)
+    if (!customPath.isNullOrBlank()) {
+        val custom = runCatching {
+            val file = File(customPath)
+            if (file.isFile) Typeface.createFromFile(file) else null
+        }.getOrNull()
+        if (custom != null) {
+            // OVERLAP FIX: never synthesize bold on a custom font. Most downloaded fonts
+            // are Regular weight; Typeface.create(custom, Typeface.BOLD) then applies FAUX
+            // bold, and on many OEM ROMs (Infinix/XOS especially) StaticLayout measures the
+            // text narrower than the synthetically-bolded glyphs are drawn — so words pile
+            // on top of each other. The default sans-serif bold is a REAL bold face, which
+            // is exactly why the default font never overlapped. Use the stored font as-is;
+            // for bold custom output pick a true-bold file (e.g. Droid Arabic Kufi Bold).
+            return custom
+        }
+    }
+    val style = if (boldPreferred) Typeface.BOLD else Typeface.NORMAL
+    val family = prefs.getString(PREF_FONT_FAMILY, "sans-serif") ?: "sans-serif"
+    return Typeface.create(family, style)
+}
+
+
+// ============================================================
+// MERGED FROM: MangaFox_V3_0_3_MangaFoxAccessibilityService.kt
+// ============================================================
+
+class MangaFoxAccessibilityService : AccessibilityService() {
+    companion object {
+        @Volatile var instance: MangaFoxAccessibilityService? = null
+            private set
+    }
+
+    private val mainHandler = Handler(Looper.getMainLooper())
+    private val worker = Executors.newSingleThreadExecutor()
+    private lateinit var windowManager: WindowManager
+    private var bubble: TextView? = null
+    private var bubbleParams: WindowManager.LayoutParams? = null
+    private var lensBackgroundBitmap: Bitmap? = null
+    private var lensBackgroundBitmapPath: String? = null
+    // Separate overlay for the lens action menu. It is kept independent from the
+    // bubble so the menu can be dismissed without recreating or moving the lens.
+    private var floatingOptionsView: View? = null
+    private var floatingOptionsParams: WindowManager.LayoutParams? = null
+    @Volatile private var currentForegroundPackage: String? = null
+    @Volatile private var hostActivityResumed: Boolean = false
+    private var captureRunning = false
+    private var fullChapterMode = false
+    private var captureOnlyMode = false
+    @Volatile private var queuedChapterId: String? = null
+    @Volatile private var autoNextAfterTranslation = false
+    private var captureCount = 0L
+    private var unchangedFrameCount = 0
+    private var screenshotRetryCount = 0
+    private var gestureFailureCount = 0
+    @Volatile private var translationRunning = false
+    @Volatile private var cancelOperationRequested = false
+    @Volatile private var keepCompletedOnCancel = true
+    @Volatile private var translationPauseRequested = false
+    @Volatile private var translationPaused = false
+    private val translationPauseLock = Object()
+    private var previousFrame: Bitmap? = null
+    private val capturedSegments = ArrayList<File>()
+    private var bubbleWasAdded = false
+
+    // Recognizers are created on demand. Keeping all four ML Kit engines alive
+    // from the beginning increased the chance of memory pressure on long chapters.
+    private val latinRecognizerDelegate = lazy { TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS) }
+    private val latinRecognizer: TextRecognizer by latinRecognizerDelegate
+    private val japaneseRecognizerDelegate = lazy { TextRecognition.getClient(JapaneseTextRecognizerOptions.Builder().build()) }
+    private val japaneseRecognizer: TextRecognizer by japaneseRecognizerDelegate
+    private val koreanRecognizerDelegate = lazy { TextRecognition.getClient(KoreanTextRecognizerOptions.Builder().build()) }
+    private val koreanRecognizer: TextRecognizer by koreanRecognizerDelegate
+    private val chineseRecognizerDelegate = lazy { TextRecognition.getClient(ChineseTextRecognizerOptions.Builder().build()) }
+    private val chineseRecognizer: TextRecognizer by chineseRecognizerDelegate
+    private val languageIdentifierDelegate = lazy { LanguageIdentification.getClient() }
+    private val languageIdentifier by languageIdentifierDelegate
+    private val translatorCache = LinkedHashMap<String, Translator>()
+    // Each worker thread owns its OCR output. A crop retry can never overwrite another page's layer list.
+    private val lastOcrTranslationLines = ThreadLocal.withInitial<List<TranslationLine>> { emptyList() }
+
+    override fun onServiceConnected() {
+        super.onServiceConnected()
+        instance = this
+        windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
+        // Apply the service capabilities at runtime as well as in the generated XML.
+        // This makes window/package events available on OEM builds that ignore part
+        // of the static accessibility configuration.
+        runCatching {
+            val info = serviceInfo ?: AccessibilityServiceInfo()
+            info.eventTypes = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED or
+                AccessibilityEvent.TYPE_WINDOWS_CHANGED or
+                AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED
+            info.feedbackType = AccessibilityServiceInfo.FEEDBACK_GENERIC
+            info.notificationTimeout = 80L
+            info.flags = info.flags or AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS or
+                AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS
+            serviceInfo = info
+        }
+        MangaFoxRuntime.status = "خدمة العدسة متصلة"
+        syncForegroundPackage()
+        // Re-check several times because some Android skins expose the active window late.
+        mainHandler.postDelayed({ syncForegroundPackage() }, 300L)
+        mainHandler.postDelayed({ syncForegroundPackage() }, 800L)
+        mainHandler.postDelayed({ syncForegroundPackage() }, 1500L)
+        mainHandler.postDelayed({
+            syncForegroundPackage()
+            if (!hostActivityResumed && currentForegroundPackage.isNullOrBlank()) {
+                currentForegroundPackage = "__external__"
+                refreshLensAppFilter()
+            }
+        }, 1900L)
+        refreshLensAppFilter()
+        mainHandler.postDelayed({ recoverInterruptedCapture() }, 900L)
+        mainHandler.postDelayed({ MangaFoxChapterQueueService.kick(this) }, 1400L)
+    }
+
+    override fun onAccessibilityEvent(event: AccessibilityEvent?) {
+        if (event == null) return
+        if (event.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED &&
+            event.eventType != AccessibilityEvent.TYPE_WINDOWS_CHANGED &&
+            event.eventType != AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) return
+        val pkg = event.packageName?.toString()?.takeIf { it.isNotBlank() }
+        if (pkg != null && pkg != currentForegroundPackage) {
+            currentForegroundPackage = pkg
+            refreshLensAppFilter()
+        }
+    }
+
+    private fun syncForegroundPackage() {
+        val activePackage = runCatching { rootInActiveWindow?.packageName?.toString() }.getOrNull()
+            ?.takeIf { it.isNotBlank() }
+        if (activePackage != null && activePackage != currentForegroundPackage) {
+            currentForegroundPackage = activePackage
+            refreshLensAppFilter()
+        }
+    }
+
+    fun onHostActivityResumed() {
+        hostActivityResumed = true
+        currentForegroundPackage = packageName
+        refreshLensAppFilter()
+    }
+
+    fun onHostActivityPaused() {
+        hostActivityResumed = false
+        // Let the next app become active, then query the accessibility root.
+        mainHandler.postDelayed({ syncForegroundPackage() }, 250L)
+        mainHandler.postDelayed({ syncForegroundPackage() }, 650L)
+        mainHandler.postDelayed({
+            syncForegroundPackage()
+            // rootInActiveWindow can be null on some Infinix/XOS builds. The
+            // Activity lifecycle is a reliable fallback: paused means external UI.
+            if (!hostActivityResumed && currentForegroundPackage == packageName) {
+                currentForegroundPackage = "__external__"
+                refreshLensAppFilter()
+            } else if (!hostActivityResumed && currentForegroundPackage.isNullOrBlank()) {
+                currentForegroundPackage = "__external__"
+                refreshLensAppFilter()
+            }
+        }, 1100L)
+        mainHandler.postDelayed({ syncForegroundPackage() }, 1800L)
+    }
+    override fun onInterrupt() = Unit
+
+    override fun onDestroy() {
+        removeFloatingBubble()
+        if (instance === this) instance = null
+        previousFrame?.recycle()
+        previousFrame = null
+        clearCaptureNotification()
+        if (captureRunning && capturedSegments.isNotEmpty()) {
+            // Do not erase completed screenshots if the system tears down the
+            // accessibility service. They can be translated after reconnection.
+            MangaFoxRuntime.status = "انقطعت خدمة الالتقاط؛ تم الاحتفاظ بـ ${capturedSegments.size} مقطع للاستعادة"
+            MangaFoxRuntime.lastError = "أوقف النظام خدمة Manga Fox أثناء الالتقاط. أعد تفعيل الخدمة لاستعادة المقاطع المحفوظة."
+        } else if (!translationRunning) {
+            capturedSegments.forEach { runCatching { it.delete() } }
+            capturedSegments.clear()
+        }
+        if (!translationRunning) closeRecognitionResources()
+        worker.shutdown()
+        super.onDestroy()
+    }
+
+    private fun closeRecognitionResources() {
+        if (latinRecognizerDelegate.isInitialized()) runCatching { latinRecognizer.close() }
+        if (japaneseRecognizerDelegate.isInitialized()) runCatching { japaneseRecognizer.close() }
+        if (koreanRecognizerDelegate.isInitialized()) runCatching { koreanRecognizer.close() }
+        if (chineseRecognizerDelegate.isInitialized()) runCatching { chineseRecognizer.close() }
+        if (languageIdentifierDelegate.isInitialized()) runCatching { languageIdentifier.close() }
+        translatorCache.values.forEach { translator -> runCatching { translator.close() } }
+        translatorCache.clear()
+    }
+
+    private fun beginCaptureMetadata() {
+        autoNextAfterTranslation = false
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        val work = prefs.getString(PREF_CURRENT_WORK_NAME, "").orEmpty().trim().ifBlank { "عمل غير مصنف" }
+        val chapter = prefs.getString(PREF_CURRENT_CHAPTER_NAME, "").orEmpty().trim()
+            .ifBlank { "فصل ${System.currentTimeMillis()}" }
+        MangaFoxRuntime.activeWorkName = work
+        MangaFoxRuntime.activeChapterName = chapter
+        // A new capture must never reuse the chapter currently open in the archive.
+        MangaFoxRuntime.activeArchiveId = ""
+        MangaFoxRuntime.pendingEdits = false
+        MangaFoxRuntime.persist(this)
+    }
+
+    fun startSingleCapture(startDelayMs: Long = 250L) {
+        if (captureRunning || translationRunning) {
+            toast("هناك عملية ترجمة أو التقاط قيد التنفيذ")
+            return
+        }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+            toast("الالتقاط التلقائي يحتاج Android 11 أو أحدث")
+            return
+        }
+        cancelOperationRequested = false
+        beginCaptureMetadata()
+        captureRunning = true
+        fullChapterMode = false
+        capturedSegments.forEach { runCatching { it.delete() } }
+        capturedSegments.clear()
+        MangaFoxRuntime.status = "التقاط الشاشة الحالية..."
+        removeFloatingBubble()
+        mainHandler.postDelayed({
+            requestScreenshot { bitmap, error ->
+                if (bitmap == null) {
+                    finishCaptureWithError(error ?: "تعذر التقاط الشاشة")
+                } else {
+                    capturedSegments.forEach { runCatching { it.delete() } }
+                    capturedSegments.clear()
+                    runCatching { capturedSegments.add(storeCaptureSegment(bitmap, 0)) }
+                        .onSuccess { finishCaptureAndTranslate() }
+                        .onFailure { finishCaptureWithError("تعذر حفظ لقطة الشاشة: ${it.localizedMessage ?: "خطأ تخزين"}") }
+                    bitmap.recycle()
+                }
+            }
+        }, startDelayMs.coerceIn(200L, 5000L))
+    }
+
+    fun toggleTranslationPause() {
+        if (!translationRunning) {
+            toast("لا توجد ترجمة قيد التشغيل حالياً")
+            return
+        }
+        synchronized(translationPauseLock) {
+            translationPauseRequested = !translationPauseRequested
+            if (!translationPauseRequested) translationPauseLock.notifyAll()
+        }
+        val paused = translationPauseRequested
+        MangaFoxRuntime.status = if (paused) "الترجمة متوقفة مؤقتاً" else "استؤنفت الترجمة"
+        MangaFoxRuntime.progressDetail = if (paused) "متوقف مؤقتاً · اضغط استئناف للمتابعة" else "استئناف المعالجة..."
+        mainHandler.post { toast(if (paused) "تم إيقاف الترجمة مؤقتاً" else "تم استئناف الترجمة") }
+    }
+
+    private fun awaitTranslationResume() {
+        synchronized(translationPauseLock) {
+            while (translationPauseRequested && translationRunning) {
+                translationPaused = true
+                MangaFoxRuntime.status = "الترجمة متوقفة مؤقتاً"
+                MangaFoxRuntime.progressDetail = "متوقف مؤقتاً · بانتظار الاستئناف"
+                try { translationPauseLock.wait(750L) }
+                catch (_: InterruptedException) { Thread.currentThread().interrupt(); break }
+            }
+            translationPaused = false
+        }
+    }
+
+    private fun clearTranslationPause() {
+        synchronized(translationPauseLock) {
+            translationPauseRequested = false
+            translationPaused = false
+            translationPauseLock.notifyAll()
+        }
+    }
+
+    private fun advanceToNextChapterFromAccessibility() {
+        if (!autoNextAfterTranslation) return
+        autoNextAfterTranslation = false
+        val root = rootInActiveWindow ?: run {
+            toast("لم أجد شاشة القراءة النشطة للانتقال للفصل التالي")
+            return
+        }
+        val exactLabels = listOf("الفصل التالي", "الفصل القادم", "next chapter", "nextChapter")
+        var visited = 0
+        var target: AccessibilityNodeInfo? = null
+        fun scan(node: AccessibilityNodeInfo?, depth: Int) {
+            if (node == null || target != null || depth > 14 || visited >= 500) return
+            visited++
+            val label = (node.text?.toString().orEmpty() + " " + node.contentDescription?.toString().orEmpty()).trim()
+            val viewId = node.viewIdResourceName.orEmpty().lowercase(Locale.ROOT)
+            val namedChapterControl = label.contains("التالي") && ("chapter" in viewId || "next_chapter" in viewId)
+            if (node.isEnabled && node.isVisibleToUser && (exactLabels.any { label.contains(it, ignoreCase = true) } || namedChapterControl)) {
+                var candidate: AccessibilityNodeInfo? = node
+                repeat(4) {
+                    if (candidate == null || candidate!!.isClickable) return@repeat
+                    candidate = candidate!!.parent
+                }
+                if (candidate?.isClickable == true) target = candidate
+            }
+            for (index in 0 until node.childCount) scan(node.getChild(index), depth + 1)
+        }
+        scan(root, 0)
+        val clicked = target?.performAction(AccessibilityNodeInfo.ACTION_CLICK) == true
+        if (!clicked) {
+            toast("لم يظهر زر واضح باسم (الفصل التالي). لم أضغط أزراراً عامة لتجنب فتح صفحة خاطئة")
+            return
+        }
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        val current = prefs.getString(PREF_CURRENT_CHAPTER_NAME, MangaFoxRuntime.activeChapterName).orEmpty()
+        val match = Regex("\\d+(?:\\.\\d+)?").find(current)
+        val nextName = if (match == null) "الفصل التالي" else {
+            val old = match.value
+            val next = old.toDoubleOrNull()?.plus(1.0) ?: 0.0
+            val formatted = if (old.contains('.')) String.format(Locale.US, "%0${old.length}.${old.substringAfter('.').length}f", next)
+                else next.toInt().toString().padStart(old.length, '0')
+            current.replaceRange(match.range, formatted)
+        }
+        prefs.edit().putString(PREF_CURRENT_CHAPTER_NAME, nextName).apply()
+        MangaFoxRuntime.activeChapterName = nextName
+        mainHandler.postDelayed({
+            if (!captureRunning && !translationRunning) startFullChapterCapture(1700L)
+        }, 1800L)
+    }
+
+    fun startFullChapterCapture(startDelayMs: Long = 450L) {
+        if (captureRunning || translationRunning) {
+            toast("هناك عملية ترجمة أو التقاط قيد التنفيذ")
+            return
+        }
+        val pendingRecovery = pendingCaptureFiles().isNotEmpty()
+        if (pendingRecovery) {
+            recoverInterruptedCapture()
+            toast("عثر Manga Fox على مقاطع محفوظة من جلسة سابقة؛ بدأت استعادتها أولاً")
+            return
+        }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+            toast("ترجمة الفصل الكامل تحتاج Android 11 أو أحدث")
+            return
+        }
+        cancelOperationRequested = false
+        beginCaptureMetadata()
+        captureRunning = true
+        fullChapterMode = true
+        captureOnlyMode = false
+        captureCount = 0L
+        unchangedFrameCount = 0
+        screenshotRetryCount = 0
+        gestureFailureCount = 0
+        previousFrame?.recycle()
+        previousFrame = null
+        capturedSegments.forEach { runCatching { it.delete() } }
+        capturedSegments.clear()
+        MangaFoxRuntime.status = "بدء التقاط الفصل العمودي..."
+        removeFloatingBubble()
+        notifyCaptureProgress()
+        mainHandler.postDelayed({ captureNextFrame() }, startDelayMs.coerceIn(250L, 5000L))
+    }
+
+    fun startFullChapterCaptureOnly(startDelayMs: Long = 450L) {
+        if (captureRunning || translationRunning) {
+            toast("هناك عملية ترجمة أو التقاط قيد التنفيذ")
+            return
+        }
+        if (pendingCaptureFiles().isNotEmpty()) {
+            recoverInterruptedCapture()
+            toast("توجد مقاطع محفوظة من جلسة سابقة؛ تتم استعادتها أولاً")
+            return
+        }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+            toast("التقاط الفصل الكامل يحتاج Android 11 أو أحدث")
+            return
+        }
+        beginCaptureMetadata()
+        captureRunning = true
+        fullChapterMode = true
+        captureOnlyMode = true
+        captureCount = 0L
+        unchangedFrameCount = 0
+        screenshotRetryCount = 0
+        gestureFailureCount = 0
+        previousFrame?.recycle()
+        previousFrame = null
+        capturedSegments.forEach { runCatching { it.delete() } }
+        capturedSegments.clear()
+        MangaFoxRuntime.status = "بدء التقاط الفصل دون ترجمة..."
+        removeFloatingBubble()
+        notifyCaptureProgress()
+        mainHandler.postDelayed({ captureNextFrame() }, startDelayMs.coerceIn(250L, 5000L))
+    }
+
+    private fun captureNextFrame() {
+        if (!captureRunning || !fullChapterMode) return
+        requestScreenshot { bitmap, error ->
+            if (!captureRunning) {
+                bitmap?.recycle()
+                return@requestScreenshot
+            }
+            if (bitmap == null) {
+                screenshotRetryCount++
+                if (screenshotRetryCount < 3 && captureRunning) {
+                    MangaFoxRuntime.status = "تعذر التصوير مؤقتاً؛ إعادة المحاولة ${screenshotRetryCount}/2"
+                    notifyCaptureProgress()
+                    mainHandler.postDelayed({ captureNextFrame() }, 900L * screenshotRetryCount)
+                } else if (capturedSegments.isNotEmpty()) {
+                    finishCaptureAndTranslate("توقف الالتقاط بعد محاولات التصوير: ${error ?: "تعذر أخذ لقطة أخرى"}")
+                } else {
+                    finishCaptureWithError(error ?: "تعذر التقاط الشاشة بعد 3 محاولات")
+                }
+                return@requestScreenshot
+            }
+            screenshotRetryCount = 0
+
+            val displayWidth = bitmap.width
+            val displayHeight = bitmap.height
+            val comparisonFrame = try {
+                createComparisonFrame(bitmap)
+            } catch (e: Exception) {
+                bitmap.recycle()
+                finishCaptureWithError("تعذر تجهيز إطار المقارنة: ${e.localizedMessage ?: "نقص ذاكرة"}")
+                return@requestScreenshot
+            }
+            val previous = previousFrame
+            if (previous != null && looksUnchanged(previous, comparisonFrame)) {
+                comparisonFrame.recycle()
+                bitmap.recycle()
+                unchangedFrameCount++
+                MangaFoxRuntime.status = "لم يتغير المحتوى؛ محاولة التمرير ${unchangedFrameCount}/3..."
+                notifyCaptureProgress()
+                if (unchangedFrameCount >= 3) {
+                    autoNextAfterTranslation = !captureOnlyMode && getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+                        .getBoolean(PREF_AUTO_NEXT_CHAPTER, false)
+                    finishCaptureAndTranslate("وصل الالتقاط إلى نهاية المحتوى بعد 3 محاولات تمرير دون تغير")
+                } else {
+                    dispatchNextSwipe(displayWidth, displayHeight)
+                }
+                return@requestScreenshot
+            }
+
+            unchangedFrameCount = 0
+            val overlapSmall = if (previous == null) 0 else findVerticalOverlap(previous, comparisonFrame)
+            val overlapPx = if (overlapSmall <= 0) 0 else
+                ((overlapSmall.toFloat() / comparisonFrame.height) * bitmap.height).roundToInt().coerceIn(0, bitmap.height - 1)
+            try {
+                capturedSegments.add(storeCaptureSegment(bitmap, overlapPx))
+            } catch (e: Exception) {
+                comparisonFrame.recycle()
+                bitmap.recycle()
+                finishCaptureAndTranslate("تعذر حفظ جزء من الفصل: ${e.localizedMessage ?: "خطأ تخزين"}")
+                return@requestScreenshot
+            }
+            previousFrame?.recycle()
+            previousFrame = comparisonFrame
+            captureCount++
+            MangaFoxRuntime.status = "التقاط الفصل: $captureCount لقطة · لا يوجد حد ثابت للعدد"
+            notifyCaptureProgress()
+            dispatchNextSwipe(displayWidth, displayHeight)
+            // The compressed JPEG segment is now on disk; release the full-size
+            // display bitmap and keep only its small comparison copy in RAM.
+            if (!bitmap.isRecycled) bitmap.recycle()
+        }
+    }
+
+    private fun dispatchNextSwipe(displayWidth: Int, displayHeight: Int) {
+        if (!captureRunning || !fullChapterMode) return
+        val width = displayWidth.toFloat()
+        val height = displayHeight.toFloat()
+        val path = Path().apply {
+            moveTo(width * 0.52f, height * 0.84f)
+            lineTo(width * 0.52f, height * 0.39f)
+        }
+        val gesture = GestureDescription.Builder()
+            .addStroke(GestureDescription.StrokeDescription(path, 0L, 720L))
+            .build()
+        val callback = object : AccessibilityService.GestureResultCallback() {
+            override fun onCompleted(gestureDescription: GestureDescription) {
+                gestureFailureCount = 0
+                mainHandler.postDelayed({ captureNextFrame() }, 1450L)
+            }
+
+            override fun onCancelled(gestureDescription: GestureDescription) {
+                gestureFailureCount++
+                if (gestureFailureCount >= 3) {
+                    finishCaptureAndTranslate("تعذر تمرير صفحة القراءة بعد 3 محاولات؛ تمت معالجة المقاطع التي جُمعت")
+                } else {
+                    MangaFoxRuntime.status = "أُلغيت حركة التمرير؛ إعادة المحاولة ${gestureFailureCount}/3"
+                    mainHandler.postDelayed({ captureNextFrame() }, 900L)
+                }
+            }
+        }
+        val dispatched = dispatchGesture(gesture, callback, mainHandler)
+        if (!dispatched) {
+            gestureFailureCount++
+            if (gestureFailureCount >= 3) {
+                finishCaptureAndTranslate("رفض النظام تنفيذ التمرير؛ تمت معالجة المقاطع التي جُمعت")
+            } else {
+                mainHandler.postDelayed({ captureNextFrame() }, 900L)
+            }
+        }
+    }
+
+    /** @N5CR4 — Cancels the active capture/translation without touching older chapters. */
+    fun cancelCurrentOperation(keepCompleted: Boolean) {
+        keepCompletedOnCancel = keepCompleted
+        cancelOperationRequested = true
+        clearTranslationPause()
+
+        if (captureRunning) {
+            captureRunning = false
+            fullChapterMode = false
+            captureOnlyMode = false
+            clearCaptureNotification()
+            previousFrame?.recycle()
+            previousFrame = null
+            restoreFloatingBubble()
+            if (keepCompleted) {
+                // Captured segments remain as recoverable work files and are not auto-translated.
+                MangaFoxRuntime.status = "أُلغي الالتقاط؛ تم الاحتفاظ بـ ${capturedSegments.size} مقطع مكتمل للاستعادة"
+                MangaFoxRuntime.progressDetail = "المقاطع المكتملة محفوظة محلياً ويمكن استعادتها لاحقاً"
+            } else {
+                capturedSegments.forEach { runCatching { it.delete() } }
+                capturedSegments.clear()
+                pendingCaptureFiles().forEach { runCatching { it.delete() } }
+                MangaFoxRuntime.status = "أُلغيت العملية وحُذفت ملفات الالتقاط"
+                MangaFoxRuntime.progressDetail = "تم حذف ملفات هذه العملية"
+                MangaFoxRuntime.progressPercent = 0
+            }
+            cancelOperationRequested = false
+            notifyCaptureProgress()
+            toast(if (keepCompleted) "تم إيقاف الالتقاط والاحتفاظ بالمقاطع المكتملة" else "تم إيقاف الالتقاط وحذف ملفاته")
+            return
+        }
+
+        if (translationRunning) {
+            MangaFoxRuntime.status = "جارٍ إيقاف العملية بأمان..."
+            MangaFoxRuntime.progressDetail = if (keepCompleted) "سيتم الاحتفاظ بالصفحات المكتملة فقط" else "سيتم حذف نتائج هذه العملية"
+            mainHandler.post { toast("تم طلب إلغاء العملية؛ يجري إيقاف الصفحة الحالية بأمان") }
+            return
+        }
+
+        cancelOperationRequested = false
+        toast("لا توجد عملية نشطة حالياً")
+    }
+
+    fun stopCaptureByUser() {
+        if (!captureRunning) {
+            toast("لا توجد عملية التقاط نشطة")
+            return
+        }
+        if (capturedSegments.isEmpty()) finishCaptureWithError("تم إيقاف الالتقاط قبل التقاط أي جزء")
+        else finishCaptureAndTranslate("أوقف المستخدم الالتقاط يدوياً؛ تمت ترجمة الأجزاء التي جُمعت")
+    }
+
+    private fun requestScreenshot(callback: (Bitmap?, String?) -> Unit) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+            callback(null, "يلزم Android 11 أو أحدث")
+            return
+        }
+
+        val delivered = AtomicBoolean(false)
+        val timeout = Runnable {
+            if (delivered.compareAndSet(false, true)) {
+                callback(null, "انتهت مهلة تصوير الشاشة؛ لم يستجب النظام")
+            }
+        }
+        mainHandler.postDelayed(timeout, 9000L)
+        fun deliver(bitmap: Bitmap?, error: String?) {
+            if (delivered.compareAndSet(false, true)) {
+                mainHandler.removeCallbacks(timeout)
+                callback(bitmap, error)
+            } else {
+                bitmap?.let { if (!it.isRecycled) it.recycle() }
+            }
+        }
+
+        val screenshotCallback = object : AccessibilityService.TakeScreenshotCallback {
+            override fun onSuccess(screenshot: AccessibilityService.ScreenshotResult) {
+                var buffer: HardwareBuffer? = null
+                var hardwareBitmap: Bitmap? = null
+                var result: Bitmap? = null
+                var failure: String? = null
+                try {
+                    val screenshotBuffer = screenshot.hardwareBuffer
+                    buffer = screenshotBuffer
+                    hardwareBitmap = Bitmap.wrapHardwareBuffer(screenshotBuffer, screenshot.colorSpace)
+                    result = hardwareBitmap?.copy(Bitmap.Config.ARGB_8888, false)
+                    if (result == null) failure = "أعاد النظام لقطة شاشة فارغة"
+                } catch (e: Exception) {
+                    failure = "تعذر تجهيز لقطة الشاشة: ${e.localizedMessage ?: "خطأ غير معروف"}"
+                } finally {
+                    runCatching { hardwareBitmap?.recycle() }
+                    runCatching { buffer?.close() }
+                }
+                deliver(result, failure)
+            }
+
+            override fun onFailure(errorCode: Int) {
+                val message = when (errorCode) {
+                    AccessibilityService.ERROR_TAKE_SCREENSHOT_SECURE_WINDOW -> "هذا التطبيق يمنع تصوير الشاشة (نافذة آمنة)"
+                    AccessibilityService.ERROR_TAKE_SCREENSHOT_NO_ACCESSIBILITY_ACCESS -> "لا توجد صلاحية التقاط للشاشة"
+                    AccessibilityService.ERROR_TAKE_SCREENSHOT_INTERVAL_TIME_SHORT -> "الالتقاط سريع جداً؛ أعد المحاولة"
+                    else -> "فشل التقاط الشاشة، رمز الخطأ: $errorCode"
+                }
+                deliver(null, message)
+            }
+        }
+
+        try {
+            // Capture the complete display, not a cropped active window. Gesture
+            // coordinates are display coordinates too, so both now share one space.
+            takeScreenshot(android.view.Display.DEFAULT_DISPLAY, mainExecutor, screenshotCallback)
+        } catch (e: Exception) {
+            deliver(null, "تعذر بدء الالتقاط: ${e.localizedMessage ?: "خطأ نظام"}")
+        }
+    }
+
+    private fun createComparisonFrame(source: Bitmap): Bitmap {
+        val maxWidth = 720
+        if (source.width <= maxWidth) {
+            return source.copy(Bitmap.Config.ARGB_8888, false)
+                ?: throw IllegalStateException("تعذر إنشاء نسخة المقارنة")
+        }
+        val scaledHeight = (source.height * (maxWidth.toFloat() / source.width)).toInt().coerceAtLeast(1)
+        return Bitmap.createScaledBitmap(source, maxWidth, scaledHeight, true)
+    }
+
+    /**
+     * Finds how many pixels at the top of the new frame repeat the bottom of the
+     * previous frame. If a reliable match cannot be found, returns zero so the
+     * app prefers a harmless duplicate strip over deleting real artwork.
+     */
+    private fun findVerticalOverlap(previous: Bitmap, current: Bitmap): Int {
+        if (previous.width != current.width || previous.height != current.height) return 0
+        val h = previous.height
+        // A 45% swipe normally leaves about 55% overlap; the wider range allows
+        // for momentum and readers that clamp or accelerate scroll gestures.
+        val minOverlap = (h * 0.24f).toInt().coerceAtLeast(24)
+        val maxOverlap = (h * 0.78f).toInt().coerceAtMost(h - 24)
+        if (maxOverlap <= minOverlap) return 0
+
+        val sampleRows = 80
+        val sampleColumns = 48
+        val xPositions = IntArray(sampleColumns) { column ->
+            ((column + 0.5f) * previous.width / sampleColumns).toInt()
+                .coerceIn(0, previous.width - 1)
+        }
+        val candidates = ArrayList<Pair<Int, Double>>(maxOverlap - minOverlap + 1)
+
+        for (overlap in minOverlap..maxOverlap) {
+            var total = 0L
+            var samples = 0
+            for (row in 0 until sampleRows) {
+                val offset = ((row + 0.5f) * overlap / sampleRows).toInt()
+                val previousY = (h - overlap + offset).coerceIn(0, h - 1)
+                val currentY = offset.coerceIn(0, h - 1)
+                for (x in xPositions) {
+                    val a = previous.getPixel(x, previousY)
+                    val b = current.getPixel(x, currentY)
+                    val dr = abs(Color.red(a) - Color.red(b))
+                    val dg = abs(Color.green(a) - Color.green(b))
+                    val db = abs(Color.blue(a) - Color.blue(b))
+                    val grayA = (Color.red(a) * 3 + Color.green(a) * 6 + Color.blue(a)) / 10
+                    val grayB = (Color.red(b) * 3 + Color.green(b) * 6 + Color.blue(b)) / 10
+                    total += dr + dg + db + abs(grayA - grayB)
+                    samples += 4
+                }
+            }
+            candidates.add(overlap to (total.toDouble() / samples.coerceAtLeast(1)))
+        }
+
+        val sorted = candidates.sortedBy { it.second }
+        val best = sorted.firstOrNull() ?: return 0
+        // Ignore nearby candidates when judging confidence: they are simply the
+        // shoulders of the same match. Compare against a genuinely different offset.
+        val secondDistinct = sorted.firstOrNull { abs(it.first - best.first) >= 12 }
+        if (best.second > 18.0) return 0
+        if (secondDistinct != null && secondDistinct.second - best.second < 1.2) return 0
+
+        // Cut the measured overlap exactly. V2.3 left 24px / ~1.8% uncut on
+        // purpose, which produced a visible repeated strip at every join.
+        return best.first.coerceIn(0, h - 1)
+    }
+
+    private fun cropContent(source: Bitmap, overlapTopPx: Int): Bitmap {
+        // Do not trim fixed percentages from screen edges: panels and speech bubbles
+        // may legitimately touch them. Only remove verified repeated rows.
+        val cut = overlapTopPx.coerceIn(0, source.height - 1)
+        val cropped = Bitmap.createBitmap(source, 0, cut, source.width, source.height - cut)
+        val maxWidth = 1080
+        if (cropped.width <= maxWidth) return cropped
+        val targetHeight = (cropped.height * (maxWidth.toFloat() / cropped.width)).toInt().coerceAtLeast(1)
+        val scaled = Bitmap.createScaledBitmap(cropped, maxWidth, targetHeight, true)
+        cropped.recycle()
+        return scaled
+    }
+
+    private fun storeCaptureSegment(source: Bitmap, overlapTopPx: Int): File {
+        val segment = cropContent(source, overlapTopPx)
+        val file = File(filesDir, "mfox_capture_${System.currentTimeMillis()}_${captureCount}_${capturedSegments.size}.jpg")
+        try {
+            FileOutputStream(file).use { stream ->
+                if (!segment.compress(Bitmap.CompressFormat.JPEG, 96, stream)) {
+                    throw IllegalStateException("تعذر ضغط صورة الالتقاط")
+                }
+            }
+        } catch (e: Exception) {
+            file.delete()
+            throw e
+        } finally {
+            if (!segment.isRecycled) segment.recycle()
+        }
+        return file
+    }
+
+    private fun looksUnchanged(first: Bitmap, second: Bitmap): Boolean {
+        if (first.width != second.width || first.height != second.height) return false
+        val a = Bitmap.createScaledBitmap(first, 28, 56, true)
+        val b = Bitmap.createScaledBitmap(second, 28, 56, true)
+        var difference = 0L
+        for (y in 0 until 56) {
+            for (x in 0 until 28) {
+                val ca = a.getPixel(x, y)
+                val cb = b.getPixel(x, y)
+                difference += abs(Color.red(ca) - Color.red(cb))
+                difference += abs(Color.green(ca) - Color.green(cb))
+                difference += abs(Color.blue(ca) - Color.blue(cb))
+            }
+        }
+        a.recycle()
+        b.recycle()
+        val average = difference.toDouble() / (28.0 * 56.0 * 3.0)
+        return average < 2.3
+    }
+
+    private fun finishCaptureAndTranslate(note: String = "") {
+        if (!captureRunning) return
+        captureRunning = false
+        fullChapterMode = false
+        clearCaptureNotification()
+        previousFrame?.recycle()
+        previousFrame = null
+        restoreFloatingBubble()
+        if (capturedSegments.isEmpty()) {
+            finishCaptureWithError("لم يتم التقاط أي جزء من الفصل")
+            return
+        }
+        val workPages = ArrayList(capturedSegments)
+        capturedSegments.clear()
+        if (captureOnlyMode) {
+            captureOnlyMode = false
+            translationRunning = true
+            cancelOperationRequested = false
+            worker.execute {
+                val saved = ArrayList<String>()
+                try {
+                    workPages.forEachIndexed { index, source ->
+                        if (cancelOperationRequested) throw IllegalStateException("MFOX_OPERATION_CANCELLED")
+                        val target = File(filesDir, "mfox_result_capture_${System.currentTimeMillis()}_$index.jpg")
+                        if (!source.renameTo(target)) source.copyTo(target, overwrite = true)
+                        source.delete()
+                        saved.add(target.absolutePath)
+                    }
+                    if (cancelOperationRequested) throw IllegalStateException("MFOX_OPERATION_CANCELLED")
+                    Handler(Looper.getMainLooper()).post {
+                        translationRunning = false
+                        MangaFoxRuntime.sourcePages = saved
+                        MangaFoxRuntime.resultPages = saved
+                        MangaFoxRuntime.translationLayerFiles = saved.map { "" }
+                        MangaFoxLayerHistory(this).reset()
+                        MangaFoxRuntime.resultTitle = MangaFoxRuntime.activeChapterName
+                        MangaFoxRuntime.captureOnlyResult = true
+                        MangaFoxRuntime.qualitySummary = "صور أصلية دون OCR أو ترجمة"
+                        MangaFoxChapterArchive.save(
+                            this, MangaFoxRuntime.activeWorkName, MangaFoxRuntime.activeChapterName,
+                            MangaFoxRuntime.resultTitle, saved, saved, saved.map { "" }, true,
+                            MangaFoxRuntime.qualitySummary
+                        )
+                        MangaFoxRuntime.progressPercent = 100
+                        MangaFoxRuntime.progressDetail = "اكتمل الالتقاط: ${saved.size} صورة"
+                        MangaFoxRuntime.status = "تم التقاط الفصل دون ترجمة؛ يمكنك تصديره PDF"
+                        MangaFoxRuntime.persist(this)
+                        toast("اكتمل التقاط ${saved.size} صورة دون ترجمة")
+                        val host = applicationContext
+                        startActivity(Intent(host, MainActivity::class.java).apply {
+                            action = ACTION_SHOW_RESULTS
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                        })
+                    }
+                } catch (e: Exception) {
+                    val cancelled = cancelOperationRequested || e.message == "MFOX_OPERATION_CANCELLED"
+                    if (cancelled && keepCompletedOnCancel) {
+                        Handler(Looper.getMainLooper()).post {
+                            translationRunning = false
+                            MangaFoxRuntime.sourcePages = saved.toList()
+                            MangaFoxRuntime.resultPages = saved.toList()
+                            MangaFoxRuntime.translationLayerFiles = saved.map { "" }
+                            MangaFoxRuntime.captureOnlyResult = true
+                            MangaFoxRuntime.qualitySummary = "نتيجة جزئية محفوظة: ${saved.size} صورة مكتملة دون ترجمة"
+                            MangaFoxRuntime.status = "أُلغيت العملية مع الاحتفاظ بالصور المكتملة"
+                            MangaFoxRuntime.progressDetail = "تم الاحتفاظ بـ ${saved.size} صورة مكتملة"
+                            MangaFoxRuntime.progressPercent = if (workPages.isEmpty()) 0 else (saved.size * 100 / workPages.size)
+                            if (saved.isNotEmpty()) runCatching {
+                                MangaFoxChapterArchive.save(
+                                    this, MangaFoxRuntime.activeWorkName, MangaFoxRuntime.activeChapterName,
+                                    MangaFoxRuntime.resultTitle, saved, saved, saved.map { "" }, true,
+                                    MangaFoxRuntime.qualitySummary
+                                )
+                            }
+                            MangaFoxRuntime.persist(this)
+                            cancelOperationRequested = false
+                            toast("تم الإلغاء مع الاحتفاظ بـ ${saved.size} صورة مكتملة")
+                        }
+                        workPages.forEach { runCatching { it.delete() } }
+                    } else {
+                        saved.forEach { runCatching { File(it).delete() } }
+                        workPages.forEach { runCatching { it.delete() } }
+                        Handler(Looper.getMainLooper()).post {
+                            translationRunning = false
+                            MangaFoxRuntime.status = if (cancelled) "أُلغيت العملية وحُذفت جميع صورها" else "تعذر تجهيز الصور"
+                            MangaFoxRuntime.progressDetail = if (cancelled) "تم حذف ملفات هذه العملية" else (e.localizedMessage ?: "خطأ")
+                            if (cancelled) MangaFoxRuntime.progressPercent = 0
+                            cancelOperationRequested = false
+                            toast(MangaFoxRuntime.status)
+                        }
+                    }
+                }
+            }
+        } else {
+            translateSavedSegments(workPages, note, MangaFoxRuntime.activeChapterName.ifBlank {
+                if (workPages.size > 1) "الفصل العمودي" else "الصفحة الحالية"
+            })
+        }
+    }
+
+    private fun pendingCaptureFiles(): List<File> {
+        return listOf(filesDir, cacheDir)
+            .flatMap { directory -> directory.listFiles()?.asList().orEmpty() }
+            .filter { it.isFile && it.name.startsWith("mfox_capture_") && it.length() > 0L }
+            .distinctBy { it.absolutePath }
+            .sortedBy { it.name }
+    }
+
+    private fun recoverInterruptedCapture() {
+        if (captureRunning || translationRunning || instance !== this) return
+        val pending = pendingCaptureFiles()
+        if (pending.isEmpty()) return
+        MangaFoxRuntime.status = "استعادة ${pending.size} مقطع محفوظ بعد انقطاع الخدمة..."
+        translateSavedSegments(
+            ArrayList(pending),
+            "تمت استعادة المقاطع المحفوظة بعد إعادة تشغيل خدمة الالتقاط.",
+            "الفصل المستعاد"
+        )
+    }
+
+    fun retryManualRegion(sourcePath: String, resultPath: String, selectedRect: Rect, completed: (Boolean, String) -> Unit) {
+        if (captureRunning || translationRunning) {
+            completed(false, "هناك عملية أخرى قيد التنفيذ")
+            return
+        }
+        translationRunning = true
+        MangaFoxRuntime.progressPercent = 0
+        MangaFoxRuntime.progressDetail = "قراءة المنطقة المحددة"
+        updateTranslationLens(0, "قراءة المنطقة المحددة")
+        worker.execute {
+            var original: Bitmap? = null
+            var crop: Bitmap? = null
+            var translatedCrop: Bitmap? = null
+            var output: Bitmap? = null
+            try {
+                original = BitmapFactory.decodeFile(sourcePath) ?: throw IllegalStateException("تعذر فتح الصورة الأصلية")
+                val safe = Rect(selectedRect).apply {
+                    left = left.coerceIn(0, original!!.width - 1)
+                    top = top.coerceIn(0, original!!.height - 1)
+                    right = right.coerceIn(left + 1, original!!.width)
+                    bottom = bottom.coerceIn(top + 1, original!!.height)
+                }
+                crop = Bitmap.createBitmap(original!!, safe.left, safe.top, safe.width(), safe.height())
+                translatedCrop = translateBitmap(crop!!) { fraction, detail ->
+                    updateTranslationLens((fraction * 95f).toInt(), "منطقة محددة · $detail")
+                }
+                if (lastOcrTranslationLines.get().isEmpty()) {
+                    throw IllegalStateException("لم يُكتشف نص قابل للترجمة داخل المنطقة المحددة")
+                }
+                // The layer update is mandatory: never report success while only the JPG was changed.
+                val pageIndex = MangaFoxRuntime.resultPages.indexOfFirst {
+                    File(it).absolutePath == File(resultPath).absolutePath
+                }
+                if (pageIndex < 0) throw IllegalStateException("تعذر ربط المنطقة بالصفحة الأصلية")
+                while (MangaFoxRuntime.translationLayerFiles.size < MangaFoxRuntime.resultPages.size) {
+                    MangaFoxRuntime.translationLayerFiles = MangaFoxRuntime.translationLayerFiles + ""
+                }
+                val layerPath = MangaFoxRuntime.translationLayerFiles.getOrNull(pageIndex)
+                val layerFile = layerPath?.takeIf { it.isNotBlank() }?.let { File(it) }
+                    ?.takeIf { it.isFile }
+                    ?: File(filesDir, "mfox_layers_manual_${System.currentTimeMillis()}_$pageIndex.json")
+                val saved = if (layerFile.isFile) {
+                    org.json.JSONArray(layerFile.readText(Charsets.UTF_8))
+                } else {
+                    org.json.JSONArray()
+                }
+                val refreshed = ArrayList<org.json.JSONObject>()
+                for (i in 0 until saved.length()) {
+                    val record = saved.optJSONObject(i) ?: continue
+                    val oldRect = Rect(record.optInt("left"), record.optInt("top"), record.optInt("right"), record.optInt("bottom"))
+                    val replaced = lastOcrTranslationLines.get().any { line ->
+                        val newRect = Rect(line.bounds).apply { offset(safe.left, safe.top) }
+                        val overlap = Rect(oldRect)
+                        if (!overlap.intersect(newRect)) false else {
+                            val intersection = overlap.width().toFloat() * overlap.height()
+                            val union = oldRect.width().toFloat() * oldRect.height() + newRect.width().toFloat() * newRect.height() - intersection
+                            val smaller = min(oldRect.width() * oldRect.height(), newRect.width() * newRect.height()).coerceAtLeast(1)
+                            union > 0f && (intersection / union > 0.28f || intersection / smaller > 0.58f)
+                        }
+                    }
+                    if (!replaced) refreshed.add(record)
+                }
+                lastOcrTranslationLines.get().forEach { line ->
+                    val rect = Rect(line.bounds).apply { offset(safe.left, safe.top) }
+                    val layer = org.json.JSONObject()
+                        .put("left", rect.left).put("top", rect.top)
+                        .put("right", rect.right).put("bottom", rect.bottom)
+                        .put("source", line.sourceText).put("translated", line.translated)
+                        .put("language", line.language).put("vertical", line.vertical)
+                        .put("eraseOnly", line.eraseOnly).put("shape", line.shape).put("status", line.status)
+                    line.textColor?.let { layer.put("textColor", it) }
+                    line.outlineColor?.let { layer.put("outlineColor", it) }
+                    line.outlineWidthDp?.let { layer.put("outlineWidth", it) }
+                    if (line.fontScale != 1f) layer.put("fontScale", line.fontScale.toDouble())
+                    line.containerBounds?.let { container ->
+                        val mappedContainer = Rect(container).apply { offset(safe.left, safe.top) }
+                        layer.put("containerLeft", mappedContainer.left)
+                            .put("containerTop", mappedContainer.top)
+                            .put("containerRight", mappedContainer.right)
+                            .put("containerBottom", mappedContainer.bottom)
+                    }
+                    refreshed.add(layer)
+                }
+                val outputLayers = org.json.JSONArray()
+                refreshed.forEach { outputLayers.put(it) }
+                val layerTemp = File(layerFile.parentFile, layerFile.name + ".tmp")
+                layerTemp.writeText(outputLayers.toString(), Charsets.UTF_8)
+                if (!layerTemp.renameTo(layerFile)) {
+                    layerTemp.copyTo(layerFile, overwrite = true)
+                    layerTemp.delete()
+                }
+                MangaFoxRuntime.translationLayerFiles = MangaFoxRuntime.translationLayerFiles.toMutableList().also {
+                    it[pageIndex] = layerFile.absolutePath
+                }
+                MangaFoxRuntime.persist(this@MangaFoxAccessibilityService)
+                output = BitmapFactory.decodeFile(resultPath) ?: original!!.copy(Bitmap.Config.ARGB_8888, true)
+                Canvas(output!!).drawBitmap(translatedCrop!!, safe.left.toFloat(), safe.top.toFloat(), Paint(Paint.ANTI_ALIAS_FLAG))
+                val target = File(resultPath)
+                val temp = File(target.parentFile, target.nameWithoutExtension + "_region.tmp." + target.extension)
+                writeRenderedBitmap(output!!, temp)
+                if (!temp.renameTo(target)) {
+                    temp.copyTo(target, overwrite = true)
+                    temp.delete()
+                }
+                MangaFoxRuntime.persist(this@MangaFoxAccessibilityService)
+                mainHandler.post {
+                    translationRunning = false
+                    MangaFoxRuntime.progressPercent = 100
+                    MangaFoxRuntime.progressDetail = "اكتملت إعادة قراءة المنطقة"
+                    updateTranslationLens(100, MangaFoxRuntime.progressDetail)
+                    completed(true, "اكتملت إعادة قراءة المنطقة وترجمتها")
+                }
+            } catch (e: Exception) {
+                mainHandler.post {
+                    translationRunning = false
+                    completed(false, "تعذرت إعادة ترجمة المنطقة: ${e.localizedMessage ?: "خطأ غير معروف"}")
+                }
+            } finally {
+                listOf(original, crop, translatedCrop, output).forEach { bitmap ->
+                    bitmap?.let { if (!it.isRecycled) it.recycle() }
+                }
+            }
+        }
+    }
+
+    /** Re-render saved per-bubble translation layers with the current font settings, without OCR. */
+    fun rerenderLastResultsFromLayers(onComplete: (() -> Unit)? = null) {
+        if (translationRunning || captureRunning) {
+            toast("انتظر انتهاء العملية الحالية")
+            return
+        }
+        val sources = MangaFoxRuntime.sourcePages.map { File(it) }
+        val targets = MangaFoxRuntime.resultPages.map { File(it) }
+        val layers = MangaFoxRuntime.translationLayerFiles.map { File(it) }
+        if (sources.isEmpty() || sources.size != targets.size ||
+            sources.any { !it.isFile } || targets.any { !it.isFile }) {
+            toast("الصور الأصلية أو النتائج غير مكتملة؛ لا يمكن إعادة التنسيق")
+            return
+        }
+        // A missing layer file is recoverable: create an empty editable layer for that page.
+        val normalizedLayers = ArrayList<String>(sources.size)
+        sources.indices.forEach { index ->
+            // `layers` already contains File objects; do not treat an entry as a String path.
+            val existing: File? = layers.getOrNull(index)
+            val usable = existing?.takeIf { it.isFile }
+                ?: File(filesDir, "mfox_layers_recovered_${System.currentTimeMillis()}_$index.json").apply {
+                    writeText(org.json.JSONArray().toString(), Charsets.UTF_8)
+                }
+            normalizedLayers.add(usable.absolutePath)
+        }
+        MangaFoxRuntime.translationLayerFiles = normalizedLayers
+        MangaFoxRuntime.persist(this)
+        translationRunning = true
+        MangaFoxRuntime.progressPercent = 0
+        MangaFoxRuntime.progressDetail = "إعادة تنسيق الطبقات المحفوظة دون OCR"
+        updateTranslationLens(0, MangaFoxRuntime.progressDetail)
+        worker.execute {
+            try {
+                sources.indices.forEach { index ->
+                    var original: Bitmap? = null
+                    var rendered: Bitmap? = null
+                    try {
+                        val json = org.json.JSONArray(File(normalizedLayers[index]).readText(Charsets.UTF_8))
+                        // Never use a previously rendered result as the next render base.
+                        // This prevents translated glyphs from accumulating after edits/font changes.
+                        val basePath = sources[index].absolutePath
+                        original = BitmapFactory.decodeFile(basePath)
+                            ?: throw IllegalStateException("تعذر قراءة الصورة الأساسية ${index + 1}")
+                        val records = ArrayList<TranslationLine>(json.length())
+                        for (recordIndex in 0 until json.length()) {
+                            val item = json.optJSONObject(recordIndex) ?: continue
+                            if (item.optString("status", "translated") == "failed") continue
+                            if (!item.has("left") || !item.has("top") || !item.has("right") || !item.has("bottom")) continue
+                            val rect = Rect(
+                                item.optInt("left"), item.optInt("top"),
+                                item.optInt("right"), item.optInt("bottom")
+                            )
+                            if (rect.width() > 0 && rect.height() > 0) {
+                                records.add(TranslationLine(
+                                    rect, item.optString("translated"),
+                                    item.optString("source"), item.optString("language", "und"),
+                                    item.optBoolean("vertical", false),
+                                    item.optBoolean("eraseOnly", false),
+                                    item.optString("shape", "round"),
+                                    if (item.has("containerLeft")) Rect(
+                                        item.optInt("containerLeft"), item.optInt("containerTop"),
+                                        item.optInt("containerRight"), item.optInt("containerBottom")
+                                    ).takeIf { it.width() > 8 && it.height() > 8 } else null,
+                                    if (item.has("textColor")) item.optInt("textColor") else null,
+                                    if (item.has("outlineColor")) item.optInt("outlineColor") else null,
+                                    if (item.has("outlineWidth")) item.optInt("outlineWidth").coerceIn(0, 8) else null,
+                                    item.optDouble("fontScale", 1.0).toFloat().coerceIn(0.5f, 2f),
+                                    item.optString("status", "translated")
+                                ))
+                            }
+                        }
+                        rendered = drawTranslatedLines(original!!, records)
+                        val target = targets[index]
+                        val temp = File(target.parentFile, target.nameWithoutExtension + "_layers.tmp." + target.extension)
+                        writeRenderedBitmap(rendered!!, temp)
+                        if (!temp.renameTo(target)) {
+                            temp.copyTo(target, overwrite = true)
+                            temp.delete()
+                        }
+                        val percent = (((index + 1).toFloat() / sources.size) * 100f).toInt()
+                        updateTranslationLens(percent.coerceAtMost(99), "إعادة تنسيق الطبقات ${index + 1}/${sources.size}")
+                    } finally {
+                        original?.let { if (!it.isRecycled) it.recycle() }
+                        rendered?.let { if (!it.isRecycled) it.recycle() }
+                    }
+                }
+                mainHandler.post {
+                    translationRunning = false
+                    MangaFoxRuntime.progressPercent = 100
+                    MangaFoxRuntime.progressDetail = "تم تطبيق إعدادات الخط دون تشغيل OCR"
+                    MangaFoxRuntime.status = MangaFoxRuntime.progressDetail
+                    MangaFoxRuntime.pendingEdits = false
+                    if (MangaFoxRuntime.activeArchiveId.isNotBlank()) {
+                        MangaFoxChapterArchive.save(
+                            this@MangaFoxAccessibilityService, MangaFoxRuntime.activeWorkName,
+                            MangaFoxRuntime.activeChapterName, MangaFoxRuntime.resultTitle,
+                            MangaFoxRuntime.sourcePages, MangaFoxRuntime.resultPages,
+                            MangaFoxRuntime.translationLayerFiles, MangaFoxRuntime.captureOnlyResult,
+                            MangaFoxRuntime.qualitySummary
+                        )
+                    }
+                    MangaFoxRuntime.persist(this@MangaFoxAccessibilityService)
+                    updateTranslationLens(100, MangaFoxRuntime.progressDetail)
+                    mainHandler.postDelayed({ if (!translationRunning) resetLensProgress() }, 3500L)
+                    notifyResultsReady()
+                    toast("تم تحديث الخط والحجم دون إعادة OCR")
+                    onComplete?.invoke()
+                }
+            } catch (e: Exception) {
+                mainHandler.post {
+                    translationRunning = false
+                    MangaFoxRuntime.lastError = "تعذرت إعادة تنسيق الطبقات: ${e.localizedMessage ?: "خطأ غير معروف"}"
+                    MangaFoxRuntime.progressDetail = "تعذرت إعادة تنسيق الطبقات"
+                    updateTranslationLens(-1, MangaFoxRuntime.progressDetail)
+                    toast(MangaFoxRuntime.lastError)
+                }
+            }
+        }
+    }
+
+    fun retranslateLastResults() {
+        if (translationRunning || captureRunning) {
+            toast("انتظر انتهاء العملية الحالية")
+            return
+        }
+        val originals = MangaFoxRuntime.sourcePages.map { File(it) }.filter { it.isFile && it.length() > 0L }
+        if (originals.isEmpty()) {
+            toast("الصور الأصلية غير متوفرة؛ أعد التقاط الفصل")
+            return
+        }
+        translateSavedSegments(ArrayList(originals), "أعيد تطبيق إعدادات الخط الحالية.", MangaFoxRuntime.resultTitle, preserveInputs = true)
+    }
+
+    private fun combineVerticalBitmaps(parts: List<Bitmap>): Bitmap {
+        require(parts.isNotEmpty()) { "لا توجد صور للدمج" }
+        if (parts.size == 1) return parts.first()
+        val naturalWidth = parts.maxOf { it.width }.coerceAtLeast(1)
+        val naturalHeights = parts.map { (it.height * (naturalWidth.toFloat() / it.width)).roundToInt().coerceAtLeast(1) }
+        val naturalTotalHeight = naturalHeights.sum().coerceAtLeast(1)
+        // Use the device heap budget to avoid allocating a huge vertical bitmap on low-memory phones.
+        val heapBudgetMb = (Runtime.getRuntime().maxMemory() / (1024L * 1024L)).toInt().coerceAtLeast(256)
+        val profile = MangaFoxPerformanceAdvisor.forDevice(heapBudgetMb, Runtime.getRuntime().availableProcessors())
+        val maxStripHeight = profile.maxImageSide * 2
+        val globalScale = minOf(
+            1f,
+            profile.maxImageSide.toFloat() / naturalWidth.toFloat(),
+            maxStripHeight.toFloat() / naturalTotalHeight.toFloat()
+        )
+        val width = (naturalWidth * globalScale).roundToInt().coerceAtLeast(1)
+        val outputHeights = parts.map { (it.height * (width.toFloat() / it.width)).roundToInt().coerceAtLeast(1) }
+        val height = outputHeights.sum().coerceAtLeast(1)
+        val combined = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(combined)
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
+        var top = 0
+        parts.forEachIndexed { index, bitmap ->
+            val bottom = top + outputHeights[index]
+            canvas.drawBitmap(bitmap, null, Rect(0, top, width, bottom), paint)
+            top = bottom
+        }
+        return combined
+    }
+
+    private fun translateSavedSegments(
+        workPages: ArrayList<File>,
+        note: String,
+        title: String,
+        preserveInputs: Boolean = false,
+        resumeCheckpoint: JSONObject? = null
+    ) {
+        if (workPages.isEmpty() || translationRunning) return
+        clearTranslationPause()
+        cancelOperationRequested = false
+        keepCompletedOnCancel = true
+        translationRunning = true
+        MangaFoxRuntime.progressPercent = 0
+        MangaFoxRuntime.progressDetail = "تهيئة الترجمة"
+        MangaFoxRuntime.detectedBlocks = 0
+        MangaFoxRuntime.translatedBlocks = 0
+        MangaFoxRuntime.failedBlocks = 0
+        MangaFoxRuntime.skippedBlocks = 0
+        MangaFoxRuntime.failedBlockSamples = emptyList()
+        MangaFoxRuntime.qualitySummary = "جارٍ تحليل النصوص..."
+        MangaFoxRuntime.status = "محرك v3.0.6b — بدء استخراج النصوص وترجمتها..."
+        updateTranslationLens(0, "تهيئة الترجمة")
+        if (note.isNotBlank()) MangaFoxRuntime.lastError = note
+
+        try {
+            worker.execute {
+                val translatedFiles = ArrayList<String>()
+                val newSourceFiles = ArrayList<String>()
+                val newLayerFiles = ArrayList<String>()
+                fun checkpointPaths(key: String): List<String> {
+                    val array = resumeCheckpoint?.optJSONArray(key) ?: return emptyList()
+                    return (0 until array.length()).map { array.optString(it, "") }.filter { it.isNotBlank() && File(it).isFile }
+                }
+                translatedFiles.addAll(checkpointPaths("results"))
+                newSourceFiles.addAll(checkpointPaths("sources"))
+                newLayerFiles.addAll(checkpointPaths("layers"))
+                val groupSize = if (preserveInputs) 1 else 2
+                val groups = workPages.chunked(groupSize)
+                var previousPageContext = emptyList<MangaFoxLocalLlm.Bubble>()
+                val startGroup = (resumeCheckpoint?.optInt("nextGroup", 0) ?: 0).coerceIn(0, groups.size)
+                try {
+                    groups.drop(startGroup).forEachIndexed { offset, groupFiles ->
+                        val index = startGroup + offset
+                        if (cancelOperationRequested) throw IllegalStateException("MFOX_OPERATION_CANCELLED")
+                        awaitTranslationResume()
+                        if (cancelOperationRequested) throw IllegalStateException("MFOX_OPERATION_CANCELLED")
+                        MangaFoxRuntime.status = "دمج وتحليل الصفحة ${index + 1} من ${groups.size}..."
+                        updateTranslationLens((index * 100 / groups.size).coerceIn(0, 99), "الصفحة ${index + 1} من ${groups.size} · تجهيز الصورة وOCR")
+                        val decodedParts = ArrayList<Bitmap>(groupFiles.size)
+                        var page: Bitmap? = null
+                        var translated: Bitmap? = null
+                        var pageCommitted = false
+                        try {
+                            groupFiles.forEach { file ->
+                                decodedParts.add(
+                                    BitmapFactory.decodeFile(file.absolutePath)
+                                        ?: throw IllegalStateException("تعذر قراءة ${file.name}")
+                                )
+                            }
+                            page = combineVerticalBitmaps(decodedParts)
+                            val mergedPage = page ?: throw IllegalStateException("تعذر دمج لقطات الفصل")
+                            if (!preserveInputs) {
+                                val sourceCopy = File(filesDir, "mfox_source_${System.currentTimeMillis()}_${index}.jpg")
+                                FileOutputStream(sourceCopy).use { stream ->
+                                    if (!mergedPage.compress(Bitmap.CompressFormat.JPEG, 96, stream)) {
+                                        throw IllegalStateException("تعذر حفظ الصورة الأصلية المدمجة")
+                                    }
+                                }
+                                newSourceFiles.add(sourceCopy.absolutePath)
+                            }
+                            val outputBitmap = translateBitmap(mergedPage, previousPageContext) { fraction, detail ->
+                                val aggregate = (((index + fraction.coerceIn(0f, 1f)) / groups.size) * 100f).toInt().coerceIn(0, 99)
+                                updateTranslationLens(aggregate, "الصفحة ${index + 1} من ${groups.size} · $detail")
+                            }
+                            translated = outputBitmap
+                            previousPageContext = lastOcrTranslationLines.get()
+                                .filter { it.sourceText.isNotBlank() }
+                                .sortedWith(compareBy<TranslationLine> { it.bounds.top }.thenByDescending { it.bounds.right })
+                                .takeLast(5)
+                                .mapIndexed { contextIndex, line ->
+                                    MangaFoxLocalLlm.Bubble(
+                                        -1 - contextIndex, line.language,
+                                        line.sourceText.take(260), line.translated.take(260)
+                                    )
+                                }
+                            val layerFile = File(filesDir, "mfox_layers_${System.currentTimeMillis()}_$index.json")
+                            val layerArray = org.json.JSONArray()
+                            lastOcrTranslationLines.get().forEach { line ->
+                                layerArray.put(org.json.JSONObject()
+                                    .put("left", line.bounds.left).put("top", line.bounds.top)
+                                    .put("right", line.bounds.right).put("bottom", line.bounds.bottom)
+                                    .put("source", line.sourceText).put("translated", line.translated)
+                                    .put("language", line.language).put("vertical", line.vertical)
+                                    .put("eraseOnly", line.eraseOnly).put("shape", line.shape)
+                                    .put("status", line.status).also { layer ->
+                                        line.textColor?.let { layer.put("textColor", it) }
+                                        line.outlineColor?.let { layer.put("outlineColor", it) }
+                                        line.outlineWidthDp?.let { layer.put("outlineWidth", it) }
+                                        if (line.fontScale != 1f) layer.put("fontScale", line.fontScale.toDouble())
+                                        line.containerBounds?.let { container ->
+                                            layer.put("containerLeft", container.left)
+                                                .put("containerTop", container.top)
+                                                .put("containerRight", container.right)
+                                                .put("containerBottom", container.bottom)
+                                        }
+                                    })
+                            }
+                            FileOutputStream(layerFile).use { stream ->
+                                stream.write(layerArray.toString().toByteArray(Charsets.UTF_8))
+                            }
+                            newLayerFiles.add(layerFile.absolutePath)
+                            // PNG prevents JPEG ringing/gray halos around freshly repainted speech balloons.
+                            val outputFile = File(filesDir, "mfox_result_${System.currentTimeMillis()}_$index.png")
+                            writeRenderedBitmap(outputBitmap, outputFile)
+                            translatedFiles.add(outputFile.absolutePath)
+                            // Durable page checkpoint: publish only after image + layer files are fully written.
+                            // A process death can no longer discard already completed pages from the active session.
+                            MangaFoxRuntime.resultPages = translatedFiles.toList()
+                            MangaFoxRuntime.translationLayerFiles = newLayerFiles.toList()
+                            if (!preserveInputs) MangaFoxRuntime.sourcePages = newSourceFiles.toList()
+                            MangaFoxRuntime.resultTitle = title
+                            MangaFoxRuntime.status = "اكتملت الصفحة ${index + 1} من ${groups.size} · تم الحفظ تلقائياً"
+                            MangaFoxRuntime.progressDetail = "حُفظت الصفحة ${index + 1} بأمان"
+                            MangaFoxRuntime.persist(this@MangaFoxAccessibilityService)
+                            MangaFoxOperationCheckpoint.save(
+                                this@MangaFoxAccessibilityService,
+                                title,
+                                workPages.map { it.absolutePath },
+                                index + 1,
+                                translatedFiles,
+                                if (preserveInputs) MangaFoxRuntime.sourcePages else newSourceFiles,
+                                newLayerFiles,
+                                preserveInputs
+                            )
+                            pageCommitted = true
+                            runCatching {
+                                MangaFoxChapterArchive.save(
+                                    this@MangaFoxAccessibilityService,
+                                    MangaFoxRuntime.activeWorkName,
+                                    MangaFoxRuntime.activeChapterName.ifBlank { title },
+                                    title,
+                                    if (preserveInputs) MangaFoxRuntime.sourcePages else newSourceFiles,
+                                    translatedFiles,
+                                    newLayerFiles,
+                                    false,
+                                    "حفظ تلقائي · ${translatedFiles.size} صفحة مكتملة"
+                                )
+                            }
+                            updateTranslationLens((((index + 1).toFloat() / groups.size) * 100f).toInt().coerceIn(0, 99), "اكتملت الصفحة ${index + 1} من ${groups.size} · حُفظت")
+                            if (cancelOperationRequested) throw IllegalStateException("MFOX_OPERATION_CANCELLED")
+                        } finally {
+                            page?.let { merged ->
+                                if (decodedParts.none { it === merged } && !merged.isRecycled) merged.recycle()
+                            }
+                            translated?.let { if (!it.isRecycled) it.recycle() }
+                            decodedParts.forEach { if (!it.isRecycled) it.recycle() }
+                            if (!preserveInputs && pageCommitted) groupFiles.forEach { runCatching { it.delete() } }
+                        }
+                    }
+                    val oldFiles = MangaFoxRuntime.resultPages
+                    val oldSources = MangaFoxRuntime.sourcePages
+                    val oldLayers = MangaFoxRuntime.translationLayerFiles
+                    val retainedSources = if (preserveInputs) oldSources else newSourceFiles.toList()
+                    MangaFoxRuntime.resultPages = translatedFiles.toList()
+                    MangaFoxRuntime.translationLayerFiles = newLayerFiles.toList()
+                    MangaFoxLayerHistory(this@MangaFoxAccessibilityService).reset()
+                    if (!preserveInputs) MangaFoxRuntime.sourcePages = newSourceFiles.toList()
+                    MangaFoxRuntime.resultTitle = title
+                    MangaFoxRuntime.pendingEdits = false
+                    MangaFoxRuntime.qualitySummary = "اكتُشف ${MangaFoxRuntime.detectedBlocks} · تُرجم ${MangaFoxRuntime.translatedBlocks} · فشل ${MangaFoxRuntime.failedBlocks} · تُرك ${MangaFoxRuntime.skippedBlocks}"
+                    MangaFoxRuntime.status = "اكتملت الترجمة: ${translatedFiles.size} صورة مدمجة · ${MangaFoxRuntime.qualitySummary}"
+                    MangaFoxRuntime.lastError = note
+                    val archivedId = MangaFoxChapterArchive.save(
+                        this@MangaFoxAccessibilityService,
+                        MangaFoxRuntime.activeWorkName,
+                        MangaFoxRuntime.activeChapterName.ifBlank { title },
+                        title,
+                        retainedSources,
+                        translatedFiles,
+                        newLayerFiles,
+                        false,
+                        MangaFoxRuntime.qualitySummary
+                    )
+                    // Archive files are independent copies. Avoid deleting an original
+                    // that is also the current input during a preserve-input retranslation.
+                    val permanentArchiveRoot = File(filesDir, "mfox_library").canonicalPath + File.separator
+                    fun deleteOnlyWorkingFile(path: String) {
+                        if (path.isBlank()) return
+                        runCatching {
+                            val file = File(path)
+                            val canonical = file.canonicalPath
+                            if (!canonical.startsWith(permanentArchiveRoot)) file.delete()
+                        }
+                    }
+                    oldFiles.filterNot { it in retainedSources || it in translatedFiles }.forEach(::deleteOnlyWorkingFile)
+                    oldLayers.filterNot { it in newLayerFiles }.forEach(::deleteOnlyWorkingFile)
+                    if (!preserveInputs) oldSources.filterNot { it in newSourceFiles }.forEach(::deleteOnlyWorkingFile)
+                    if (archivedId == null) MangaFoxRuntime.lastError = "${MangaFoxRuntime.lastError} · تعذر إنشاء نسخة الأرشيف".trim(' ', '·')
+                    MangaFoxRuntime.persist(this@MangaFoxAccessibilityService)
+                    MangaFoxOperationCheckpoint.clear(this@MangaFoxAccessibilityService)
+                    clearTranslationPause()
+                    MangaFoxRuntime.progressPercent = 100
+                    MangaFoxRuntime.progressDetail = "اكتملت الترجمة"
+                    mainHandler.post {
+                        translationRunning = false
+                        updateTranslationLens(100, "اكتملت الترجمة")
+                        mainHandler.postDelayed({ if (!translationRunning) resetLensProgress() }, 5000L)
+                        if (instance !== this@MangaFoxAccessibilityService) closeRecognitionResources()
+                        val notified = notifyResultsReady()
+                        toast(if (notified) "اكتملت الترجمة العربية. اضغط إشعار Manga Fox لعرض الفصل" else "اكتملت الترجمة. افتح Manga Fox ثم اختر عرض آخر نتيجة مترجمة")
+                        completeQueuedChapter(true, "اكتملت ترجمة الفصل")
+                        if (autoNextAfterTranslation) mainHandler.postDelayed({ advanceToNextChapterFromAccessibility() }, 1100L)
+                    }
+                } catch (e: Exception) {
+                    val cancelled = cancelOperationRequested || e.message == "MFOX_OPERATION_CANCELLED"
+                    if (cancelled) {
+                        val keep = keepCompletedOnCancel
+                        if (keep && translatedFiles.isNotEmpty()) {
+                            // Commit only fully rendered pages; the in-flight page is completed before this boundary.
+                            MangaFoxRuntime.resultPages = translatedFiles.toList()
+                            MangaFoxRuntime.translationLayerFiles = newLayerFiles.toList()
+                            if (!preserveInputs) MangaFoxRuntime.sourcePages = newSourceFiles.toList()
+                            MangaFoxRuntime.resultTitle = title
+                            MangaFoxRuntime.pendingEdits = false
+                            MangaFoxRuntime.qualitySummary = "نتيجة جزئية محفوظة: ${translatedFiles.size} صفحة مكتملة"
+                            MangaFoxRuntime.status = "أُلغيت العملية مع الاحتفاظ بالصفحات المكتملة"
+                            MangaFoxRuntime.progressDetail = "تم الاحتفاظ بـ ${translatedFiles.size} صفحة مكتملة"
+                            runCatching {
+                                MangaFoxChapterArchive.save(
+                                    this@MangaFoxAccessibilityService, MangaFoxRuntime.activeWorkName,
+                                    MangaFoxRuntime.activeChapterName.ifBlank { title }, title,
+                                    if (preserveInputs) MangaFoxRuntime.sourcePages else newSourceFiles,
+                                    translatedFiles, newLayerFiles, false, MangaFoxRuntime.qualitySummary
+                                )
+                            }
+                            MangaFoxRuntime.persist(this@MangaFoxAccessibilityService)
+                        } else {
+                            newSourceFiles.forEach { runCatching { File(it).delete() } }
+                            newLayerFiles.forEach { runCatching { File(it).delete() } }
+                            translatedFiles.forEach { runCatching { File(it).delete() } }
+                            MangaFoxRuntime.status = "أُلغيت العملية وحُذفت نتائجها"
+                            MangaFoxRuntime.progressDetail = "لم يتم الاحتفاظ بأي صفحة من هذه العملية"
+                            MangaFoxRuntime.progressPercent = 0
+                        }
+                        if (!preserveInputs) workPages.forEach { runCatching { it.delete() } }
+                        MangaFoxRuntime.lastError = ""
+                        MangaFoxOperationCheckpoint.clear(this@MangaFoxAccessibilityService)
+                        clearTranslationPause()
+                        cancelOperationRequested = false
+                        mainHandler.post {
+                            translationRunning = false
+                            updateTranslationLens(-1, "تم إلغاء العملية")
+                            mainHandler.postDelayed({ resetLensProgress() }, 2500L)
+                            if (instance !== this@MangaFoxAccessibilityService) closeRecognitionResources()
+                            toast(if (keep && translatedFiles.isNotEmpty()) "أُلغيت العملية مع الاحتفاظ بـ ${translatedFiles.size} صفحة مكتملة" else "أُلغيت العملية وحُذفت نتائجها")
+                            completeQueuedChapter(false, "أُلغيت ترجمة الفصل من الطابور")
+                        }
+                    } else {
+                        // Keep the last committed page boundary and remaining source files.
+                        // A transient OCR/model/storage failure must not destroy hours of capture work.
+                        MangaFoxRuntime.resultPages = translatedFiles.filter { File(it).isFile }
+                        MangaFoxRuntime.translationLayerFiles = newLayerFiles.filter { File(it).isFile }
+                        if (!preserveInputs) MangaFoxRuntime.sourcePages = newSourceFiles.filter { File(it).isFile }
+                        MangaFoxRuntime.resultTitle = title
+                        MangaFoxRuntime.qualitySummary = "توقف عند الصفحة ${translatedFiles.size + 1} · ${translatedFiles.size} صفحة محفوظة"
+                        MangaFoxRuntime.persist(this@MangaFoxAccessibilityService)
+                        runCatching {
+                            if (translatedFiles.isNotEmpty()) MangaFoxChapterArchive.save(
+                                this@MangaFoxAccessibilityService,
+                                MangaFoxRuntime.activeWorkName,
+                                MangaFoxRuntime.activeChapterName.ifBlank { title },
+                                title,
+                                if (preserveInputs) MangaFoxRuntime.sourcePages else newSourceFiles,
+                                translatedFiles,
+                                newLayerFiles,
+                                false,
+                                MangaFoxRuntime.qualitySummary
+                            )
+                        }
+                        // Do not clear the checkpoint. The next app launch can resume it.
+                        clearTranslationPause()
+                        MangaFoxRuntime.lastError = "حدث خطأ أثناء الترجمة: ${e.localizedMessage ?: "خطأ غير معروف"}"
+                        MangaFoxRuntime.status = "توقفت المعالجة مع حفظ التقدم"
+                        MangaFoxRuntime.progressDetail = "${translatedFiles.size} صفحة محفوظة · يمكن الاستكمال من آخر نقطة حفظ"
+                        mainHandler.post {
+                            translationRunning = false
+                            updateTranslationLens(-1, "توقفت المعالجة · التقدم محفوظ")
+                            mainHandler.postDelayed({ resetLensProgress() }, 4000L)
+                            if (instance !== this@MangaFoxAccessibilityService) closeRecognitionResources()
+                            toast("${MangaFoxRuntime.lastError} · تم حفظ الصفحات المكتملة ويمكن الاستكمال لاحقاً")
+                            completeQueuedChapter(false, MangaFoxRuntime.lastError)
+                        }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            translationRunning = false
+            clearTranslationPause()
+            workPages.forEach { runCatching { it.delete() } }
+            finishCaptureWithError("تعذر تشغيل عامل الترجمة: ${e.localizedMessage ?: "خطأ داخلي"}")
+            completeQueuedChapter(false, e.localizedMessage ?: "تعذر تشغيل عامل الترجمة")
+        }
+    }
+
+    private fun completeQueuedChapter(success: Boolean, detail: String) {
+        val id = queuedChapterId ?: return
+        queuedChapterId = null
+        MangaFoxChapterQueueService.onChapterFinished(this, id, success, detail)
+    }
+
+    fun startQueuedArchiveChapter(chapterId: String): Int {
+        if (captureRunning || translationRunning) return 0
+        if (!MangaFoxChapterArchive.open(this, chapterId)) return -1
+        val sources = MangaFoxRuntime.sourcePages.mapNotNull { path -> path.takeIf { it.isNotBlank() }?.let(::File)?.takeIf { it.isFile && it.length() > 0L } }
+        if (sources.isEmpty() || sources.size != MangaFoxRuntime.resultPages.size ||
+            sources.size != MangaFoxRuntime.sourcePages.count { it.isNotBlank() }) return -1
+        queuedChapterId = chapterId
+        val title = MangaFoxRuntime.activeChapterName.ifBlank { MangaFoxRuntime.resultTitle }
+        translateSavedSegments(ArrayList(sources), "ترجمة من طابور الفصول الخلفي", title, preserveInputs = true)
+        return if (translationRunning) 1 else { queuedChapterId = null; -1 }
+    }
+
+    /** Resume the last durable page boundary after the app/service process was interrupted. */
+    fun resumeInterruptedOperation(): Boolean {
+        if (translationRunning) return false
+        val checkpoint = MangaFoxOperationCheckpoint.read(this) ?: return false
+        val inputArray = checkpoint.optJSONArray("inputs") ?: return false
+        val inputs = (0 until inputArray.length()).map { File(inputArray.optString(it, "")) }
+        val next = checkpoint.optInt("nextGroup", 0).coerceAtLeast(0)
+        val groupSize = if (checkpoint.optBoolean("preserveInputs", false)) 1 else 2
+        val remaining = inputs.chunked(groupSize).drop(next).flatten()
+        if (remaining.isEmpty() || remaining.any { !it.isFile || it.length() <= 0L }) return false
+        val title = checkpoint.optString("title", MangaFoxRuntime.activeChapterName)
+        val preserve = checkpoint.optBoolean("preserveInputs", false)
+        translateSavedSegments(
+            ArrayList(inputs),
+            "استكمال العملية من الصفحة ${next + 1} بعد استعادة نقطة الحفظ.",
+            title,
+            preserve,
+            checkpoint
+        )
+        return true
+    }
+
+    private fun finishCaptureWithError(message: String) {
+        captureRunning = false
+        fullChapterMode = false
+        clearCaptureNotification()
+        previousFrame?.recycle()
+        previousFrame = null
+        capturedSegments.forEach { runCatching { it.delete() } }
+        capturedSegments.clear()
+        MangaFoxRuntime.status = "تعذر الالتقاط"
+        MangaFoxRuntime.lastError = message
+        restoreFloatingBubble()
+        toast(message)
+    }
+
+    private data class TranslationLine(
+        val bounds: Rect,
+        val translated: String,
+        val sourceText: String = "",
+        val language: String = "und",
+        val vertical: Boolean = false,
+        val eraseOnly: Boolean = false,
+        val shape: String = "round",
+        /** Bubble interior used for typesetting; source bounds remain the erase-only area. */
+        val containerBounds: Rect? = null,
+        val textColor: Int? = null,
+        val outlineColor: Int? = null,
+        val outlineWidthDp: Int? = null,
+        val fontScale: Float = 1f,
+        val status: String = "translated"
+    )
+    private data class OcrCandidate(
+        val bounds: Rect?, val text: String, val engineLanguage: String,
+        val containerBounds: Rect? = null, val bubbleId: Int? = null
+    )
+    private data class BlockForTranslation(
+        val bounds: Rect, val text: String, val language: String,
+        val containerBounds: Rect? = null,
+        val mergedLines: Int = 1,
+        val shape: String = "rect"
+    )
+
+    private fun countChars(text: String, predicate: (Char) -> Boolean): Int = text.count(predicate)
+
+    /** Heuristic confidence flag; yellow means a human should check the OCR wording. */
+    private fun needsReviewStatus(sourceText: String, translatedText: String): Boolean {
+        val compact = sourceText.filterNot { it.isWhitespace() }
+        if (compact.length <= 2) return true
+        val meaningful = compact.count { it.isLetterOrDigit() }
+        val noisy = compact.length - meaningful
+        return meaningful < 4 || noisy.toFloat() / compact.length.coerceAtLeast(1) > 0.22f || translatedText.length > sourceText.length * 5
+    }
+
+    private fun languageForCode(code: String): String =
+        TranslateLanguage.fromLanguageTag(code.lowercase(java.util.Locale.ROOT))
+            ?: TranslateLanguage.ENGLISH
+
+    private fun boxForBlock(block: Text.TextBlock): Rect? {
+        block.boundingBox?.let { return Rect(it) }
+        val boxes = block.lines.mapNotNull { it.boundingBox }
+        if (boxes.isEmpty()) return null
+        return Rect(boxes.first()).apply { boxes.drop(1).forEach { union(it) } }
+    }
+
+    private fun candidateFromBlock(block: Text.TextBlock, engine: String, scale: Float = 1f): OcrCandidate {
+        val boundsAtSource = boxForBlock(block)?.let { box ->
+            if (scale == 1f) Rect(box) else Rect(
+                (box.left / scale).roundToInt(), (box.top / scale).roundToInt(),
+                (box.right / scale).roundToInt(), (box.bottom / scale).roundToInt()
+            )
+        }
+        val lineParts = block.lines.filter { it.text.isNotBlank() }
+        val phrase = if (boundsAtSource != null && boundsAtSource.height() > boundsAtSource.width() * 2.2f && lineParts.isNotEmpty()) {
+            // Vertical Japanese columns are read from right to left, then top to bottom.
+            lineParts.sortedByDescending { it.boundingBox?.centerX() ?: 0 }
+                .joinToString("") { it.text.trim() }
+        } else {
+            lineParts.joinToString(" ") { it.text.trim() }.ifBlank { block.text.trim() }
+        }
+        return OcrCandidate(boundsAtSource, phrase.trim(), engine)
+    }
+
+    /**
+     * Prefer line-sized OCR boxes over a whole TextBlock. A block may contain Arabic and
+     * Latin on adjacent lines; assigning one language and one large rectangle to it was
+     * the main source of mixed-script overlaps seen in translated pages.
+     */
+    private fun collectCandidates(result: Text?, engine: String, scale: Float = 1f): List<OcrCandidate> {
+        fun mapBounds(raw: Rect?): Rect? {
+            if (raw == null) return null
+            return if (scale == 1f) Rect(raw) else Rect(
+                (raw.left / scale).roundToInt(), (raw.top / scale).roundToInt(),
+                (raw.right / scale).roundToInt(), (raw.bottom / scale).roundToInt()
+            )
+        }
+        return result?.textBlocks.orEmpty().flatMap { block ->
+            val blockBounds = boxForBlock(block)
+            val hasVerticalCjk = blockBounds != null &&
+                blockBounds.height() > blockBounds.width() * 2.2f &&
+                countChars(block.text) { it in '\u3040'..'\u30FF' || it in '\u4E00'..'\u9FFF' } > 0
+            if (hasVerticalCjk) {
+                listOf(candidateFromBlock(block, engine, scale))
+            } else {
+                val lines = block.lines.mapNotNull { line ->
+                    val elementBounds = line.elements.mapNotNull { it.boundingBox }
+                        .reduceOrNull { acc, rect -> Rect(acc).apply { union(rect) } }
+                    val rawBounds = line.boundingBox ?: elementBounds
+                        ?: blockBounds?.takeIf { block.lines.size == 1 }
+                    val text = line.text.trim().ifBlank {
+                        line.elements.joinToString("") { element -> element.text.trim() }
+                    }
+                    if (text.isBlank()) null else OcrCandidate(mapBounds(rawBounds), text, engine)
+                }
+                if (lines.isNotEmpty()) lines else listOf(candidateFromBlock(block, engine, scale))
+            }
+        }.filter { it.text.isNotBlank() }
+    }
+
+    private fun intersectionOverUnion(a: Rect, b: Rect): Float {
+        val left = max(a.left, b.left)
+        val top = max(a.top, b.top)
+        val right = min(a.right, b.right)
+        val bottom = min(a.bottom, b.bottom)
+        val intersection = max(0, right - left) * max(0, bottom - top)
+        if (intersection <= 0) return 0f
+        val union = a.width() * a.height() + b.width() * b.height() - intersection
+        return if (union <= 0) 0f else intersection.toFloat() / union.toFloat()
+    }
+
+    private fun candidateQuality(candidate: OcrCandidate): Int {
+        val text = candidate.text
+        val letters = text.count { it.isLetterOrDigit() }
+        // A single CJK glyph can be a complete word, name, reaction, or sound effect.
+        // Do not discard it merely because the OCR line contains fewer than two letters.
+        if (letters == 0) return -1000
+        val shortGlyphPenalty = if (letters == 1) 3 else 0
+        val arabic = text.count { isArabicChar(it) }
+        val latin = text.count { it in 'A'..'Z' || it in 'a'..'z' }
+        val cjk = text.count { it in '\u3040'..'\u30FF' || it in '\u4E00'..'\u9FFF' || it in '\uAC00'..'\uD7AF' }
+        val replacement = text.count { it == '\uFFFD' || it == '?' }
+        // One OCR line mixing Arabic with Latin/CJK is almost always broken
+        // recognition noise; such lines used to win the merge and produced the
+        // garbled mixed-script translations visible in the screenshots.
+        val mixedScriptPenalty = if (arabic > 0 && latin + cjk > 0) 60 else 0
+        val expectedScriptBonus = when (candidate.engineLanguage) {
+            "zh" -> cjk * 2
+            "ja" -> (cjk + text.count { it in '\u3040'..'\u30FF' }) * 2
+            "ko" -> text.count { it in '\uAC00'..'\uD7AF' } * 2
+            "en" -> latin * 2
+            else -> 0
+        }
+        val areaPenalty = candidate.bounds?.let { (it.width().coerceAtLeast(1) * it.height().coerceAtLeast(1)) / 12000 } ?: 0
+        return letters * 5 + arabic * 2 + expectedScriptBonus - shortGlyphPenalty - replacement * 12 - mixedScriptPenalty - areaPenalty.coerceAtMost(40)
+    }
+
+    private fun mergeOcrCandidates(input: List<OcrCandidate>): List<OcrCandidate> {
+        val merged = ArrayList<OcrCandidate>()
+        fun overlaps(a: Rect, b: Rect): Boolean {
+            val left = max(a.left, b.left)
+            val top = max(a.top, b.top)
+            val right = min(a.right, b.right)
+            val bottom = min(a.bottom, b.bottom)
+            val intersection = max(0, right - left) * max(0, bottom - top)
+            if (intersection <= 0) return false
+            val smallerArea = min(a.width() * a.height(), b.width() * b.height()).coerceAtLeast(1)
+            val containedOverlap = intersection.toFloat() / smallerArea.toFloat()
+            return intersectionOverUnion(a, b) >= 0.45f || containedOverlap >= 0.80f
+        }
+        input.asSequence()
+            .filter { it.text.isNotBlank() && it.bounds?.let { box -> box.width() > 2 && box.height() > 2 } == true }
+            .sortedByDescending { candidateQuality(it) }
+            .forEach { candidate ->
+                val box = candidate.bounds ?: return@forEach
+                val conflicts = merged.filter { old -> old.bounds?.let { overlaps(it, box) } == true }
+                if (conflicts.isEmpty()) {
+                    merged.add(candidate)
+                } else {
+                    // Collapse every overlapping duplicate at once; replacing only the first
+                    // collision allowed a third OCR engine's near-identical box to survive.
+                    val group = conflicts + candidate
+                    val winner = group.maxByOrNull { candidateQuality(it) } ?: candidate
+                    val bubbleMetadata = group.firstOrNull { it.containerBounds != null }
+                    merged.removeAll { old -> old.bounds?.let { overlaps(it, box) } == true }
+                    merged.add(winner.copy(
+                        containerBounds = bubbleMetadata?.containerBounds?.let(::Rect),
+                        bubbleId = bubbleMetadata?.bubbleId
+                    ))
+                }
+            }
+        // Deterministically remove residual collisions caused by chained/partially intersecting boxes.
+        val nonOverlapping = ArrayList<OcrCandidate>()
+        merged.sortedByDescending { candidateQuality(it) }.forEach { candidate ->
+            val box = candidate.bounds ?: return@forEach
+            if (nonOverlapping.none { it.bounds?.let { accepted -> overlaps(accepted, box) } == true }) {
+                nonOverlapping.add(candidate)
+            }
+        }
+        // Manga panels are read top-to-bottom, then right-to-left within a visual row.
+        return nonOverlapping.sortedWith(
+            compareBy<OcrCandidate> { it.bounds?.top ?: Int.MAX_VALUE }
+                .thenByDescending { it.bounds?.right ?: Int.MIN_VALUE }
+        )
+    }
+
+    private fun createOcrVariant(source: Bitmap, inverted: Boolean): Pair<Bitmap, Float> {
+        val largest = max(source.width, source.height).coerceAtLeast(1)
+        val scale = min(if (largest < 1800) 1.65f else 1.25f, 3600f / largest.toFloat()).coerceAtLeast(1f)
+        val width = (source.width * scale).roundToInt().coerceAtLeast(1)
+        val height = (source.height * scale).roundToInt().coerceAtLeast(1)
+        val transform = Matrix().apply { setScale(width.toFloat() / source.width, height.toFloat() / source.height) }
+        val scaled = Bitmap.createBitmap(source, 0, 0, source.width, source.height, transform, true)
+        val gray = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val contrast = if (inverted) -1.30f else 1.30f
+        val offset = if (inverted) 287f else -32f
+        val matrix = ColorMatrix(floatArrayOf(
+            contrast, 0f, 0f, 0f, offset,
+            0f, contrast, 0f, 0f, offset,
+            0f, 0f, contrast, 0f, offset,
+            0f, 0f, 0f, 1f, 0f
+        ))
+        matrix.postConcat(ColorMatrix().apply { setSaturation(0f) })
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply { colorFilter = ColorMatrixColorFilter(matrix) }
+        Canvas(gray).drawBitmap(scaled, 0f, 0f, paint)
+        if (!scaled.isRecycled) scaled.recycle()
+
+        // Percentile histogram stretch improves faded lettering without allocating
+        // a second full-size pixel buffer (only one scanline is kept in memory).
+        val histogram = IntArray(256)
+        // Work in 96-row bands: far fewer Bitmap JNI calls than one row at a time,
+        // while avoiding a second full-resolution IntArray that could cost 70+ MB.
+        val bandHeight = min(96, height).coerceAtLeast(1)
+        val band = IntArray(width * bandHeight)
+        for (top in 0 until height step bandHeight) {
+            val rows = min(bandHeight, height - top)
+            gray.getPixels(band, 0, width, 0, top, width, rows)
+            val used = width * rows
+            for (i in 0 until used) histogram[Color.red(band[i]).coerceIn(0, 255)]++
+        }
+        val totalPixels = width * height
+        val lowTarget = (totalPixels * 0.01f).toInt()
+        val highTarget = (totalPixels * 0.99f).toInt()
+        var cumulative = 0
+        var low = 0
+        var high = 255
+        for (value in 0..255) {
+            cumulative += histogram[value]
+            if (cumulative >= lowTarget) { low = value; break }
+        }
+        cumulative = 0
+        for (value in 0..255) {
+            cumulative += histogram[value]
+            if (cumulative >= highTarget) { high = value; break }
+        }
+        if (high > low + 2) {
+            val range = (high - low).toFloat()
+            for (top in 0 until height step bandHeight) {
+                val rows = min(bandHeight, height - top)
+                gray.getPixels(band, 0, width, 0, top, width, rows)
+                val used = width * rows
+                for (i in 0 until used) {
+                    val value = ((Color.red(band[i]) - low) * 255f / range).roundToInt().coerceIn(0, 255)
+                    band[i] = Color.rgb(value, value, value)
+                }
+                gray.setPixels(band, 0, width, 0, top, width, rows)
+            }
+        }
+        return gray to scale
+    }
+
+    /**
+     * Otsu-binarized OCR input for decorative/outlined/faded Latin lettering.
+     * The longest side is capped at 2400 px and pixels are processed in bands
+     * so a full-page threshold pass does not require a second full-size IntArray.
+     */
+    private fun createBinarizedOcrVariant(source: Bitmap): Pair<Bitmap, Float> {
+        val largest = max(source.width, source.height).coerceAtLeast(1)
+        val scale = min(1.45f, 2400f / largest.toFloat()).coerceAtLeast(0.01f)
+        val width = (source.width * scale).roundToInt().coerceAtLeast(1)
+        val height = (source.height * scale).roundToInt().coerceAtLeast(1)
+        val transform = Matrix().apply { setScale(width.toFloat() / source.width, height.toFloat() / source.height) }
+        val scaled = Bitmap.createBitmap(source, 0, 0, source.width, source.height, transform, true)
+        val gray = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val grayscale = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            colorFilter = ColorMatrixColorFilter(ColorMatrix().apply { setSaturation(0f) })
+        }
+        Canvas(gray).drawBitmap(scaled, 0f, 0f, grayscale)
+        if (scaled !== source && !scaled.isRecycled) scaled.recycle()
+
+        val histogram = IntArray(256)
+        val bandHeight = min(64, height).coerceAtLeast(1)
+        val band = IntArray(width * bandHeight)
+        for (top in 0 until height step bandHeight) {
+            val rows = min(bandHeight, height - top)
+            gray.getPixels(band, 0, width, 0, top, width, rows)
+            for (i in 0 until width * rows) histogram[Color.red(band[i]).coerceIn(0, 255)]++
+        }
+        val total = width.toLong() * height.toLong()
+        var sum = 0.0
+        for (v in 0..255) sum += v.toDouble() * histogram[v]
+        var sumBackground = 0.0
+        var weightBackground = 0L
+        var bestVariance = -1.0
+        var threshold = 145
+        for (v in 0..255) {
+            weightBackground += histogram[v].toLong()
+            if (weightBackground == 0L) continue
+            val weightForeground = total - weightBackground
+            if (weightForeground == 0L) break
+            sumBackground += v.toDouble() * histogram[v]
+            val meanBackground = sumBackground / weightBackground
+            val meanForeground = (sum - sumBackground) / weightForeground
+            val delta = meanBackground - meanForeground
+            val variance = weightBackground.toDouble() * weightForeground.toDouble() * delta * delta
+            if (variance > bestVariance) { bestVariance = variance; threshold = v }
+        }
+        // Keep anti-aliased glyph edges readable: the threshold is softened slightly
+        // rather than turning every gray edge pixel into a hard white boundary.
+        val cutoff = (threshold - 8).coerceIn(0, 255)
+        for (top in 0 until height step bandHeight) {
+            val rows = min(bandHeight, height - top)
+            gray.getPixels(band, 0, width, 0, top, width, rows)
+            for (i in 0 until width * rows) {
+                val value = Color.red(band[i])
+                band[i] = if (value <= cutoff) Color.BLACK else Color.WHITE
+            }
+            gray.setPixels(band, 0, width, 0, top, width, rows)
+        }
+        return gray to scale
+    }
+
+    /**
+     * Stable manga ordering: cluster bubbles whose vertical centers overlap the same
+     * dialogue band, sort bands from top to bottom, then sort each band right to left.
+     */
+    private fun orderBlocksInReadingOrder(input: List<BlockForTranslation>): List<BlockForTranslation> {
+        if (input.size < 2) return input.toList()
+        val rows = ArrayList<MutableList<BlockForTranslation>>()
+        input.sortedWith(compareBy<BlockForTranslation> { it.bounds.top }.thenByDescending { it.bounds.centerX() })
+            .forEach { block ->
+                val compatible = rows.mapIndexedNotNull { index, row ->
+                    val centers = row.map { it.bounds.centerY() }.sorted()
+                    val medianCenter = centers[centers.size / 2].toFloat()
+                    val heights = row.map { it.bounds.height() }.sorted()
+                    val medianHeight = heights[heights.size / 2].coerceAtLeast(1)
+                    val sharedHeight = min(medianHeight, block.bounds.height().coerceAtLeast(1))
+                    val tolerance = max(16f, sharedHeight * 0.48f)
+                    val distance = abs(block.bounds.centerY() - medianCenter)
+                    if (distance <= tolerance) index to distance else null
+                }
+                val rowIndex = compatible.minByOrNull { it.second }?.first
+                if (rowIndex == null) rows.add(mutableListOf(block)) else rows[rowIndex].add(block)
+            }
+        return rows.sortedBy { row -> row.map { it.bounds.centerY() }.average() }
+            .flatMap { row -> row.sortedWith(
+                compareByDescending<BlockForTranslation> { it.bounds.centerX() }
+                    .thenBy { it.bounds.top }
+            ) }
+    }
+
+    /**
+     * Estimates a balloon container type from corner fill and border irregularity.
+     * This is intentionally a geometry heuristic, not a claimed ML shape detector.
+     */
+    private fun estimateBubbleShape(bitmap: Bitmap, input: Rect): String {
+        val rect = Rect(input).apply {
+            left = left.coerceIn(0, bitmap.width - 1)
+            top = top.coerceIn(0, bitmap.height - 1)
+            right = right.coerceIn(left + 1, bitmap.width)
+            bottom = bottom.coerceIn(top + 1, bitmap.height)
+        }
+        if (rect.width() < 24 || rect.height() < 18) return "rect"
+        val sx = max(2, rect.width() / 18)
+        val sy = max(2, rect.height() / 18)
+        val corners = listOf(
+            rect.left + sx to rect.top + sy,
+            rect.right - sx - 1 to rect.top + sy,
+            rect.left + sx to rect.bottom - sy - 1,
+            rect.right - sx - 1 to rect.bottom - sy - 1
+        )
+        fun isLight(color: Int): Boolean {
+            val lum = (Color.red(color) * 30 + Color.green(color) * 59 + Color.blue(color) * 11) / 100
+            val chroma = max(Color.red(color), max(Color.green(color), Color.blue(color))) -
+                min(Color.red(color), min(Color.green(color), Color.blue(color)))
+            return lum > 178 && (chroma < 100 || lum > 225)
+        }
+        val cornerLight = corners.count { (x, y) -> isLight(bitmap.getPixel(x.coerceIn(0, bitmap.width - 1), y.coerceIn(0, bitmap.height - 1))) }
+        if (cornerLight >= 3) return "narration"
+
+        val sampleValues = ArrayList<Int>(48)
+        for (i in 0 until 12) {
+            val f = (i + 0.5f) / 12f
+            val x = (rect.left + rect.width() * f).roundToInt().coerceIn(0, bitmap.width - 1)
+            val y = (rect.top + rect.height() * f).roundToInt().coerceIn(0, bitmap.height - 1)
+            listOf(
+                bitmap.getPixel(x, rect.top.coerceIn(0, bitmap.height - 1)),
+                bitmap.getPixel(x, (rect.bottom - 1).coerceIn(0, bitmap.height - 1)),
+                bitmap.getPixel(rect.left.coerceIn(0, bitmap.width - 1), y),
+                bitmap.getPixel((rect.right - 1).coerceIn(0, bitmap.width - 1), y)
+            ).forEach { color -> sampleValues.add((Color.red(color) * 30 + Color.green(color) * 59 + Color.blue(color) * 11) / 100) }
+        }
+        val mean = sampleValues.average()
+        val variance = sampleValues.map { (it - mean) * (it - mean) }.average()
+        val ratio = rect.width().toFloat() / rect.height().coerceAtLeast(1)
+        return when {
+            variance > 1850.0 && ratio in 0.45f..2.2f -> "spiky"
+            ratio in 0.55f..1.9f -> "oval"
+            variance > 1100.0 -> "spiky"
+            else -> "rect"
+        }
+    }
+
+    /**
+     * Finds enclosed bright regions that resemble speech-balloon interiors.
+     * This is a lightweight heuristic (not a trained balloon detector): it runs
+     * on a bounded thumbnail and returns only compact, enclosed components.
+     */
+    private fun detectBrightBubbleRegions(source: Bitmap): List<Rect> {
+        val largest = max(source.width, source.height).coerceAtLeast(1)
+        val scale = min(1f, min(1000f / largest.toFloat(), kotlin.math.sqrt(900_000f / (source.width.toFloat() * source.height.toFloat()))))
+            .coerceAtLeast(0.01f)
+        val sampleWidth = (source.width * scale).roundToInt().coerceAtLeast(1)
+        val sampleHeight = (source.height * scale).roundToInt().coerceAtLeast(1)
+        val sample = Bitmap.createScaledBitmap(source, sampleWidth, sampleHeight, true)
+        try {
+            val total = sampleWidth * sampleHeight
+            val visited = BooleanArray(total)
+            val queue = IntArray(total)
+            val pixels = IntArray(total)
+            sample.getPixels(pixels, 0, sampleWidth, 0, 0, sampleWidth, sampleHeight)
+            val regions = ArrayList<Pair<Int, Rect>>()
+            val minArea = max(24, (total * 0.00045f).toInt())
+            val maxArea = (total * 0.22f).toInt()
+
+            fun isBright(index: Int): Boolean {
+                val color = pixels[index]
+                val red = Color.red(color)
+                val green = Color.green(color)
+                val blue = Color.blue(color)
+                val luminance = (red * 30 + green * 59 + blue * 11) / 100
+                val chroma = max(red, max(green, blue)) - min(red, min(green, blue))
+                // Includes white/gray and pale pastel speech balloons, while avoiding
+                // treating every saturated colorful drawing as a balloon interior.
+                return luminance >= 198 && (chroma <= 82 || luminance >= 232)
+            }
+
+            for (start in 0 until total) {
+                if (visited[start]) continue
+                visited[start] = true
+                if (!isBright(start)) continue
+                var head = 0
+                var tail = 0
+                queue[tail++] = start
+                var minX = sampleWidth
+                var minY = sampleHeight
+                var maxX = -1
+                var maxY = -1
+                var area = 0
+                while (head < tail) {
+                    val index = queue[head++]
+                    val x = index % sampleWidth
+                    val y = index / sampleWidth
+                    area++
+                    if (x < minX) minX = x
+                    if (x > maxX) maxX = x
+                    if (y < minY) minY = y
+                    if (y > maxY) maxY = y
+
+                    val left = if (x > 0) index - 1 else -1
+                    val right = if (x < sampleWidth - 1) index + 1 else -1
+                    val up = if (y > 0) index - sampleWidth else -1
+                    val down = if (y < sampleHeight - 1) index + sampleWidth else -1
+                    if (left >= 0 && !visited[left]) { visited[left] = true; if (isBright(left)) queue[tail++] = left }
+                    if (right >= 0 && !visited[right]) { visited[right] = true; if (isBright(right)) queue[tail++] = right }
+                    if (up >= 0 && !visited[up]) { visited[up] = true; if (isBright(up)) queue[tail++] = up }
+                    if (down >= 0 && !visited[down]) { visited[down] = true; if (isBright(down)) queue[tail++] = down }
+                }
+                // Edge-touching regions are valid: manga bubbles are often clipped by a page edge.
+                if (area < minArea || area > maxArea) continue
+                val width = maxX - minX + 1
+                val height = maxY - minY + 1
+                if (width < 14 || height < 10) continue
+                val ratio = width.toFloat() / height.toFloat()
+                if (ratio !in 0.18f..6.0f) continue
+                val padX = max(3, width / 14)
+                val padY = max(3, height / 14)
+                val left = (minX - padX).coerceAtLeast(0)
+                val top = (minY - padY).coerceAtLeast(0)
+                val right = (maxX + 1 + padX).coerceAtMost(sampleWidth)
+                val bottom = (maxY + 1 + padY).coerceAtMost(sampleHeight)
+                val mapped = Rect(
+                    (left / scale).roundToInt().coerceIn(0, source.width - 1),
+                    (top / scale).roundToInt().coerceIn(0, source.height - 1),
+                    (right / scale).roundToInt().coerceIn(1, source.width),
+                    (bottom / scale).roundToInt().coerceIn(1, source.height)
+                )
+                if (mapped.width() > 12 && mapped.height() > 12) regions.add(area to mapped)
+            }
+            val selected = ArrayList<Rect>()
+            regions.sortedByDescending { it.first }.forEach { (_, rect) ->
+                val overlapsExisting = selected.any { previous ->
+                    val left = max(previous.left, rect.left)
+                    val top = max(previous.top, rect.top)
+                    val right = min(previous.right, rect.right)
+                    val bottom = min(previous.bottom, rect.bottom)
+                    val intersection = max(0, right - left) * max(0, bottom - top)
+                    val smaller = min(previous.width() * previous.height(), rect.width() * rect.height()).coerceAtLeast(1)
+                    intersectionOverUnion(previous, rect) > 0.40f || intersection.toFloat() / smaller > 0.70f
+                }
+                if (!overlapsExisting) selected.add(rect)
+            }
+            return selected.take(28)
+        } finally {
+            if (!sample.isRecycled && sample !== source) sample.recycle()
+        }
+    }
+
+    private fun recognizeBubbleRegions(
+        source: Bitmap,
+        engines: List<Pair<String, TextRecognizer>>,
+        onProgress: (Float, String) -> Unit
+    ): List<OcrCandidate> {
+        val regions = detectBrightBubbleRegions(source)
+        if (regions.isEmpty()) return emptyList()
+        val found = ArrayList<OcrCandidate>()
+        regions.forEachIndexed { index, region ->
+            val regionMaxSide = max(region.width(), region.height()).toFloat().coerceAtLeast(1f)
+            // Enlarge small bubbles, but downscale oversized regions before allocation to cap memory.
+            val enlarge = if (regionMaxSide < 900f) {
+                min(1.8f, 1450f / regionMaxSide)
+            } else {
+                min(1f, 1600f / regionMaxSide)
+            }.coerceAtLeast(0.12f)
+            val transform = Matrix().apply { setScale(enlarge, enlarge) }
+            val crop = runCatching {
+                Bitmap.createBitmap(source, region.left, region.top, region.width(), region.height(), transform, true)
+            }.getOrNull() ?: return@forEachIndexed
+            try {
+                val input = InputImage.fromBitmap(crop, 0)
+                var latinCharacters = 0
+                engines.forEach { engine ->
+                    val result = runCatching { Tasks.await(engine.second.process(input)) }.getOrNull()
+                    val local = collectCandidates(result, engine.first, enlarge)
+                    if (engine.first == "en") latinCharacters = local.sumOf { item -> item.text.count { it.isLetter() } }
+                    local.forEach { candidate ->
+                        val shifted = candidate.bounds?.let { Rect(it).apply { offset(region.left, region.top) } }
+                        found.add(candidate.copy(
+                            bounds = shifted,
+                            containerBounds = Rect(region),
+                            bubbleId = index
+                        ))
+                    }
+                }
+                // Artistic fonts often fail on the raw crop but become legible after
+                // binarization. Retry only Latin here to bound the additional work.
+                if (engines.any { it.first == "en" } && latinCharacters < 8) {
+                    val (binary, binaryScale) = createBinarizedOcrVariant(crop)
+                    try {
+                        val retry = runCatching {
+                            Tasks.await(latinRecognizer.process(InputImage.fromBitmap(binary, 0)))
+                        }.getOrNull()
+                        collectCandidates(retry, "en", enlarge * binaryScale).forEach { candidate ->
+                            val shifted = candidate.bounds?.let { Rect(it).apply { offset(region.left, region.top) } }
+                            found.add(candidate.copy(bounds = shifted, containerBounds = Rect(region), bubbleId = index))
+                        }
+                    } finally {
+                        if (!binary.isRecycled) binary.recycle()
+                    }
+                }
+            } finally {
+                if (!crop.isRecycled) crop.recycle()
+            }
+            onProgress(0.36f, "إعادة OCR داخل الفقاعة ${index + 1}/${regions.size}")
+        }
+        return found
+    }
+
+    /**
+     * Associate OCR boxes with a detected bright balloon only when the balloon clearly
+     * contains the box. A shared balloon is not reused as a full-size text area when it
+     * contains multiple OCR blocks, preventing translations from colliding.
+     */
+    private fun attachSingleBlockBubbleContainers(
+        source: Bitmap, candidates: List<OcrCandidate>
+    ): List<OcrCandidate> {
+        if (candidates.isEmpty()) return candidates
+        val regions = detectBrightBubbleRegions(source)
+        if (regions.isEmpty()) return candidates
+        val associated = candidates.map { candidate ->
+            val box = candidate.bounds ?: return@map candidate
+            if (candidate.containerBounds != null) return@map candidate
+            val centerX = box.centerX()
+            val centerY = box.centerY()
+            val match = regions.withIndex().filter { (_, region) ->
+                val regionArea = region.width().toLong() * region.height().toLong()
+                val pageArea = source.width.toLong() * source.height.toLong()
+                val touchesBorder = region.left <= 1 || region.top <= 1 ||
+                    region.right >= source.width - 1 || region.bottom >= source.height - 1
+                // A big bright region touching the page edge is usually the white margin
+                // itself (BFS connects edge bubbles to the margin), not a real balloon.
+                val giantMarginComponent = touchesBorder && regionArea > pageArea * 2L / 100L
+                region.contains(box.left, box.top, box.right, box.bottom) &&
+                    !giantMarginComponent &&
+                    regionArea <= pageArea * 6L / 100L &&
+                    regionArea <= box.width().toLong() * box.height().toLong() * 6L &&
+                    region.width() <= box.width() * 4f &&
+                    region.height() <= box.height() * 4f &&
+                    region.width() >= box.width() * 1.22f &&
+                    region.height() >= box.height() * 1.22f
+            }.minByOrNull { (_, region) -> region.width().toLong() * region.height().toLong() }
+            if (match == null) candidate
+            else candidate.copy(containerBounds = Rect(match.value), bubbleId = match.index)
+        }
+        val counts = associated.mapNotNull { it.bubbleId }.groupingBy { it }.eachCount()
+        return associated.map { candidate ->
+            val id = candidate.bubbleId
+            if (id != null && counts[id] == 1) candidate
+            else candidate.copy(containerBounds = null, bubbleId = null)
+        }
+    }
+
+    private fun rotatedJapaneseCandidates(source: Bitmap): List<OcrCandidate> {
+        val rotate = Matrix().apply { setRotate(90f) }
+        val rotated = Bitmap.createBitmap(source, 0, 0, source.width, source.height, rotate, true)
+        return try {
+            val result = runCatching {
+                Tasks.await(japaneseRecognizer.process(InputImage.fromBitmap(rotated, 0)))
+            }.getOrNull()
+            collectCandidates(result, "ja").mapNotNull { candidate ->
+                val b = candidate.bounds ?: return@mapNotNull candidate
+                // Coordinates of a clockwise-rotated HxW image mapped back to the original W×H image.
+                val mapped = Rect(
+                    b.top.coerceIn(0, source.width - 1),
+                    (source.height - b.right).coerceIn(0, source.height - 1),
+                    b.bottom.coerceIn(1, source.width),
+                    (source.height - b.left).coerceIn(1, source.height)
+                )
+                candidate.copy(bounds = mapped)
+            }
+        } finally {
+            if (!rotated.isRecycled) rotated.recycle()
+        }
+    }
+
+    private fun translatorFor(code: String): Translator {
+        return translatorCache.getOrPut(code) {
+            Translation.getClient(
+                TranslatorOptions.Builder()
+                    .setSourceLanguage(languageForCode(code))
+                    .setTargetLanguage(TranslateLanguage.ARABIC)
+                    .build()
+            )
+        }
+    }
+
+    private fun isArabicChar(ch: Char): Boolean =
+        ch in '\u0600'..'\u06FF' || ch in '\u0750'..'\u077F' ||
+            ch in '\u08A0'..'\u08FF' || ch in '\uFB50'..'\uFDFF' || ch in '\uFE70'..'\uFEFF'
+
+    private fun hasArabicLetters(value: String): Boolean =
+        value.any { isArabicChar(it) && it.isLetter() }
+
+    private fun hasForeignLetters(value: String): Boolean = value.any { it.isLetter() && !isArabicChar(it) }
+
+    private fun foreignLetterCount(value: String): Int =
+        value.count { it.isLetter() && !isArabicChar(it) }
+
+    /** True when the translation still contains Latin letter runs, i.e. ML Kit returned OCR noise. */
+    private fun hasUntranslatedLatinRuns(value: String, minRun: Int = 3): Boolean {
+        var run = 0
+        for (ch in value) {
+            if (ch in 'A'..'Z' || ch in 'a'..'z') {
+                run++
+                if (run >= minRun) return true
+            } else {
+                run = 0
+            }
+        }
+        return false
+    }
+
+    /** Detects source-script fragments that should never remain in an Arabic CJK translation. @N5CR4 */
+    private fun hasUntranslatedSourceResidue(source: String, translated: String): Boolean {
+        val sourceHasEastAsian = source.any {
+            it in '\u3040'..'\u30FF' || it in '\u3400'..'\u4DBF' ||
+                it in '\u4E00'..'\u9FFF' || it in '\uAC00'..'\uD7AF'
+        }
+        if (!sourceHasEastAsian) return hasUntranslatedLatinRuns(translated, minRun = 3)
+        val outputHasEastAsian = translated.any {
+            it in '\u3040'..'\u30FF' || it in '\u3400'..'\u4DBF' ||
+                it in '\u4E00'..'\u9FFF' || it in '\uAC00'..'\uD7AF'
+        }
+        return outputHasEastAsian || hasUntranslatedLatinRuns(translated, minRun = 2)
+    }
+
+    /** Reject outputs that retain almost all foreign letters, even if the line also contains Arabic. */
+    private fun isUsefulArabicTranslation(source: String, translated: String): Boolean {
+        if (translated.isBlank()) return false
+        if (!hasArabicLetters(translated)) return false
+        val sourceHasCjk = source.any { it in '\u3040'..'\u30FF' || it in '\u4E00'..'\u9FFF' || it in '\uAC00'..'\uD7AF' }
+        val outputHasCjk = translated.any { it in '\u3040'..'\u30FF' || it in '\u4E00'..'\u9FFF' || it in '\uAC00'..'\uD7AF' }
+        if (sourceHasCjk && (outputHasCjk || hasUntranslatedLatinRuns(translated, minRun = 2))) return false
+        if (!hasForeignLetters(source)) return true
+        val sourceForeign = foreignLetterCount(source)
+        val outputForeign = foreignLetterCount(translated)
+        // Long dialogues legitimately keep names (Xianlun, Yaoyao...) in Latin;
+        // a flat 68% cap used to reject many valid long translations.
+        val allowedRatio = if (source.length > 120) 0.45f else 0.68f
+        return sourceForeign == 0 || outputForeign < max(2, (sourceForeign * allowedRatio).roundToInt())
+    }
+
+    private fun languageForBlock(text: String, engineHint: String, forced: String): String {
+        val letters = text.filter { it.isLetter() }
+        val arabic = countChars(letters) { isArabicChar(it) }
+        val hangul = countChars(text) { it in '\uAC00'..'\uD7AF' || it in '\u1100'..'\u11FF' }
+        val kana = countChars(text) { it in '\u3040'..'\u30FF' }
+        val cjk = countChars(text) { it in '\u4E00'..'\u9FFF' }
+        val latin = countChars(text) { it in 'A'..'Z' || it in 'a'..'z' }
+        // Arabic-only lines are retained. Mixed Arabic/foreign lines must not be skipped.
+        if (arabic > 0 && hangul + kana + cjk + latin == 0) return "ar"
+        if (hangul > 0) return "ko"
+        if (kana > 0) return "ja"
+        if (cjk > 0) return when (forced) {
+            "ja" -> "ja"
+            "zh" -> "zh"
+            else -> "zh"
+        }
+        if (latin > 0) {
+            if (forced != "auto" && TranslateLanguage.fromLanguageTag(forced) != null) return forced
+            val identifiedLatinLanguage = runCatching {
+                Tasks.await(languageIdentifier.identifyLanguage(text.take(500)))
+            }.getOrDefault("und").lowercase(java.util.Locale.ROOT).substringBefore('-')
+            return if (TranslateLanguage.fromLanguageTag(identifiedLatinLanguage) != null)
+                identifiedLatinLanguage else "en"
+        }
+        if (arabic >= 2 && !hasForeignLetters(text)) return "ar"
+        if (forced != "auto" && TranslateLanguage.fromLanguageTag(forced) != null) return forced
+        if (engineHint in setOf("ja", "en", "ko", "zh")) return engineHint
+        val identified = runCatching { Tasks.await(languageIdentifier.identifyLanguage(text.take(500))) }.getOrDefault("und")
+        val normalized = identified.lowercase().substringBefore('-')
+        return if (normalized in setOf("ja", "en", "ko", "zh")) normalized else "en"
+    }
+
+    /** Translate foreign-script runs while preserving Arabic already present in the OCR line. */
+    private fun translateMixedTextPreservingArabic(source: String, language: String): String {
+        val output = StringBuilder()
+        val segment = StringBuilder()
+        var segmentIsArabic: Boolean? = null
+        fun flush() {
+            if (segment.isEmpty()) return
+            val raw = segment.toString()
+            val kind = segmentIsArabic
+            if (kind == true || raw.none { it.isLetterOrDigit() }) {
+                output.append(raw)
+            } else {
+                val trimmed = raw.trim()
+                val leading = raw.takeWhile { it.isWhitespace() }
+                val trailing = raw.takeLastWhile { it.isWhitespace() }
+                val translated = if (trimmed.any { it.isLetterOrDigit() }) {
+                    runCatching { translateWithLanguage(trimmed, language) }.getOrDefault(trimmed)
+                } else trimmed
+                output.append(leading).append(translated).append(trailing)
+            }
+            segment.clear()
+            segmentIsArabic = null
+        }
+        source.forEach { ch ->
+            val script = when {
+                ch.isLetter() && ch in '\u0600'..'\u06FF' -> true
+                ch.isLetterOrDigit() -> false
+                else -> null
+            }
+            if (script != null && segmentIsArabic != null && script != segmentIsArabic) flush()
+            if (script != null && segmentIsArabic == null) segmentIsArabic = script
+            segment.append(ch)
+        }
+        flush()
+        return output.toString()
+    }
+
+    private fun softenAllCaps(value: String): String {
+        val letters = value.filter { it in 'A'..'Z' || it in 'a'..'z' }
+        if (letters.length < 4 || letters.count { it.isUpperCase() } < letters.length * 0.8) return value
+        return value.lowercase()
+            .replace(Regex("\\bi\\b"), "I")
+            .replace(Regex("(^|[.!?]\\s+)([a-z])")) { it.groupValues[1] + it.groupValues[2].uppercase() }
+    }
+
+    private fun correctLikelyOcrText(value: String, language: String): String {
+        var corrected = value.replace(' ', ' ').replace(Regex("\\s+"), " ").trim()
+        if (language == "en") {
+            corrected = corrected.replace(Regex("(?i)\\bl\\s*['’]m\\b"), "I'm")
+            corrected = corrected.replace(Regex("(?<=[A-Za-z])0(?=[A-Za-z])"), "O")
+            corrected = corrected.replace(Regex("(?<=[A-Za-z])1(?=[A-Za-z])"), "I")
+        }
+        return corrected
+    }
+
+    private fun cleanArabicTranslation(value: String): String {
+        var cleaned = value.replace('\u0640', ' ')
+            .replace(Regex("\\s+"), " ")
+            .replace(Regex("([،,؟.!])\\1+"), "$1")
+            .replace(Regex("\\s+([،.!؟])"), "$1")
+            .replace(Regex("([,])\\s*"), "، ")
+            .replace('?', '؟')
+            .trim()
+        cleaned = cleaned.replace(Regex("(?iu)\\b([\\p{L}]{2,})(?:\\s+\\1\\b)+"), "$1")
+        return cleaned.trim()
+    }
+
+    private fun updateQualityCounts(detected: Int, translated: Int, failed: Int, skipped: Int, failedSamples: List<String>) {
+        MangaFoxRuntime.detectedBlocks += detected
+        MangaFoxRuntime.translatedBlocks += translated
+        MangaFoxRuntime.failedBlocks += failed
+        MangaFoxRuntime.skippedBlocks += skipped
+        if (failedSamples.isNotEmpty()) {
+            MangaFoxRuntime.failedBlockSamples = (MangaFoxRuntime.failedBlockSamples + failedSamples).take(30)
+        }
+        MangaFoxRuntime.qualitySummary = "اكتُشف ${MangaFoxRuntime.detectedBlocks} · تُرجم ${MangaFoxRuntime.translatedBlocks} · فشل ${MangaFoxRuntime.failedBlocks} · تُرك ${MangaFoxRuntime.skippedBlocks}"
+    }
+
+    private fun normalizeDictionaryKey(source: String): String =
+        source.lowercase(java.util.Locale.ROOT).filter { it.isLetterOrDigit() }
+
+    private fun learnedTranslationFor(source: String): String? {
+        val raw = getSharedPreferences(PREFS_NAME, MODE_PRIVATE).getString(PREF_LEARNED_TRANSLATIONS, "{}") ?: "{}"
+        return runCatching {
+            val dictionary = org.json.JSONObject(raw)
+            val key = normalizeDictionaryKey(source)
+            dictionary.optString(key).takeIf { it.isNotBlank() }
+                ?: dictionary.keys().asSequence().firstOrNull { normalizeDictionaryKey(it) == key }
+                    ?.let { dictionary.optString(it).takeIf { value -> value.isNotBlank() } }
+        }.getOrNull()
+    }
+
+    private fun dictionarySfxTranslation(source: String): String? {
+        val normalized = source.filterNot { it.isWhitespace() || it in "。、・!！?？…,." }
+        val dictionary = linkedMapOf(
+            "ゴゴゴ" to "ررررر…",
+            "ドキドキ" to "دقات قلب!",
+            "キラキラ" to "بريق!",
+            "ガシャン" to "تحطّم!",
+            "ガーン" to "يا للصدمة!",
+            "ドン" to "دُووم!",
+            "バン" to "بانغ!",
+            "ザッ" to "خطوة سريعة!"
+        )
+        return dictionary.entries.firstOrNull { normalized.contains(it.key) }?.value
+    }
+
+    private fun isLikelyAdPage(candidates: List<OcrCandidate>): Boolean {
+        val content = candidates.joinToString(" ") { it.text.lowercase() }
+        val strong = listOf("advertisement", "sponsored", "download our app", "install our app", "buy now", "広告", "アプリをダウンロード", "광고", "앱 다운로드", "广告")
+        val soft = listOf("next chapter", "read more", "follow us", "support the author", "join our discord", "subscribe", "次の話", "次の章", "다음 화", "다음 회", "下一章", "继续阅读")
+        val strongHits = strong.count { content.contains(it) }
+        val softHits = soft.count { content.contains(it) }
+        return strongHits > 0 || (softHits >= 2 && candidates.size <= 12)
+    }
+
+    /**
+     * Reject likely failed/low-confidence machine translations before rendering.
+     * This is a conservative heuristic: it detects empty echoes, untranslated Latin,
+     * missing Arabic output and implausibly expanded text, not semantic truth.
+     */
+    private fun isSuspiciousTranslation(sourceText: String, translatedText: String): Boolean {
+        val source = sourceText.trim()
+        val translated = cleanArabicTranslation(translatedText)
+        if (source.isBlank() || translated.isBlank()) return true
+        if (translated.equals(source, ignoreCase = true) && source.length > 2) return true
+        if (hasUntranslatedSourceResidue(source, translated)) return true
+        if (hasForeignLetters(source) && !isUsefulArabicTranslation(source, translated)) return true
+        if (translated.length > max(24, source.length * 5)) return true
+        return needsReviewStatus(source, translated)
+    }
+
+    /**
+     * Performs exactly three additional translation attempts for a suspicious block.
+     * Different likely language codes are used where available; the strongest valid
+     * Arabic candidate is retained. A failed attempt never replaces a better result.
+     */
+    private fun retryTranslationThreeTimes(
+        sourceText: String,
+        languageCode: String,
+        mixed: Boolean
+    ): String? {
+        val source = sourceText.trim()
+        if (source.isBlank()) return null
+        val candidates = retryLanguageCandidates(source, languageCode)
+        var best: String? = null
+        var bestScore = Int.MIN_VALUE
+        repeat(3) { attempt ->
+            val retryCode = candidates.getOrNull(attempt) ?: languageCode
+            val raw = runCatching {
+                if (mixed) translateMixedTextPreservingArabic(source, retryCode)
+                else translateInChunks(source, retryCode)
+            }.getOrNull() ?: return@repeat
+            val clean = cleanArabicTranslation(raw)
+            if (isSuspiciousTranslation(source, clean)) return@repeat
+            val arabicCount = clean.count { isArabicChar(it) && it.isLetter() }
+            val foreignCount = foreignLetterCount(clean)
+            val lengthPenalty = kotlin.math.abs(clean.length - source.length) / 8
+            val score = arabicCount * 3 - foreignCount * 5 - lengthPenalty
+            if (score > bestScore) {
+                bestScore = score
+                best = raw
+            }
+        }
+        return best
+    }
+
+    private fun translateWithLanguage(sourceText: String, languageCode: String): String {
+        // The paid/remote AI path is intentionally not invoked. Qwen handles page context
+        // locally; this method remains the on-device ML Kit fallback for individual bubbles.
+        val translator = translatorFor(languageCode)
+        Tasks.await(translator.downloadModelIfNeeded(DownloadConditions.Builder().build()))
+        return Tasks.await(translator.translate(sourceText))
+    }
+
+    /** ML Kit quality drops on long comic strings; translate sentence-sized chunks instead. */
+    private fun translateInChunks(sourceText: String, languageCode: String, maxChunk: Int = 240): String {
+        if (sourceText.length <= maxChunk) return translateWithLanguage(sourceText, languageCode)
+        val sentences = sourceText.split(Regex("(?<=[.!?؟…])\\s+")).filter { it.isNotBlank() }
+        val chunks = ArrayList<String>()
+        val current = StringBuilder()
+        fun flush() {
+            if (current.isNotBlank()) { chunks.add(current.toString().trim()); current.clear() }
+        }
+        for (sentence in sentences) {
+            if (current.length + sentence.length + 1 > maxChunk) flush()
+            if (sentence.length > maxChunk) {
+                var rest = sentence.trim()
+                while (rest.length > maxChunk) {
+                    val cut = rest.lastIndexOf(' ', maxChunk).takeIf { it > 60 } ?: maxChunk
+                    chunks.add(rest.substring(0, cut))
+                    rest = rest.substring(cut).trim()
+                }
+                current.append(rest).append(' ')
+            } else {
+                current.append(sentence).append(' ')
+            }
+        }
+        flush()
+        if (chunks.isEmpty()) return translateWithLanguage(sourceText, languageCode)
+        return chunks.joinToString(" ") { chunk ->
+            runCatching { translateWithLanguage(chunk, languageCode) }.getOrDefault(chunk)
+        }
+    }
+
+    /** Last-resort re-read of one failed block using enhanced variants of its own crop. */
+    private fun retranslateBlockWithEnhancedOcr(source: Bitmap, item: BlockForTranslation, language: String): String? {
+        val b = item.bounds
+        if (b.width() < 24 || b.height() < 12) return null
+        val left = b.left.coerceIn(0, source.width - 1)
+        val top = b.top.coerceIn(0, source.height - 1)
+        val width = b.right.coerceIn(left + 1, source.width) - left
+        val height = b.bottom.coerceIn(top + 1, source.height) - top
+        if (width < 24 || height < 12) return null
+        val crop = runCatching { Bitmap.createBitmap(source, left, top, width, height) }.getOrNull() ?: return null
+        try {
+            val recognizer = when (language) {
+                "ja" -> japaneseRecognizer
+                "ko" -> koreanRecognizer
+                "zh" -> chineseRecognizer
+                else -> latinRecognizer
+            }
+            val variants = listOf(
+                runCatching { createBinarizedOcrVariant(crop) }.getOrNull(),
+                runCatching { createOcrVariant(crop, inverted = false) }.getOrNull()
+            )
+            var bestText: String? = null
+            var bestScore = 0
+            for (entry in variants) {
+                if (entry == null) continue
+                val (variant, _) = entry
+                try {
+                    val result = runCatching {
+                        Tasks.await(recognizer.process(InputImage.fromBitmap(variant, 0)))
+                    }.getOrNull()
+                    val read = result?.text?.trim().orEmpty()
+                    val containsEastAsianGlyph = read.any {
+                        it in '\u3040'..'\u30FF' || it in '\u3400'..'\u4DBF' ||
+                            it in '\u4E00'..'\u9FFF' || it in '\uAC00'..'\uD7AF'
+                    }
+                    // A single CJK glyph can be a complete interjection, name, or SFX.
+                    if (read.length < 4 && !containsEastAsianGlyph) continue
+                    val letters = read.count { it.isLetter() }
+                    val weird = read.count { !(it.isLetterOrDigit() || it.isWhitespace() || it in ".,!?…'\"-—:;()«»") }
+                    val score = letters * 2 - weird * 5
+                    if (score > bestScore) { bestScore = score; bestText = read }
+                } finally {
+                    if (!variant.isRecycled) variant.recycle()
+                }
+            }
+            val read = bestText ?: return null
+            val cleaned = correctLikelyOcrText(read.replace(Regex("\\s+"), " "), language)
+            val cleanedHasEastAsianGlyph = cleaned.any {
+                it in '\u3040'..'\u30FF' || it in '\u3400'..'\u4DBF' ||
+                    it in '\u4E00'..'\u9FFF' || it in '\uAC00'..'\uD7AF'
+            }
+            if ((cleaned.length < 3 && !cleanedHasEastAsianGlyph) || cleaned.isBlank() ||
+                cleaned.equals(item.text, ignoreCase = true)) return null
+            return runCatching { translateInChunks(cleaned, language) }.getOrNull()
+        } finally {
+            if (!crop.isRecycled) crop.recycle()
+        }
+    }
+
+    private fun retryLanguageCandidates(sourceText: String, current: String): List<String> {
+        val detected = runCatching {
+            Tasks.await(languageIdentifier.identifyLanguage(sourceText.take(500)))
+        }.getOrDefault("und").lowercase().substringBefore('-')
+        val alternate = when (current) {
+            "ja" -> "zh"
+            "zh" -> "ja"
+            "ko" -> "en"
+            else -> "en"
+        }
+        val supportedLanguages = TranslateLanguage.getAllLanguages().toSet()
+        return listOf(detected, alternate, "en", "ja", "ko", "zh")
+            .filter { it in supportedLanguages && it != current }
+            .distinct()
+    }
+
+    private fun scoreTranslationCandidate(sourceText: String, candidate: String): Double {
+        val value = candidate.trim()
+        if (value.isBlank()) return -1_000.0
+        val letters = value.count { it.isLetter() }.coerceAtLeast(1)
+        val arabic = value.count { it in '\u0600'..'\u06FF' || it in '\u0750'..'\u077F' || it in '\u08A0'..'\u08FF' }
+        val latin = value.count { it in 'A'..'Z' || it in 'a'..'z' }
+        val sourceLetters = sourceText.count { it.isLetter() }.coerceAtLeast(1)
+        val ratio = value.length.toDouble() / sourceText.length.coerceAtLeast(1)
+        var score = (arabic.toDouble() / letters) * 5.0
+        score -= (latin.toDouble() / letters) * 4.0
+        score += min(arabic, 100) * 0.008
+        if (ratio < 0.12) score -= 1.2
+        if (ratio > 4.0) score -= min(2.0, (ratio - 4.0) * 0.25)
+        if (value.equals(sourceText.trim(), ignoreCase = true)) score -= 3.0
+        if (arabic == 0 && hasForeignLetters(sourceText)) score -= 4.0
+        if (sourceLetters < 3) score += 0.0
+        return score
+    }
+
+    private fun chooseBestTranslationCandidate(sourceText: String, qwenCandidate: String?, mlKitCandidate: String?): String? {
+        return listOfNotNull(qwenCandidate, mlKitCandidate)
+            .map { it.trim() }
+            .filter { it.isNotBlank() }
+            .maxByOrNull { scoreTranslationCandidate(sourceText, it) }
+    }
+
+    private fun translateBitmap(
+        source: Bitmap,
+        previousPageContext: List<MangaFoxLocalLlm.Bubble> = emptyList(),
+        onProgress: (Float, String) -> Unit = { _, _ -> }
+    ): Bitmap {
+        lastOcrTranslationLines.set(emptyList())
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        val forcedLanguage = prefs.getString(PREF_SOURCE_LANGUAGE, "auto") ?: "auto"
+        onProgress(0.03f, "تهيئة التعرف على النص · اللغة ${if (forcedLanguage == "auto") "تلقائية" else forcedLanguage}")
+        val recognizerByCode: Map<String, TextRecognizer> = mapOf(
+            "en" to latinRecognizer,
+            "ja" to japaneseRecognizer,
+            "ko" to koreanRecognizer,
+            "zh" to chineseRecognizer
+        )
+        var activeLanguage = forcedLanguage.takeIf { it in recognizerByCode.keys } ?: "auto"
+        val languageScores = LinkedHashMap<String, Double>()
+        if (activeLanguage == "auto") {
+            // Probe a bounded thumbnail first, then retain all script engines with measurable evidence.
+            val probeScale = min(1f, 960f / max(source.width, source.height).coerceAtLeast(1))
+            val probe = if (probeScale < 0.999f) Bitmap.createScaledBitmap(
+                source, max(1, (source.width * probeScale).roundToInt()),
+                max(1, (source.height * probeScale).roundToInt()), true
+            ) else source
+            try {
+                // Script-specific engines first: kana and Hangul provide strong language evidence.
+                listOf("ja", "ko", "zh", "en").forEachIndexed { index, code ->
+                    val result = runCatching {
+                        Tasks.await(recognizerByCode.getValue(code).process(InputImage.fromBitmap(probe, 0)))
+                    }.getOrNull()
+                    val sample = collectCandidates(result, code, if (probeScale > 0f) 1f / probeScale else 1f)
+                    val textSample = sample.joinToString(" ") { it.text }
+                    val letters = textSample.count { it.isLetter() }.coerceAtLeast(1)
+                    val latin = textSample.count { it in 'A'..'Z' || it in 'a'..'z' }
+                    val kana = textSample.count { it in '\u3040'..'\u30FF' }
+                    val hangul = textSample.count { it in '\uAC00'..'\uD7AF' }
+                    val han = textSample.count { it in '\u4E00'..'\u9FFF' }
+                    val score = when (code) {
+                        "ja" -> (kana * 3.0 + han * 0.15) / letters
+                        "ko" -> (hangul * 3.0) / letters
+                        "zh" -> (han * 1.5) / letters
+                        else -> (latin * 1.4) / letters
+                    }
+                    languageScores[code] = score
+                    onProgress(0.045f + index * 0.012f, "كشف لغة الكتابة من صورة مصغرة · ${index + 1}/4")
+                }
+            } finally {
+                if (probe !== source && !probe.isRecycled) probe.recycle()
+            }
+            activeLanguage = languageScores.maxByOrNull { it.value }?.key ?: "en"
+            // If every probe is nearly empty, Latin is the broadest fallback.
+            if ((languageScores[activeLanguage] ?: 0.0) < 0.015) activeLanguage = "en"
+        }
+        val selectedEngineCodes = if (forcedLanguage in recognizerByCode.keys) {
+            listOf(activeLanguage)
+        } else {
+            val bestScore = languageScores.values.maxOrNull() ?: 0.0
+            // Keep every script with measurable evidence. This catches mixed pages (e.g.
+            // Chinese dialogue plus English SFX) without scanning all four engines blindly.
+            val evidenceFloor = max(0.01, bestScore * 0.015)
+            val detected = languageScores.entries.sortedByDescending { it.value }
+                .filter { it.value >= evidenceFloor }
+                .map { it.key }
+            (listOf(activeLanguage) + detected).distinct().ifEmpty { listOf("en") }
+        }
+        val engines: List<Pair<String, TextRecognizer>> = selectedEngineCodes.map { code ->
+            code to recognizerByCode.getValue(code)
+        }
+        fun recognizeAll(bitmap: Bitmap, scale: Float): List<OcrCandidate> {
+            val image = InputImage.fromBitmap(bitmap, 0)
+            val found = ArrayList<OcrCandidate>()
+            engines.forEachIndexed { engineIndex, engine ->
+                onProgress(0.08f + engineIndex * 0.018f, "OCR متعدد اللغات: ${engine.first} · ${engineIndex + 1}/${engines.size}")
+                val result = runCatching { Tasks.await(engine.second.process(image)) }.getOrNull()
+                found.addAll(collectCandidates(result, engine.first, scale))
+            }
+            return found
+        }
+
+        val allCandidates = ArrayList<OcrCandidate>()
+        allCandidates.addAll(recognizeAll(source, 1f))
+        // OCR robustness for non-standard Latin lettering: run an independent
+        // contrast pass even when other scripts were recognized successfully.
+        if (engines.any { it.first == "en" }) {
+            onProgress(0.20f, "فحص الخطوط اللاتينية المزخرفة بعد تحسين التباين")
+            val (latinEnhanced, latinScale) = createOcrVariant(source, inverted = false)
+            try {
+                val retry = runCatching {
+                    Tasks.await(latinRecognizer.process(InputImage.fromBitmap(latinEnhanced, 0)))
+                }.getOrNull()
+                allCandidates.addAll(collectCandidates(retry, "en", latinScale))
+            } finally {
+                if (!latinEnhanced.isRecycled) latinEnhanced.recycle()
+            }
+            onProgress(0.235f, "محاولة قراءة الخطوط المزخرفة بالعتبة التكيفية العامة")
+            val (binary, binaryScale) = createBinarizedOcrVariant(source)
+            try {
+                val retry = runCatching {
+                    Tasks.await(latinRecognizer.process(InputImage.fromBitmap(binary, 0)))
+                }.getOrNull()
+                allCandidates.addAll(collectCandidates(retry, "en", binaryScale))
+            } finally {
+                if (!binary.isRecycled) binary.recycle()
+            }
+        }
+        val firstMerged = mergeOcrCandidates(allCandidates)
+        val foundChars = firstMerged.sumOf { it.text.count { character -> character.isLetterOrDigit() } }
+        if (firstMerged.size < 2 || foundChars < 18) {
+            // Retry low-yield pages with an enlarged grayscale/high-contrast image.
+            onProgress(0.27f, "إعادة قراءة النصوص الصغيرة بعد التكبير ورفع التباين")
+            val (enhanced, scale) = createOcrVariant(source, inverted = false)
+            try { allCandidates.addAll(recognizeAll(enhanced, scale)) } finally { enhanced.recycle() }
+            var combined = mergeOcrCandidates(allCandidates)
+            if (combined.size < 2 || combined.sumOf { it.text.length } < 18) {
+                onProgress(0.34f, "محاولة ثانية للصورة المعكوسة")
+                val (inverted, invertedScale) = createOcrVariant(source, inverted = true)
+                try { allCandidates.addAll(recognizeAll(inverted, invertedScale)) } finally { inverted.recycle() }
+            }
+        }
+        val preBubbleMerge = mergeOcrCandidates(allCandidates)
+        val preBubbleChars = preBubbleMerge.sumOf { it.text.count { character -> character.isLetterOrDigit() } }
+        val tallSparsePage = source.height >= 2400 && source.height > source.width * 2 && preBubbleMerge.size < 20
+        val lowCoveragePage = preBubbleChars < 180 && preBubbleMerge.size < 14
+        if (preBubbleMerge.size < 6 || preBubbleChars < 100 || tallSparsePage || lowCoveragePage) {
+            onProgress(0.355f, "فحص مناطق الفقاعات الفاتحة وإعادة OCR لكل منطقة")
+            allCandidates.addAll(recognizeBubbleRegions(source, engines) { fraction, detail ->
+                onProgress(fraction, detail)
+            })
+        }
+        val beforeRotation = mergeOcrCandidates(allCandidates)
+        val verticalJapanese = beforeRotation.any { candidate ->
+            val b = candidate.bounds
+            b != null && b.height() > b.width() * 2.2f && countChars(candidate.text) { it in '\u3040'..'\u30FF' || it in '\u4E00'..'\u9FFF' } > 0
+        }
+        if ((verticalJapanese || beforeRotation.size < 2) && engines.any { it.first == "ja" }) {
+            onProgress(0.37f, "محاولة قراءة الأعمدة اليابانية بعد تدويرها")
+            allCandidates.addAll(rotatedJapaneseCandidates(source))
+        }
+        val mergedCandidates = mergeOcrCandidates(allCandidates)
+        val candidates = attachSingleBlockBubbleContainers(source, mergedCandidates)
+        // v3.0.6 — balloons the full-page OCR missed entirely (outlined/artistic lettering,
+        // faint text): re-read only bright regions that contain no candidate at all.
+        val missedCandidates = ArrayList<OcrCandidate>()
+        detectBrightBubbleRegions(source).take(24).forEachIndexed { regionIndex, region ->
+            val regionRect = Rect(region)
+            val covered = candidates.any { c ->
+                c.bounds?.let { rb -> regionRect.contains(rb.centerX(), rb.centerY()) } == true
+            }
+            if (covered) return@forEachIndexed
+            val maxSide = max(region.width(), region.height()).coerceAtLeast(1)
+            val enlarge = (if (maxSide < 900) min(1.8f, 1450f / maxSide) else min(1f, 1600f / maxSide)).coerceAtLeast(0.12f)
+            val left = region.left.coerceIn(0, source.width - 1)
+            val top = region.top.coerceIn(0, source.height - 1)
+            val w = region.right.coerceIn(left + 1, source.width) - left
+            val h = region.bottom.coerceIn(top + 1, source.height) - top
+            if (w < 30 || h < 20) return@forEachIndexed
+            val crop = runCatching {
+                Bitmap.createBitmap(source, left, top, w, h, Matrix().apply { setScale(enlarge, enlarge) }, true)
+            }.getOrNull() ?: return@forEachIndexed
+            try {
+                val regionEngines = engines
+                val variants = listOf(
+                    runCatching { createOcrVariant(crop, inverted = false) }.getOrNull(),
+                    runCatching { createBinarizedOcrVariant(crop) }.getOrNull()
+                )
+                for (variantEntry in variants) {
+                    if (variantEntry == null) continue
+                    val (variant, variantScale) = variantEntry
+                    try {
+                        for (engine in regionEngines) {
+                            val result = runCatching {
+                                Tasks.await(engine.second.process(InputImage.fromBitmap(variant, 0)))
+                            }.getOrNull()
+                            collectCandidates(result, engine.first, enlarge * variantScale).forEach { cand ->
+                                val shifted = cand.bounds?.let { Rect(it).apply { offset(left, top) } }
+                                if (shifted != null && regionRect.contains(shifted.centerX(), shifted.centerY())) {
+                                    missedCandidates.add(cand.copy(bounds = shifted, containerBounds = regionRect, bubbleId = regionIndex))
+                                }
+                            }
+                        }
+                    } finally {
+                        if (!variant.isRecycled) variant.recycle()
+                    }
+                }
+            } finally {
+                if (!crop.isRecycled) crop.recycle()
+            }
+        }
+        val candidatesAfterMissed: List<OcrCandidate> = if (missedCandidates.isEmpty()) candidates
+            else attachSingleBlockBubbleContainers(source, mergeOcrCandidates(candidates + missedCandidates))
+        if (candidatesAfterMissed.isEmpty()) {
+            updateQualityCounts(0, 0, 0, 0, emptyList())
+            onProgress(1f, "لم يكتشف OCR أي نص واضح")
+            return source.copy(Bitmap.Config.ARGB_8888, true)
+                ?: throw IllegalStateException("تعذر نسخ الصورة للمعالجة")
+        }
+        if (isLikelyAdPage(candidatesAfterMissed)) {
+            updateQualityCounts(candidates.size, 0, 0, candidates.size, emptyList())
+            onProgress(1f, "تم تخطي صفحة يُرجّح أنها إعلان أو شاشة انتقال للفصل")
+            return source.copy(Bitmap.Config.ARGB_8888, true)
+                ?: throw IllegalStateException("تعذر نسخ الصورة للمعالجة")
+        }
+
+        onProgress(0.40f, "تحديد لغة كل كتلة نصية بصورة مستقلة")
+        val blocks = ArrayList<BlockForTranslation>()
+        val failedSamples = ArrayList<String>()
+        var skippedCount = 0
+        // Balloon-aware paragraph clustering. Explicitly different bubble IDs are never merged.
+        // Bright-region detection is computed once and reused for the center-in-same-bubble rule.
+        val candList = candidatesAfterMissed
+        val brightRegionsForJoin = detectBrightBubbleRegions(source)
+            .filter { region ->
+                val pageArea = source.width.toLong() * source.height.toLong()
+                region.width().toLong() * region.height().toLong() <= pageArea * 6L / 100L
+            }
+        val parent = IntArray(candList.size) { it }
+        fun findRoot(x: Int): Int {
+            var r = x
+            while (parent[r] != r) r = parent[r]
+            var c = x
+            while (parent[c] != r) { val t = parent[c]; parent[c] = r; c = t }
+            return r
+        }
+        fun join(a: Int, b: Int) { val ra = findRoot(a); val rb = findRoot(b); if (ra != rb) parent[ra] = rb }
+        fun horizontalOverlap(a: Rect, b: Rect): Float {
+            val left = max(a.left, b.left)
+            val right = min(a.right, b.right)
+            if (right <= left) return 0f
+            return (right - left).toFloat() / max(1, min(a.width(), b.width()))
+        }
+        fun shareSmallBubble(a: Rect, b: Rect): Boolean = brightRegionsForJoin.any { region ->
+            val area = region.width().toLong() * region.height().toLong()
+            val pageArea = source.width.toLong() * source.height.toLong()
+            area <= pageArea * 6L / 100L &&
+                region.contains(a.centerX(), a.centerY()) && region.contains(b.centerX(), b.centerY())
+        }
+        for (i in candList.indices) {
+            val a = candList[i].bounds ?: continue
+            for (j in i + 1 until candList.size) {
+                val b = candList[j].bounds ?: continue
+                val idA = candList[i].bubbleId
+                val idB = candList[j].bubbleId
+                if (idA != null && idB != null && idA != idB) continue
+                val sameKnownBubble = idA != null && idA == idB
+                val gap = when {
+                    b.top >= a.bottom -> b.top - a.bottom
+                    a.top >= b.bottom -> a.top - b.bottom
+                    else -> 0
+                }
+                val closeLines = horizontalOverlap(a, b) >= 0.55f &&
+                    gap <= 0.45f * max(a.height(), b.height())
+                val sameBalloon = sameKnownBubble || shareSmallBubble(a, b) ||
+                    (idA == null && idB == null && closeLines)
+                if (sameBalloon) join(i, j)
+            }
+        }
+        val clusters = LinkedHashMap<Int, ArrayList<OcrCandidate>>()
+        candList.forEachIndexed { i, c -> clusters.getOrPut(findRoot(i)) { ArrayList() }.add(c) }
+        fun isLikelyWatermark(text: String, bounds: Rect): Boolean {
+            val compact = text.trim().replace(Regex("\\s+"), "")
+            val known = setOf("快看", "快看漫画", "KuaiKan", "Kuaikan", "kuaikan", "快看漫画网")
+            if (known.any { compact.equals(it, ignoreCase = true) }) return true
+            // Never discard arbitrary short CJK strings: a single glyph can be dialogue,
+            // a name, or an SFX. Only the explicit known watermark strings above are skipped.
+            return false
+        }
+        fun emitBlock(list: List<OcrCandidate>) {
+            val withBounds = list.mapNotNull { c -> c.bounds?.let { Rect(it) to c } }
+            if (withBounds.isEmpty()) {
+                skippedCount++
+                val t = list.firstOrNull()?.text.orEmpty()
+                if (t.isNotBlank()) failedSamples.add("بلا إحداثيات · ${t.take(90)}")
+                return
+            }
+            val union = Rect(withBounds.first().first)
+            withBounds.drop(1).forEach { union.union(it.first) }
+            if (union.width() < 3 || union.height() < 3) { skippedCount++; return }
+            val joined = withBounds.sortedBy { it.first.top }
+                .joinToString(" ") { it.second.text.trim() }
+                .replace(Regex("\\s+"), " ").trim()
+            if (joined.isBlank()) { skippedCount++; return }
+            if (isLikelyWatermark(joined, union)) { skippedCount++; return }
+            val code = languageForBlock(joined, withBounds.first().second.engineLanguage, forcedLanguage)
+            if (code == "ar") { skippedCount++; return }
+            val pageArea = source.width.toLong() * source.height.toLong()
+            val unionArea = union.width().toLong() * union.height().toLong().coerceAtLeast(1L)
+            val container = list.firstNotNullOfOrNull { candidate ->
+                candidate.containerBounds?.let { candidateBox ->
+                    val safe = Rect(candidateBox)
+                    val area = safe.width().toLong() * safe.height().toLong()
+                    if (safe.contains(union) && area <= pageArea * 6L / 100L && area <= unionArea * 6L) safe else null
+                }
+            }
+            val shape = container?.let { estimateBubbleShape(source, it) } ?: "rect"
+            blocks.add(BlockForTranslation(union, joined, code, container, withBounds.size, shape))
+        }
+        clusters.values.forEach { emitBlock(it) }
+        // Group overlapping dialogue bands first, then apply right-to-left order
+        // inside each band. This avoids a slightly taller bubble in the same row
+        // being sorted after a lower bubble simply because its center is lower.
+        val orderedBlocks = orderBlocksInReadingOrder(blocks)
+        blocks.clear()
+        blocks.addAll(orderedBlocks)
+        if (blocks.isEmpty()) {
+            updateQualityCounts(candidates.size, 0, 0, skippedCount, failedSamples)
+            onProgress(1f, "لم توجد كتل أجنبية ذات إحداثيات صالحة")
+            return source.copy(Bitmap.Config.ARGB_8888, true)
+                ?: throw IllegalStateException("تعذر نسخ الصورة للمعالجة")
+        }
+
+        // Honor pause before starting the page-level online request; an in-flight HTTPS
+        // request is allowed to finish, then the per-bubble loop checks pause again.
+        awaitTranslationResume()
+        val contextTranslations: Map<Int, String> = if (
+            prefs.getBoolean(PREF_CONTEXT_PAGE_TRANSLATION, true)
+        ) {
+            val knowledge = MangaFoxKnowledgeStore(this)
+            val pageBlocks = blocks.mapIndexed { blockIndex, block ->
+                MangaFoxLocalLlm.Bubble(blockIndex, block.language, block.text)
+            }
+            var contextualResult: Map<Int, String> = emptyMap()
+
+            if (prefs.getBoolean(PREF_AI_ZH_ENABLED, false) &&
+                !MangaFoxSecureSecretStore.get(this, MangaFoxApiProvider.selectedId(this)).isNullOrBlank()
+            ) {
+                onProgress(0.425f, "ترجمة سياق الصفحة عبر API · ${blocks.size} فقاعة")
+                contextualResult = runCatching {
+                    MangaFoxAiTranslator.translatePageContext(
+                        this,
+                        pageBlocks.map { MangaFoxAiTranslator.ContextBlock(it.id, it.language, it.text) },
+                        knowledge.glossary(), knowledge.characters(), previousPageContext.takeLast(5)
+                    )
+                }.onFailure { error ->
+                    onProgress(0.43f, "تعذر API؛ تجربة Qwen المحلي: ${error.message?.take(80).orEmpty()}")
+                }.getOrDefault(emptyMap())
+            }
+
+            if (contextualResult.size < pageBlocks.size &&
+                prefs.getBoolean(PREF_CONTEXT_LOCAL_ENGINE, true) &&
+                MangaFoxLocalLlm.isModelDownloaded(this)
+            ) {
+                val missingPageBlocks = pageBlocks.filter { it.id !in contextualResult.keys }
+                onProgress(0.435f, "استكمال ${missingPageBlocks.size} فقاعات غير مكتملة عبر Qwen المحلي")
+                val localTranslations = runCatching {
+                    MangaFoxLocalLlm.translatePageContext(
+                        this, missingPageBlocks, knowledge.glossary(), knowledge.characters(),
+                        previousPageContext.takeLast(5)
+                    )
+                }.onFailure { error ->
+                    onProgress(0.44f, "تعذر Qwen المحلي؛ ستُترجم الفقاعات المتبقية منفردة: ${error.message?.take(80).orEmpty()}")
+                }.getOrDefault(emptyMap())
+                contextualResult = LinkedHashMap(contextualResult).apply { putAll(localTranslations) }
+            }
+            contextualResult
+        } else emptyMap()
+
+        val translatedBlocks = ArrayList<TranslationLine>()
+        val failedLayerLines = ArrayList<TranslationLine>()
+        var failedCount = 0
+        blocks.forEachIndexed { index, item ->
+            awaitTranslationResume()
+            try {
+                onProgress(0.43f + (0.50f * index / blocks.size), "تجهيز نموذج ${item.language} ثم ترجمة الكتلة ${index + 1}/${blocks.size}")
+                val normalizedSource = softenAllCaps(correctLikelyOcrText(item.text, item.language))
+                val learned = learnedTranslationFor(item.text) ?: learnedTranslationFor(normalizedSource)
+                val sfx = if (getSharedPreferences(PREFS_NAME, MODE_PRIVATE).getBoolean(PREF_TRANSLATE_SFX, false)) {
+                    dictionarySfxTranslation(item.text)
+                } else null
+                val glossaryOverride = MangaFoxKnowledgeStore(this).exactGlossaryTranslation(normalizedSource)
+                val contextual = contextTranslations[index]?.takeIf { value ->
+                    value.isNotBlank() && !value.equals(item.text, ignoreCase = true) &&
+                        (!hasForeignLetters(normalizedSource) || isUsefulArabicTranslation(normalizedSource, cleanArabicTranslation(value)))
+                }
+                val mixed = hasArabicLetters(normalizedSource) && hasForeignLetters(normalizedSource)
+                // A valid page-context result (cloud API or local Qwen) is authoritative.
+                // Do not compare it with ML Kit using script-density heuristics: that used to
+                // let a fluent-looking but semantically weaker local result replace the API.
+                var translatedRaw: String? = learned ?: sfx ?: glossaryOverride ?: contextual
+                if (translatedRaw == null) {
+                    translatedRaw = runCatching {
+                        if (mixed) translateMixedTextPreservingArabic(normalizedSource, item.language)
+                        else translateInChunks(normalizedSource, item.language)
+                    }.getOrNull()
+                }
+                // Confirmation pass applies to ML Kit, contextual, learned and glossary outputs.
+                // Any suspicious result receives exactly three additional translation attempts.
+                var currentClean = translatedRaw?.let { cleanArabicTranslation(it) }.orEmpty()
+                val contextualWasRejected = contextTranslations.containsKey(index) && contextual == null
+                val sourceHasCjk = normalizedSource.any {
+                    it in '\u3040'..'\u30FF' || it in '\u4E00'..'\u9FFF' || it in '\uAC00'..'\uD7AF'
+                }
+                val outputHasCjk = currentClean.any {
+                    it in '\u3040'..'\u30FF' || it in '\u4E00'..'\u9FFF' || it in '\uAC00'..'\uD7AF'
+                }
+                val cloudRescueNeeded = contextualWasRejected || currentClean.isBlank() ||
+                    currentClean.equals(normalizedSource, ignoreCase = true) ||
+                    !hasArabicLetters(currentClean) || hasUntranslatedSourceResidue(normalizedSource, currentClean) ||
+                    (sourceHasCjk && outputHasCjk)
+                if (cloudRescueNeeded && prefs.getBoolean(PREF_AI_ZH_ENABLED, false) &&
+                    !MangaFoxSecureSecretStore.get(this, MangaFoxApiProvider.selectedId(this)).isNullOrBlank()
+                ) {
+                    // A page response can omit or garble one ID. Retry only that block as a
+                    // standalone request so one bad row cannot leave the source untranslated.
+                    val rescueKnowledge = MangaFoxKnowledgeStore(this)
+                    val scriptMode = prefs.getString(PREF_ZH_SCRIPT, "auto") ?: "auto"
+                    val cloudRescue = runCatching {
+                        MangaFoxAiTranslator.translate(
+                            this, normalizedSource, rescueKnowledge.glossary(), rescueKnowledge.characters(),
+                            scriptMode = scriptMode, sourceLanguage = item.language
+                        )
+                    }.getOrNull()
+                    val rescueClean = cloudRescue?.let { cleanArabicTranslation(it) }.orEmpty()
+                    if (rescueClean.isNotBlank() && !isSuspiciousTranslation(normalizedSource, rescueClean) &&
+                        (!hasForeignLetters(normalizedSource) || isUsefulArabicTranslation(normalizedSource, rescueClean))
+                    ) {
+                        translatedRaw = cloudRescue
+                        currentClean = rescueClean
+                    }
+                }
+                if (isSuspiciousTranslation(normalizedSource, currentClean)) {
+                    val confirmed = retryTranslationThreeTimes(normalizedSource, item.language, mixed)
+                    if (!confirmed.isNullOrBlank()) translatedRaw = confirmed
+                }
+                val translated = translatedRaw?.let { cleanArabicTranslation(it) }.orEmpty()
+                val sourceNeedsArabic = hasForeignLetters(item.text)
+                val junkLatin = hasUntranslatedSourceResidue(item.text, translated) &&
+                    learned == null && sfx == null && glossaryOverride == null
+                if (translated.isBlank() ||
+                    (translated.equals(item.text, ignoreCase = true) && item.text.length > 8) ||
+                    junkLatin ||
+                    (sourceNeedsArabic && !isUsefulArabicTranslation(item.text, translated))) {
+                    // Text-heavy bubbles usually carry decorative lettering the full-page
+                    // OCR pass misreads. Re-read just this region with enhanced variants
+                    // and translate the cleaner reading before declaring failure.
+                    val enhancedRaw = if (learned == null && sfx == null && glossaryOverride == null)
+                        retranslateBlockWithEnhancedOcr(source, item, item.language) else null
+                    val enhanced = enhancedRaw?.let { cleanArabicTranslation(it) }.orEmpty()
+                    if (enhanced.isNotBlank() && !enhanced.equals(item.text, ignoreCase = true) &&
+                        !hasUntranslatedSourceResidue(item.text, enhanced) &&
+                        (!sourceNeedsArabic || isUsefulArabicTranslation(item.text, enhanced))) {
+                        translatedBlocks.add(TranslationLine(
+                            Rect(item.bounds), enhanced, item.text, item.language,
+                            vertical = item.mergedLines <= 1 && MangaFoxLayoutEngine.shouldUseVertical(item.bounds),
+                            shape = item.shape,
+                            containerBounds = item.containerBounds?.let(::Rect),
+                            status = if (needsReviewStatus(item.text, enhanced)) "review" else "translated"
+                        ))
+                    } else {
+                        failedCount++
+                        failedSamples.add(item.text.take(100))
+                        failedLayerLines.add(TranslationLine(
+                            Rect(item.bounds), "", item.text, item.language,
+                            shape = item.shape,
+                            containerBounds = item.containerBounds?.let(::Rect),
+                            status = "failed"
+                        ))
+                    }
+                } else {
+                    translatedBlocks.add(TranslationLine(
+                        Rect(item.bounds), translated, item.text, item.language,
+                        vertical = item.mergedLines <= 1 && MangaFoxLayoutEngine.shouldUseVertical(item.bounds),
+                        shape = item.shape,
+                        containerBounds = item.containerBounds?.let(::Rect),
+                        status = if (needsReviewStatus(item.text, translated)) "review" else "translated"
+                    ))
+                }
+            } catch (_: Exception) {
+                // A thrown translation/model error also receives three independent retries
+                // before the more expensive enhanced-OCR recovery path.
+                val mixedSource = hasArabicLetters(item.text) && hasForeignLetters(item.text)
+                val retried = retryTranslationThreeTimes(item.text, item.language, mixedSource)
+                val retriedClean = retried?.let { cleanArabicTranslation(it) }.orEmpty()
+                val rescued = if (retriedClean.isNotBlank() && !isSuspiciousTranslation(item.text, retriedClean)) retried
+                    else runCatching { retranslateBlockWithEnhancedOcr(source, item, item.language) }.getOrNull()
+                val rescuedClean = rescued?.let { cleanArabicTranslation(it) }.orEmpty()
+                if (rescuedClean.isNotBlank() && !hasUntranslatedLatinRuns(rescuedClean) &&
+                    (!hasForeignLetters(item.text) || isUsefulArabicTranslation(item.text, rescuedClean))) {
+                    translatedBlocks.add(TranslationLine(
+                        Rect(item.bounds), rescuedClean, item.text, item.language,
+                        vertical = item.mergedLines <= 1 && MangaFoxLayoutEngine.shouldUseVertical(item.bounds),
+                        shape = item.shape,
+                        containerBounds = item.containerBounds?.let(::Rect),
+                        status = if (needsReviewStatus(item.text, rescuedClean)) "review" else "translated"
+                    ))
+                } else {
+                    failedCount++
+                    failedSamples.add(item.text.take(100))
+                    failedLayerLines.add(TranslationLine(
+                        Rect(item.bounds), "", item.text, item.language,
+                        shape = item.shape,
+                        containerBounds = item.containerBounds?.let(::Rect),
+                        status = "failed"
+                    ))
+                }
+            }
+            onProgress(0.45f + (0.48f * (index + 1) / blocks.size), "ترجمة الكتلة ${index + 1}/${blocks.size}")
+        }
+        updateQualityCounts(candidatesAfterMissed.size, translatedBlocks.size, failedCount, skippedCount, failedSamples)
+        if (translatedBlocks.isEmpty()) {
+            lastOcrTranslationLines.set(failedLayerLines.map { line ->
+                line.copy(bounds = Rect(line.bounds), containerBounds = line.containerBounds?.let(::Rect))
+            })
+            onProgress(1f, "لم تنجح ترجمة أي كتلة؛ راجع تقرير الجودة")
+            return source.copy(Bitmap.Config.ARGB_8888, true)
+                ?: throw IllegalStateException("تعذر نسخ الصورة للمعالجة")
+        }
+        lastOcrTranslationLines.set((translatedBlocks + failedLayerLines).map { line ->
+            line.copy(
+                bounds = Rect(line.bounds),
+                containerBounds = line.containerBounds?.let(::Rect)
+            )
+        })
+        onProgress(0.98f, "إخراج النص العربي بجودة عالية")
+        val rendered = drawTranslatedLines(source, translatedBlocks)
+        onProgress(1f, "اكتملت الصورة · ${translatedBlocks.size} مترجمة · $failedCount فاشلة · $skippedCount متروكة")
+        return rendered
+    }
+
+    /** Keeps new rendered pages lossless while preserving JPEG compatibility for older sessions. */
+    private fun writeRenderedBitmap(bitmap: Bitmap, target: File) {
+        val png = target.extension.equals("png", ignoreCase = true)
+        FileOutputStream(target).use { stream ->
+            val format = if (png) Bitmap.CompressFormat.PNG else Bitmap.CompressFormat.JPEG
+            val quality = if (png) 100 else 96
+            if (!bitmap.compress(format, quality, stream)) throw IllegalStateException("تعذر حفظ الصورة المعالجة")
+        }
+    }
+
+    /** Removes only high-contrast source glyph pixels; it never paints a rectangular plate. */
+    private fun eraseTextPixels(bitmap: Bitmap, area: Rect, fillColor: Int) {
+        val r = Rect(area)
+        if (!r.intersect(0, 0, bitmap.width, bitmap.height) || r.width() < 5 || r.height() < 5) return
+        val w = r.width()
+        val h = r.height()
+        val pixels = IntArray(w * h)
+        bitmap.getPixels(pixels, 0, w, r.left, r.top, w, h)
+        val out = pixels.copyOf()
+        val baseR = Color.red(fillColor)
+        val baseG = Color.green(fillColor)
+        val baseB = Color.blue(fillColor)
+        val baseLum = (baseR * 30 + baseG * 59 + baseB * 11) / 100
+        val left = max(1, w / 16)
+        val right = min(w - 1, w - left)
+        val top = max(1, h / 14)
+        val bottom = min(h - 1, h - top)
+        for (y in top until bottom) for (x in left until right) {
+            val index = y * w + x
+            val color = pixels[index]
+            val red = Color.red(color)
+            val green = Color.green(color)
+            val blue = Color.blue(color)
+            val distance = abs(red - baseR) + abs(green - baseG) + abs(blue - baseB)
+            val luminance = (red * 30 + green * 59 + blue * 11) / 100
+            val luminanceDelta = abs(baseLum - luminance)
+            if (distance >= 92 && luminanceDelta >= 38) {
+                out[index] = fillColor
+                // Replace only the one-pixel anti-alias fringe around a confirmed glyph.
+                for (dy in -1..1) for (dx in -1..1) {
+                    if (dx == 0 && dy == 0) continue
+                    val nx = x + dx
+                    val ny = y + dy
+                    if (nx !in left until right || ny !in top until bottom) continue
+                    val neighborIndex = ny * w + nx
+                    val neighbor = pixels[neighborIndex]
+                    val neighborDistance = abs(Color.red(neighbor) - baseR) +
+                        abs(Color.green(neighbor) - baseG) + abs(Color.blue(neighbor) - baseB)
+                    val neighborLum = (Color.red(neighbor) * 30 + Color.green(neighbor) * 59 + Color.blue(neighbor) * 11) / 100
+                    if (neighborDistance in 38..150 && abs(baseLum - neighborLum) >= 14) {
+                        out[neighborIndex] = fillColor
+                    }
+                }
+            }
+        }
+        bitmap.setPixels(out, 0, w, r.left, r.top, w, h)
+    }
+
+    private fun clipTextToBubbleShape(canvas: Canvas, rect: Rect, shape: String) {
+        val bounds = RectF(rect)
+        when (shape) {
+            "oval" -> {
+                val path = Path().apply { addOval(bounds, Path.Direction.CW) }
+                canvas.clipPath(path)
+            }
+            "spiky" -> {
+                val path = Path()
+                val cx = bounds.centerX(); val cy = bounds.centerY()
+                val rx = bounds.width() / 2f; val ry = bounds.height() / 2f
+                for (i in 0 until 28) {
+                    val angle = (Math.PI * 2.0 * i / 28.0).toFloat()
+                    val radius = if (i % 2 == 0) 1f else 0.94f
+                    val x = cx + kotlin.math.cos(angle) * rx * radius
+                    val y = cy + kotlin.math.sin(angle) * ry * radius
+                    if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
+                }
+                path.close()
+                canvas.clipPath(path)
+            }
+            "narration" -> {
+                val radius = min(bounds.width(), bounds.height()) * 0.035f
+                val path = Path().apply { addRoundRect(bounds, radius, radius, Path.Direction.CW) }
+                canvas.clipPath(path)
+            }
+            else -> canvas.clipRect(bounds)
+        }
+    }
+
+    private fun drawTranslatedLines(source: Bitmap, translatedLines: List<TranslationLine>): Bitmap {
+        val output = source.copy(Bitmap.Config.ARGB_8888, true)
+            ?: throw IllegalStateException("تعذر إنشاء صورة الترجمة")
+        val canvas = Canvas(output)
+        val renderItems = translatedLines.mapNotNull { item ->
+            val eraseRect = Rect(item.bounds).apply {
+                val padX = max(2, width() / 16)
+                val padY = max(2, height() / 12)
+                inset(-padX, -padY)
+                left = left.coerceIn(0, output.width)
+                top = top.coerceIn(0, output.height)
+                right = right.coerceIn(0, output.width)
+                bottom = bottom.coerceIn(0, output.height)
+            }
+            val trustedContainer = item.containerBounds?.let { candidate ->
+                val area = candidate.width().toLong() * candidate.height().toLong()
+                val textArea = item.bounds.width().toLong() * item.bounds.height().toLong().coerceAtLeast(1L)
+                val pageArea = output.width.toLong() * output.height.toLong()
+                Rect(candidate).takeIf { it.contains(item.bounds) && area <= pageArea * 6L / 100L && area <= textArea * 6L }
+            }
+            val layoutRect = (trustedContainer ?: Rect(eraseRect)).apply {
+                // Stay inside the detected balloon outline; OCR text bounds remain the erase area.
+                if (trustedContainer != null) {
+                    val insetRatio = when (item.shape) {
+                        "spiky" -> 0.18f
+                        "narration" -> 0.06f
+                        "oval", "round" -> 0.13f
+                        else -> 0.09f
+                    }
+                    inset(max(3, (width() * insetRatio).roundToInt()), max(3, (height() * insetRatio).roundToInt()))
+                    // HARD CLAMP: typesetting must stay near the OCR text box. Bright-region
+                    // detection can return near-page-sized rectangles (white margins connect
+                    // to bubbles); without this clamp Arabic text was drawn far outside the balloon.
+                    val maxW = max(48, (eraseRect.width() * 2.2f).roundToInt())
+                    val maxH = max(48, (eraseRect.height() * 3.0f).roundToInt())
+                    val cx = eraseRect.centerX()
+                    val cy = eraseRect.centerY()
+                    val allowed = Rect(
+                        (cx - maxW / 2).coerceIn(0, output.width),
+                        (cy - maxH / 2).coerceIn(0, output.height),
+                        (cx + maxW / 2).coerceIn(0, output.width),
+                        (cy + maxH / 2).coerceIn(0, output.height)
+                    )
+                    val intersection = Rect(this)
+                    if (intersection.intersect(allowed)) set(intersection) else set(eraseRect)
+                }
+                left = left.coerceIn(0, output.width)
+                top = top.coerceIn(0, output.height)
+                right = right.coerceIn(0, output.width)
+                bottom = bottom.coerceIn(0, output.height)
+            }
+            if (eraseRect.width() < 8 || eraseRect.height() < 8 ||
+                layoutRect.width() < 8 || layoutRect.height() < 8) null
+            else Triple(item, eraseRect, layoutRect)
+        }
+        // Pass 1: erase every source text region first. This avoids a later bubble's
+        // background rectangle overwriting Arabic text drawn for an earlier bubble.
+        renderItems.forEach { (item, eraseRect, layoutRect) ->
+            // Estimate the balloon fill from the original page, then erase glyph pixels
+            // with that same fill. This avoids a second, inconsistent color estimate
+            // that can leave a visible patch/halo behind the translated lettering.
+            val fillColor = estimateBubbleFillColor(source, layoutRect, item.bounds)
+            eraseTextPixels(output, eraseRect, fillColor)
+        }
+        // Pass 2: draw text only after all backgrounds are ready; clipping keeps
+        // long words/layouts from spilling into neighboring bubbles.
+        renderItems.forEach { (item, _, layoutRect) ->
+            if (!item.eraseOnly && item.translated.isNotBlank()) {
+                canvas.save()
+                clipTextToBubbleShape(canvas, layoutRect, item.shape)
+                val fillColor = estimateBubbleFillColor(source, layoutRect, item.bounds)
+                val textColor = item.textColor ?: readableTextColor(fillColor)
+                val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+                val density = resources.displayMetrics.density.coerceAtLeast(1f)
+                val configuredWidthDp = prefs.getInt(PREF_TRANSLATED_OUTLINE_WIDTH, 0).coerceIn(0, 8)
+                val configuredColor = prefs.getInt(PREF_TRANSLATED_OUTLINE_COLOR, if (textColor == Color.WHITE) Color.BLACK else Color.WHITE)
+                val contrast = contrastRatio(textColor, fillColor)
+                val customWidth = item.outlineWidthDp
+                val outlineWidthDp = customWidth ?: if (configuredWidthDp > 0) configuredWidthDp else if (contrast < 4.5) 1 else 0
+                val outlineColor = item.outlineColor ?: if (configuredWidthDp > 0) configuredColor else if (textColor == Color.WHITE) Color.BLACK else Color.WHITE
+                val outlineWidthPx = outlineWidthDp.coerceIn(0, 8) * density
+                drawArabicText(canvas, item.translated, layoutRect, item.vertical, textColor, outlineColor, outlineWidthPx, item.fontScale)
+                canvas.restore()
+            }
+        }
+        return output
+    }
+
+    /** Uses the dominant pixels around a speech balloon; dark/colorful fills are not forced to white. */
+    private fun sampleBubbleColor(bitmap: Bitmap, rect: Rect): Int =
+        MangaFoxBubbleRepair.sampleBackground(bitmap, rect)
+
+    private fun estimateBubbleFillColor(bitmap: Bitmap, layoutRect: Rect, textRect: Rect): Int {
+        val centralGlyphArea = Rect(textRect).apply {
+            inset(max(1, width() / 4), max(1, height() / 4))
+        }
+        return runCatching {
+            MangaFoxBubbleRepair.sampleInteriorColor(bitmap, layoutRect, centralGlyphArea)
+        }.getOrDefault(Color.WHITE)
+    }
+
+    private fun contrastRatio(foreground: Int, background: Int): Double {
+        fun luminance(color: Int): Double {
+            fun linear(channel: Int): Double {
+                val value = channel / 255.0
+                return if (value <= 0.04045) value / 12.92 else Math.pow((value + 0.055) / 1.055, 2.4)
+            }
+            return 0.2126 * linear(Color.red(color)) + 0.7152 * linear(Color.green(color)) + 0.0722 * linear(Color.blue(color))
+        }
+        val a = luminance(foreground)
+        val b = luminance(background)
+        return (maxOf(a, b) + 0.05) / (minOf(a, b) + 0.05)
+    }
+
+    private fun readableTextColor(backgroundColor: Int): Int {
+        fun linear(channel: Int): Double {
+            val value = channel / 255.0
+            return if (value <= 0.04045) value / 12.92 else Math.pow((value + 0.055) / 1.055, 2.4)
+        }
+        val luminance = 0.2126 * linear(Color.red(backgroundColor)) +
+            0.7152 * linear(Color.green(backgroundColor)) +
+            0.0722 * linear(Color.blue(backgroundColor))
+        val blackContrast = (luminance + 0.05) / 0.05
+        val whiteContrast = 1.05 / (luminance + 0.05)
+        return if (whiteContrast > blackContrast) Color.WHITE else Color.rgb(18, 18, 20)
+    }
+
+    private fun drawArabicText(canvas: Canvas, text: String, rect: Rect, vertical: Boolean = false, textColor: Int = Color.rgb(20, 20, 22), outlineColor: Int = Color.BLACK, outlineWidthPx: Float = 0f, fontScale: Float = 1f) {
+        if (vertical) {
+            drawArabicTextTopToBottom(canvas, text, rect, textColor, outlineColor, outlineWidthPx, fontScale)
+            return
+        }
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        val density = resources.displayMetrics.density.coerceAtLeast(1f)
+        val insetX = max(4, rect.width() / 18)
+        val insetY = max(3, rect.height() / 14)
+        val availableWidth = (rect.width() - insetX * 2).coerceAtLeast(12)
+        val availableHeight = (rect.height() - insetY * 2).coerceAtLeast(12)
+        val maxPx = min(
+            prefs.getInt(PREF_FONT_SIZE, 22).coerceIn(10, 72) * density * fontScale.coerceIn(0.5f, 2f),
+            (availableHeight * 0.78f).coerceAtLeast(8f * density)
+        )
+        val automatic = prefs.getBoolean(PREF_AUTO_FONT_FIT, true)
+        val layout = if (automatic) {
+            findLargestArabicLayout(text, availableWidth, availableHeight, maxPx, 6.5f * density, textColor)
+        } else {
+            buildArabicLayout(text, availableWidth, maxPx, textColor)
+        }
+        val x = rect.left + insetX
+        val y = rect.top + ((rect.height() - layout.height) / 2f).coerceAtLeast(insetY.toFloat())
+        canvas.save()
+        canvas.clipRect(rect)
+        canvas.translate(x.toFloat(), y)
+        drawOutlinedLayout(canvas, layout, textColor, outlineColor, outlineWidthPx)
+        canvas.restore()
+    }
+
+    /** Binary-searches the largest type size whose shaped RTL layout fits both dimensions. */
+    private fun findLargestArabicLayout(
+        value: String, width: Int, height: Int, maxSizePx: Float, minSizePx: Float, textColor: Int
+    ): android.text.StaticLayout {
+        val lower = min(minSizePx, maxSizePx).coerceAtLeast(5f)
+        var low = lower
+        var high = maxSizePx.coerceAtLeast(lower)
+        var best = buildArabicLayout(value, width, lower, textColor)
+        var bestFits = best.height <= height && (0 until best.lineCount).all { best.getLineWidth(it) <= width + 1f }
+        repeat(20) {
+            val middle = (low + high) / 2f
+            val candidate = buildArabicLayout(value, width, middle, textColor)
+            val fits = candidate.height <= height && (0 until candidate.lineCount).all {
+                candidate.getLineWidth(it) <= width + 1f
+            }
+            if (fits) { best = candidate; bestFits = true; low = middle } else high = middle
+        }
+        // Keep the complete text at the minimum readable size if exceptionally long copy
+        // cannot fully fit; the caller clips to the speech region rather than spilling outside.
+        if (!bestFits) return buildArabicLayout(value, width, lower, textColor)
+        return best
+    }
+
+    /** Stacks Arabic words from top to bottom while preserving each word's connected shaping. */
+    private fun drawArabicTextTopToBottom(canvas: Canvas, value: String, rect: Rect, textColor: Int, outlineColor: Int, outlineWidthPx: Float, fontScale: Float = 1f) {
+        val words = value.trim().split(Regex("\\s+")).filter { it.isNotBlank() }
+        if (words.isEmpty()) return
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        val maxWidth = (rect.width() - 10).coerceAtLeast(10)
+        val maxHeight = (rect.height() - 10).coerceAtLeast(10)
+        val density = resources.displayMetrics.density.coerceAtLeast(1f)
+        val configured = prefs.getInt(PREF_FONT_SIZE, 22).coerceIn(10, 72) * density * fontScale.coerceIn(0.5f, 2f)
+        var chosenSize = min(configured, maxWidth * 0.90f).coerceAtLeast(7f * density)
+        var layouts = emptyList<android.text.StaticLayout>()
+        var heights = emptyList<Int>()
+        val autoFit = prefs.getBoolean(PREF_AUTO_FONT_FIT, true)
+        val floor = 6.5f * density
+        for (attempt in 0 until if (autoFit) 36 else 1) {
+            val paint = android.text.TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = textColor; typeface = resolveArabicTypeface(prefs)
+                textSize = chosenSize; style = Paint.Style.FILL
+            }
+            layouts = words.map { word ->
+                android.text.StaticLayout.Builder.obtain(word, 0, word.length, paint, maxWidth)
+                    .setAlignment(android.text.Layout.Alignment.ALIGN_CENTER)
+                    .setTextDirection(android.text.TextDirectionHeuristics.RTL)
+                    .setIncludePad(true)
+                    .setBreakStrategy(android.text.Layout.BREAK_STRATEGY_HIGH_QUALITY)
+                    .build()
+            }
+            heights = layouts.map { it.height }
+            val total = heights.sum()
+            if (!autoFit || total <= maxHeight || chosenSize <= floor) break
+            chosenSize = max(floor, chosenSize - max(0.5f * density, (chosenSize - floor) / 8f))
+        }
+        val totalHeight = heights.sum()
+        val spacing = max(1, (maxHeight - totalHeight) / (words.size + 1))
+        var y = rect.top + spacing.toFloat()
+        canvas.save()
+        canvas.clipRect(rect)
+        layouts.forEachIndexed { index, layout ->
+            canvas.save()
+            canvas.translate(rect.left + (rect.width() - layout.width) / 2f, y)
+            drawOutlinedLayout(canvas, layout, textColor, outlineColor, outlineWidthPx)
+            canvas.restore()
+            y += heights[index] + spacing
+        }
+        canvas.restore()
+    }
+
+    /** Draws a rounded outline pass first, then the requested fill color. */
+    private fun drawOutlinedLayout(
+        canvas: Canvas,
+        layout: android.text.StaticLayout,
+        fillColor: Int,
+        outlineColor: Int,
+        outlineWidthPx: Float
+    ) {
+        val paint = layout.paint
+        if (outlineWidthPx > 0f && Color.alpha(outlineColor) > 0) {
+            paint.color = outlineColor
+            paint.style = Paint.Style.STROKE
+            paint.strokeWidth = outlineWidthPx
+            paint.strokeJoin = Paint.Join.ROUND
+            paint.strokeCap = Paint.Cap.ROUND
+            layout.draw(canvas)
+        }
+        paint.color = fillColor
+        paint.style = Paint.Style.FILL
+        paint.strokeWidth = 0f
+        layout.draw(canvas)
+    }
+
+
+    private fun buildArabicLayout(value: String, width: Int, size: Float, textColor: Int): android.text.StaticLayout {
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        val paint = android.text.TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = textColor
+            textSize = size
+            typeface = resolveArabicTypeface(prefs)
+            style = Paint.Style.FILL
+            strokeWidth = 0f
+        }
+        return android.text.StaticLayout.Builder.obtain(value, 0, value.length, paint, width)
+            .setAlignment(android.text.Layout.Alignment.ALIGN_CENTER)
+            .setTextDirection(android.text.TextDirectionHeuristics.RTL)
+            .setIncludePad(true)
+            .setBreakStrategy(android.text.Layout.BREAK_STRATEGY_HIGH_QUALITY)
+            .setHyphenationFrequency(android.text.Layout.HYPHENATION_FREQUENCY_NONE)
+            .setLineSpacing(0f, 0.96f)
+            .build()
+    }
+
+    private fun updateTranslationLens(percent: Int, detail: String) {
+        if (percent >= 0) MangaFoxRuntime.progressPercent = percent.coerceIn(0, 100)
+        MangaFoxRuntime.progressDetail = detail
+        if (percent >= 0) MangaFoxRuntime.status = "ترجمة الصور: ${percent.coerceIn(0, 100)}% · $detail"
+        mainHandler.post {
+            val view = bubble ?: return@post
+            val current = if (translationRunning) MangaFoxRuntime.progressPercent else if (percent >= 100) 100 else percent
+            view.text = when {
+                percent < 0 -> "!"
+                translationRunning -> "${current.coerceIn(0, 99)}%"
+                MangaFoxRuntime.pendingEdits -> "✎"
+                current >= 100 -> "✓"
+                else -> "狐"
+            }
+            view.textSize = if (translationRunning) 13f else 25f
+            view.setTextColor(lensForegroundColor(getSharedPreferences(PREFS_NAME, MODE_PRIVATE)))
+            view.contentDescription = if (translationRunning) {
+                "Manga Fox: ترجمة الصور ${current}%، $detail"
+            } else if (percent < 0) {
+                "Manga Fox: حدث خطأ أثناء الترجمة"
+            } else {
+                "Manga Fox Translator. اضغط لفتح خيارات الترجمة واسحب لتحريك العدسة"
+            }
+            val params = bubbleParams
+            if (bubbleWasAdded && params != null) runCatching { windowManager.updateViewLayout(view, params) }
+        }
+    }
+
+    private fun resetLensProgress() {
+        mainHandler.post {
+            bubble?.apply {
+                val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+                text = if (MangaFoxRuntime.pendingEdits) "✎" else (prefs.getString(PREF_LENS_GLYPH, "狐") ?: "狐")
+                setTextColor(lensForegroundColor(prefs))
+                textSize = (prefs.getInt(PREF_LENS_SIZE, 58) * 0.40f).coerceIn(18f, 38f)
+                contentDescription = if (MangaFoxRuntime.pendingEdits) "توجد تعديلات طبقات غير مطبقة. افتح Manga FOX ثم طبّق جميع التعديلات" else "Manga Fox Translator. اضغط لفتح خيارات الترجمة واسحب لتحريك العدسة"
+            }
+        }
+    }
+
+    fun updateLensPendingEdits() {
+        mainHandler.post {
+            val view = bubble ?: return@post
+            if (!translationRunning) {
+                val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+                view.text = if (MangaFoxRuntime.pendingEdits) "✎" else (prefs.getString(PREF_LENS_GLYPH, "狐") ?: "狐")
+                view.setTextColor(lensForegroundColor(prefs))
+                view.textSize = if (MangaFoxRuntime.pendingEdits) 24f else (prefs.getInt(PREF_LENS_SIZE, 58) * 0.40f).coerceIn(18f, 38f)
+                view.contentDescription = if (MangaFoxRuntime.pendingEdits) "توجد تعديلات غير مطبقة" else "Manga Fox Translator. اضغط لفتح خيارات الترجمة واسحب لتحريك العدسة"
+            }
+        }
+    }
+
+    fun centerFloatingBubble() {
+        if (!this::windowManager.isInitialized) return
+        if (Build.VERSION.SDK_INT >= 23 && !Settings.canDrawOverlays(this)) {
+            toast("فعّل إذن الظهور فوق التطبيقات أولاً")
+            return
+        }
+        if (!bubbleWasAdded || bubble == null || bubbleParams == null) {
+            refreshLensAppFilter()
+            mainHandler.postDelayed({
+                if (bubbleWasAdded && bubble != null && bubbleParams != null) {
+                    centerFloatingBubble()
+                } else {
+                    toast("تعذر إظهار العدسة؛ تحقق من خدمة Manga FOX")
+                }
+            }, 220L)
+            return
+        }
+        val view = bubble ?: return
+        val params = bubbleParams ?: return
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        val screenWidth = resources.displayMetrics.widthPixels
+        val screenHeight = resources.displayMetrics.heightPixels
+        params.x = ((screenWidth - params.width) / 2).coerceAtLeast(0)
+        params.y = ((screenHeight - params.height) / 2).coerceAtLeast(0)
+        runCatching {
+            windowManager.updateViewLayout(view, params)
+            prefs.edit().putInt("lens_x", params.x).putInt("lens_y", params.y).apply()
+            toast("انجذبت العدسة إلى منتصف الشاشة")
+        }.onFailure { toast("تعذر تحريك العدسة: ${it.localizedMessage ?: "خطأ"}") }
+    }
+
+    fun applyLensSettings() {
+        val view = bubble ?: return
+        val params = bubbleParams ?: return
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        val size = prefs.getInt(PREF_LENS_SIZE, 58).coerceIn(42, 96)
+        params.width = dp(size)
+        params.height = dp(size)
+        view.textSize = (size * 0.40f).coerceIn(18f, 38f)
+        view.alpha = prefs.getInt(PREF_LENS_ALPHA, 100).coerceIn(35, 100) / 100f
+        view.text = if (MangaFoxRuntime.pendingEdits) "✎" else (prefs.getString(PREF_LENS_GLYPH, "狐") ?: "狐")
+        view.background = lensBackgroundForPrefs(prefs)
+        view.setTextColor(lensForegroundColor(prefs))
+        if (bubbleWasAdded) runCatching { windowManager.updateViewLayout(view, params) }
+    }
+
+    private fun lensBackground(color: Int): GradientDrawable = GradientDrawable().apply {
+        shape = GradientDrawable.OVAL
+        setColor(color)
+        setStroke(dp(2), Color.WHITE)
+    }
+
+    private fun lensBackgroundForPrefs(prefs: SharedPreferences): Drawable {
+        val path = prefs.getString(PREF_LENS_IMAGE_PATH, null).orEmpty()
+        if (path.isBlank() || !File(path).isFile) {
+            lensBackgroundBitmap?.let { if (!it.isRecycled) it.recycle() }
+            lensBackgroundBitmap = null
+            lensBackgroundBitmapPath = null
+            return lensBackground(prefs.getInt(PREF_LENS_COLOR, Color.rgb(255, 190, 65)))
+        }
+        if (lensBackgroundBitmapPath != path || lensBackgroundBitmap?.isRecycled != false) {
+            val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            BitmapFactory.decodeFile(path, bounds)
+            var sample = 1
+            while (bounds.outWidth / sample > 768 || bounds.outHeight / sample > 768) sample *= 2
+            val decoded = BitmapFactory.decodeFile(path, BitmapFactory.Options().apply { inSampleSize = sample.coerceAtLeast(1) })
+            lensBackgroundBitmap?.let { if (!it.isRecycled) it.recycle() }
+            lensBackgroundBitmap = decoded
+            lensBackgroundBitmapPath = path
+        }
+        return lensBackgroundBitmap?.let { LensImageBackgroundDrawable(it, Color.WHITE) }
+            ?: lensBackground(prefs.getInt(PREF_LENS_COLOR, Color.rgb(255, 190, 65)))
+    }
+
+    private fun lensForegroundColor(prefs: SharedPreferences): Int {
+        val imagePath = prefs.getString(PREF_LENS_IMAGE_PATH, null).orEmpty()
+        if (imagePath.isNotBlank() && File(imagePath).isFile) return Color.WHITE
+        val color = prefs.getInt(PREF_LENS_COLOR, Color.rgb(177, 107, 255))
+        val luminance = (Color.red(color) * 299 + Color.green(color) * 587 + Color.blue(color) * 114) / 1000
+        return if (luminance > 150) Color.BLACK else Color.WHITE
+    }
+
+    /** Keep the single overlay attached regardless of which app/window is in front. */
+    fun refreshLensAppFilter() {
+        if (!this::windowManager.isInitialized || captureRunning) return
+        val overlayAllowed = Build.VERSION.SDK_INT < 23 || Settings.canDrawOverlays(this)
+        if (!overlayAllowed) {
+            MangaFoxRuntime.status = "يلزم السماح بالظهور فوق التطبيقات"
+            MangaFoxRuntime.lastError = "افتح إعدادات Android واسمح لـ Manga FOX بالظهور فوق التطبيقات الأخرى."
+            return
+        }
+        // Idempotent: accessibility events and Activity lifecycle callbacks must never
+        // remove/recreate an already attached view, otherwise the lens visibly flickers.
+        if (bubbleWasAdded && bubble != null) return
+        showFloatingBubble()
+    }
+
+    /** Opens the action menu. A lens tap must never start capture directly. */
+    private fun showFloatingOptions() {
+        if (!this::windowManager.isInitialized) return
+        if (Build.VERSION.SDK_INT >= 23 && !Settings.canDrawOverlays(this)) {
+            toast("اسمح لـ Manga FOX بالظهور فوق التطبيقات لفتح قائمة العدسة")
+            return
+        }
+        removeFloatingOptions()
+
+        val lensAccent = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+            .getInt(PREF_LENS_COLOR, Color.rgb(177, 107, 255))
+        val panel = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutDirection = View.LAYOUT_DIRECTION_RTL
+            setPadding(dp(16), dp(14), dp(16), dp(14))
+            background = GradientDrawable().apply {
+                setColor(Color.rgb(24, 20, 35))
+                cornerRadius = dp(20).toFloat()
+                setStroke(dp(1), lensAccent)
+            }
+            elevation = dp(18).toFloat()
+        }
+        panel.addView(TextView(this).apply {
+            text = "MANGA FOX  ·  خيارات العدسة"
+            textSize = 17f
+            typeface = Typeface.create("sans-serif-black", Typeface.BOLD)
+            setTextColor(lensAccent)
+            gravity = Gravity.CENTER
+            setPadding(0, 0, 0, dp(4))
+        }, LinearLayout.LayoutParams(-1, -2))
+        panel.addView(TextView(this).apply {
+            text = "اختر العملية التي تريد تنفيذها"
+            textSize = 12f
+            setTextColor(Color.LTGRAY)
+            gravity = Gravity.CENTER
+            setPadding(0, 0, 0, dp(10))
+        }, LinearLayout.LayoutParams(-1, -2))
+
+        fun addAction(title: String, detail: String, accent: Boolean = false, action: () -> Unit) {
+            val item = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                layoutDirection = View.LAYOUT_DIRECTION_RTL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(dp(13), dp(9), dp(13), dp(9))
+                background = GradientDrawable().apply {
+                    setColor(if (accent) Color.rgb(48, 35, 68) else Color.rgb(37, 32, 48))
+                    cornerRadius = dp(12).toFloat()
+                    setStroke(dp(1), if (accent) lensAccent else Color.rgb(65, 57, 82))
+                }
+                isClickable = true
+                isFocusable = true
+                setOnClickListener {
+                    removeFloatingOptions()
+                    action()
+                }
+            }
+            item.addView(TextView(this).apply {
+                text = title
+                textSize = 14f
+                typeface = Typeface.DEFAULT_BOLD
+                setTextColor(Color.WHITE)
+            }, LinearLayout.LayoutParams(-1, -2))
+            item.addView(TextView(this).apply {
+                text = detail
+                textSize = 11f
+                setTextColor(Color.LTGRAY)
+            }, LinearLayout.LayoutParams(-1, -2))
+            panel.addView(item, LinearLayout.LayoutParams(-1, -2).apply {
+                bottomMargin = dp(7)
+            })
+        }
+
+        addAction("ترجمة الشاشة الحالية", "التقاط الشاشة الظاهرة ثم تحليل النصوص وترجمتها", true) {
+            startSingleCapture(500L)
+        }
+        addAction("ترجمة الفصل العمودي كاملاً", "تمرير الفصل والتقاط صفحاته ثم ترجمتها بأعلى جودة متاحة") {
+            startFullChapterCapture(800L)
+        }
+        addAction("التقاط الفصل دون ترجمة", "حفظ صور الفصل الأصلية لتصديرها أو معالجتها لاحقاً") {
+            startFullChapterCaptureOnly(800L)
+        }
+        addAction("إيقاف الالتقاط الحالي", "إيقاف الالتقاط والاحتفاظ بالمقاطع التي جُمعت") {
+            stopCaptureByUser()
+        }
+        addAction("عرض آخر نتيجة مترجمة", "فتح الصور والطبقات والترجمة المحفوظة") {
+            runCatching {
+                startActivity(Intent(this, MainActivity::class.java).apply {
+                    action = ACTION_SHOW_RESULTS
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                })
+            }.onFailure { toast("تعذر فتح آخر نتيجة: ${it.localizedMessage ?: "خطأ"}") }
+        }
+
+        addAction("انجذاب العدسة إلى وسط الشاشة", "إعادة وضع العدسة في مركز الشاشة وحفظ موضعها") {
+            centerFloatingBubble()
+        }
+
+        val close = TextView(this).apply {
+            text = "إغلاق"
+            textSize = 13f
+            typeface = Typeface.DEFAULT_BOLD
+            setTextColor(lensAccent)
+            gravity = Gravity.CENTER
+            setPadding(0, dp(7), 0, dp(2))
+            setOnClickListener { removeFloatingOptions() }
+        }
+        panel.addView(close, LinearLayout.LayoutParams(-1, -2))
+
+        val scroll = ScrollView(this).apply {
+            isFillViewport = true
+            isVerticalScrollBarEnabled = false
+            addView(panel, android.widget.FrameLayout.LayoutParams(-1, -2))
+        }
+        val params = WindowManager.LayoutParams(
+            min(dp(330), (resources.displayMetrics.widthPixels * 0.90f).toInt()),
+            WindowManager.LayoutParams.WRAP_CONTENT,
+            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+            PixelFormat.TRANSLUCENT
+        ).apply {
+            gravity = Gravity.CENTER
+            dimAmount = 0f
+        }
+        floatingOptionsView = scroll
+        floatingOptionsParams = params
+        runCatching { windowManager.addView(scroll, params) }
+            .onFailure {
+                floatingOptionsView = null
+                floatingOptionsParams = null
+                toast("تعذر فتح قائمة العدسة. تحقق من إذن الظهور فوق التطبيقات")
+            }
+    }
+
+    private fun removeFloatingOptions() {
+        val view = floatingOptionsView
+        if (view != null && this::windowManager.isInitialized) {
+            runCatching { windowManager.removeView(view) }
+        }
+        floatingOptionsView = null
+        floatingOptionsParams = null
+    }
+
+    private fun showFloatingBubble() {
+        if (captureRunning) return
+        if (Build.VERSION.SDK_INT >= 23 && !Settings.canDrawOverlays(this)) return
+        if (bubbleWasAdded || !this::windowManager.isInitialized) return
+        val lensPrefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        val lensSize = lensPrefs.getInt(PREF_LENS_SIZE, 58).coerceIn(42, 96)
+        val lensAlpha = lensPrefs.getInt(PREF_LENS_ALPHA, 100).coerceIn(35, 100) / 100f
+        val view = TextView(this).apply {
+            text = lensPrefs.getString(PREF_LENS_GLYPH, "狐") ?: "狐"
+            textSize = (lensSize * 0.40f).coerceIn(18f, 38f)
+            typeface = Typeface.create("sans-serif-black", Typeface.BOLD)
+            setTextColor(lensForegroundColor(lensPrefs))
+            gravity = Gravity.CENTER
+            background = lensBackgroundForPrefs(lensPrefs)
+            elevation = dp(8).toFloat()
+            alpha = lensAlpha
+            contentDescription = "Manga Fox Translator. اضغط لفتح خيارات الترجمة واسحب لتحريك العدسة"
+        }
+        val params = WindowManager.LayoutParams(
+            dp(lensSize), dp(lensSize),
+            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+            PixelFormat.TRANSLUCENT
+        ).apply {
+            gravity = Gravity.TOP or Gravity.START
+            x = lensPrefs.getInt("lens_x", dp(12))
+            y = lensPrefs.getInt("lens_y", (resources.displayMetrics.heightPixels * 0.36f).toInt())
+        }
+        var downX = 0f
+        var downY = 0f
+        var startX = 0
+        var startY = 0
+        var moved = false
+        view.setOnTouchListener { _, event ->
+            when (event.action) {
+                android.view.MotionEvent.ACTION_DOWN -> {
+                    downX = event.rawX
+                    downY = event.rawY
+                    startX = params.x
+                    startY = params.y
+                    moved = false
+                    true
+                }
+                android.view.MotionEvent.ACTION_MOVE -> {
+                    val dx = (event.rawX - downX).toInt()
+                    val dy = (event.rawY - downY).toInt()
+                    if (abs(dx) > dp(6) || abs(dy) > dp(6)) moved = true
+                    if (moved) {
+                        params.x = startX + dx
+                        params.y = startY + dy
+                        runCatching { windowManager.updateViewLayout(view, params) }
+                    }
+                    true
+                }
+                android.view.MotionEvent.ACTION_UP -> {
+                    if (moved) {
+                        lensPrefs.edit().putInt("lens_x", params.x).putInt("lens_y", params.y).apply()
+                    } else {
+                        // A tap only opens the menu. Capture begins exclusively after
+                        // the user selects one of the menu actions.
+                        showFloatingOptions()
+                    }
+                    true
+                }
+                android.view.MotionEvent.ACTION_CANCEL -> true
+                else -> false
+            }
+        }
+        if (translationRunning) {
+            view.text = "${MangaFoxRuntime.progressPercent.coerceIn(0, 99)}%"
+            view.textSize = 13f
+            view.contentDescription = "Manga Fox: ترجمة الصور ${MangaFoxRuntime.progressPercent}%"
+        } else if (MangaFoxRuntime.pendingEdits) {
+            view.text = "✎"
+            view.contentDescription = "توجد تعديلات غير مطبقة في Manga FOX"
+        }
+        bubble = view
+        bubbleParams = params
+        runCatching {
+            windowManager.addView(view, params)
+            bubbleWasAdded = true
+            MangaFoxRuntime.status = "العدسة العائمة ظاهرة"
+        }.onFailure { error ->
+            bubble = null
+            bubbleParams = null
+            bubbleWasAdded = false
+            MangaFoxRuntime.status = "تعذر إظهار العدسة: ${error.javaClass.simpleName}"
+            MangaFoxRuntime.lastError = "تعذر إنشاء النافذة العائمة. تحقق من إذن الظهور فوق التطبيقات الأخرى. ${error.message ?: ""}"
+        }
+    }
+
+    private fun removeFloatingBubble() {
+        removeFloatingOptions()
+        val view = bubble
+        if (view != null && bubbleWasAdded) runCatching { windowManager.removeView(view) }
+        // Drop the detached View reference. Keeping it made the re-enable path
+        // call restoreFloatingBubble(), which only scheduled another refresh and
+        // never re-attached or recreated the overlay.
+        bubbleWasAdded = false
+        bubble = null
+        bubbleParams = null
+    }
+
+    private fun restoreFloatingBubble() {
+        // Compatibility hook for older call sites. Visibility is no longer tied to foreground app.
+        refreshLensAppFilter()
+    }
+
+    private fun notifyCaptureProgress() {
+        if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) return
+        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val channelId = "manga_fox_capture"
+        if (Build.VERSION.SDK_INT >= 26) {
+            manager.createNotificationChannel(NotificationChannel(channelId, "التقاط Manga Fox", NotificationManager.IMPORTANCE_LOW))
+        }
+        val stopIntent = Intent(this, MainActivity::class.java).apply {
+            action = ACTION_STOP_CAPTURE
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        }
+        val stopPending = PendingIntent.getActivity(
+            this, 402, stopIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        val builder = if (Build.VERSION.SDK_INT >= 26) Notification.Builder(this, channelId) else Notification.Builder(this)
+        val notification = builder
+            .setSmallIcon(android.R.drawable.ic_menu_search)
+            .setContentTitle("Manga Fox · التقاط الفصل")
+            .setContentText("${captureCount} لقطة ملتقطة · اضغط زر إيقاف الالتقاط في الإشعار")
+            .setOngoing(true)
+            .addAction(android.R.drawable.ic_media_pause, "إيقاف الالتقاط", stopPending)
+            .build()
+        runCatching { manager.notify(402, notification) }
+    }
+
+    private fun clearCaptureNotification() {
+        runCatching {
+            (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).cancel(402)
+        }
+    }
+
+    private fun notifyResultsReady(): Boolean {
+        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val channelId = "manga_fox_results"
+        if (Build.VERSION.SDK_INT >= 26) {
+            manager.createNotificationChannel(
+                NotificationChannel(channelId, "نتائج Manga Fox", NotificationManager.IMPORTANCE_DEFAULT)
+            )
+        }
+        val openIntent = Intent(this, MainActivity::class.java).apply {
+            action = ACTION_SHOW_RESULTS
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            this,
+            401,
+            openIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        val builder = if (Build.VERSION.SDK_INT >= 26) Notification.Builder(this, channelId) else Notification.Builder(this)
+        val notification = builder
+            .setSmallIcon(android.R.drawable.ic_menu_search)
+            .setContentTitle("Manga Fox")
+            .setContentText("اكتملت الترجمة العربية · اضغط لعرض الفصل")
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
+            .build()
+        if (Build.VERSION.SDK_INT < 33 || checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+            manager.notify(401, notification)
+            return true
+        }
+        return false
+    }
+
+    private fun toast(message: String) {
+        mainHandler.post { Toast.makeText(this, message, Toast.LENGTH_LONG).show() }
+    }
+
+    private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
+}
+
+// PHANTOM CORE INLINE: kept in this file so source-only GitHub uploads cannot omit engine classes.
+
+
+// ============================================================
+// MERGED FROM: MangaFox_V3_0_3_MangaFoxEngines.kt
+// ============================================================
+
+/** Persistent glossary and character bible. This is local-only and never uploads page text. */
+class MangaFoxKnowledgeStore(context: Context) {
+    private val prefs = context.getSharedPreferences("mfox_phantom_knowledge_v1", Context.MODE_PRIVATE)
+    private val lock = Any()
+
+    data class GlossaryEntry(val source: String, val arabic: String, val note: String = "")
+    data class CharacterEntry(val name: String, val voice: String, val notes: String = "")
+
+    fun glossary(): List<GlossaryEntry> = synchronized(lock) {
+        val array = runCatching { JSONArray(prefs.getString(KEY_GLOSSARY, "[]")) }.getOrElse { JSONArray() }
+        (0 until array.length()).mapNotNull { i ->
+            array.optJSONObject(i)?.let { obj ->
+                val source = obj.optString("source").trim()
+                val arabic = obj.optString("arabic").trim()
+                if (source.isBlank() || arabic.isBlank()) null else GlossaryEntry(source, arabic, obj.optString("note"))
+            }
+        }
+    }
+
+    fun saveGlossaryEntry(entry: GlossaryEntry) = synchronized(lock) {
+        val values = glossary().filterNot { it.source.equals(entry.source, true) }.toMutableList()
+        values.add(entry)
+        val array = JSONArray()
+        values.forEach { array.put(JSONObject().put("source", it.source).put("arabic", it.arabic).put("note", it.note)) }
+        prefs.edit().putString(KEY_GLOSSARY, array.toString()).apply()
+    }
+
+    fun deleteGlossaryEntry(source: String) = synchronized(lock) {
+        val array = JSONArray()
+        glossary().filterNot { it.source.equals(source, true) }.forEach {
+            array.put(JSONObject().put("source", it.source).put("arabic", it.arabic).put("note", it.note))
+        }
+        prefs.edit().putString(KEY_GLOSSARY, array.toString()).apply()
+    }
+
+    fun characters(): List<CharacterEntry> = synchronized(lock) {
+        val array = runCatching { JSONArray(prefs.getString(KEY_CHARACTERS, "[]")) }.getOrElse { JSONArray() }
+        (0 until array.length()).mapNotNull { i ->
+            array.optJSONObject(i)?.let { obj ->
+                val name = obj.optString("name").trim()
+                if (name.isBlank()) null else CharacterEntry(name, obj.optString("voice"), obj.optString("notes"))
+            }
+        }
+    }
+
+    fun saveCharacter(entry: CharacterEntry) = synchronized(lock) {
+        val values = characters().filterNot { it.name.equals(entry.name, true) }.toMutableList()
+        values.add(entry)
+        val array = JSONArray()
+        values.forEach { array.put(JSONObject().put("name", it.name).put("voice", it.voice).put("notes", it.notes)) }
+        prefs.edit().putString(KEY_CHARACTERS, array.toString()).apply()
+    }
+
+    fun deleteCharacter(name: String) = synchronized(lock) {
+        val array = JSONArray()
+        characters().filterNot { it.name.equals(name, true) }.forEach {
+            array.put(JSONObject().put("name", it.name).put("voice", it.voice).put("notes", it.notes))
+        }
+        prefs.edit().putString(KEY_CHARACTERS, array.toString()).apply()
+    }
+
+    /** Exact whole-line entries are safe overrides; partial terms are deliberately not blindly substituted. */
+    fun exactGlossaryTranslation(source: String): String? = glossary().firstOrNull {
+        normalize(it.source) == normalize(source)
+    }?.arabic
+
+    fun exportJson(): String = JSONObject()
+        .put("glossary", JSONArray().also { a -> glossary().forEach { a.put(JSONObject().put("source", it.source).put("arabic", it.arabic).put("note", it.note)) } })
+        .put("characters", JSONArray().also { a -> characters().forEach { a.put(JSONObject().put("name", it.name).put("voice", it.voice).put("notes", it.notes)) } })
+        .toString()
+
+    fun importJson(json: String) = synchronized(lock) {
+        val root = JSONObject(json)
+        val glossaryArray = root.optJSONArray("glossary") ?: JSONArray()
+        val characterArray = root.optJSONArray("characters") ?: JSONArray()
+        val safeGlossary = JSONArray()
+        for (i in 0 until glossaryArray.length()) {
+            val item = glossaryArray.optJSONObject(i) ?: continue
+            val source = item.optString("source").trim().take(180)
+            val arabic = item.optString("arabic").trim().take(300)
+            if (source.isNotBlank() && arabic.isNotBlank()) safeGlossary.put(JSONObject().put("source", source).put("arabic", arabic).put("note", item.optString("note").take(300)))
+        }
+        val safeCharacters = JSONArray()
+        for (i in 0 until characterArray.length()) {
+            val item = characterArray.optJSONObject(i) ?: continue
+            val name = item.optString("name").trim().take(100)
+            if (name.isNotBlank()) safeCharacters.put(JSONObject().put("name", name).put("voice", item.optString("voice").take(300)).put("notes", item.optString("notes").take(1000)))
+        }
+        prefs.edit().putString(KEY_GLOSSARY, safeGlossary.toString()).putString(KEY_CHARACTERS, safeCharacters.toString()).apply()
+    }
+
+    private fun normalize(value: String) = value.lowercase(Locale.ROOT).trim().replace(Regex("\\s+"), " ")
+
+    companion object {
+        private const val KEY_GLOSSARY = "glossary_json"
+        private const val KEY_CHARACTERS = "characters_json"
+    }
+}
+
+data class MangaFoxQualityFinding(val severity: String, val page: Int, val message: String)
+data class MangaFoxPageAudit(
+    val page: Int,
+    val layerCount: Int,
+    val overlapCount: Int,
+    val outOfBoundsCount: Int,
+    val untranslatedCount: Int,
+    val emptyTextCount: Int,
+    val findings: List<MangaFoxQualityFinding>
+)
+data class MangaFoxQualityReport(val pages: List<MangaFoxPageAudit>) {
+    val errorCount get() = pages.sumOf { page -> page.findings.count { it.severity == "خطأ" } }
+    val warningCount get() = pages.sumOf { page -> page.findings.count { it.severity != "خطأ" } }
+    val inspectedLayers get() = pages.sumOf { it.layerCount }
+    fun toArabicText(): String = buildString {
+        append("فحص بنيوي للطبقات: ${pages.size} صفحة · $inspectedLayers طبقة\n")
+        append("مشاكل حرجة: $errorCount · تحذيرات نصية: $warningCount\n\n")
+        pages.filter { it.findings.isNotEmpty() }.forEach { page ->
+            append("الصفحة ${page.page}:\n")
+            page.findings.take(14).forEach { append("• [${it.severity}] ${it.message}\n") }
+            append('\n')
+        }
+        if (pages.all { it.findings.isEmpty() }) append("لم تُكتشف مشاكل بنيوية في الطبقات. هذا لا يثبت صحة OCR أو الترجمة بصرياً؛ راجع الصورة يدوياً أيضاً.")
+        else append("ملاحظة: هذا الفحص يتحقق من بيانات الطبقات والإحداثيات والتداخل. لا يستطيع وحده إثبات أن كل كلمة في الصورة تُرجمت.")
+    }
+}
+
+/** Static quality gate for known structural failure modes: overlap, clipping, blank and likely untranslated layers. */
+object MangaFoxQualityGuard {
+    fun inspect(resultPaths: List<String>, layerPaths: List<String>): MangaFoxQualityReport {
+        val audits = resultPaths.indices.map { pageIndex ->
+            val findings = ArrayList<MangaFoxQualityFinding>()
+            val imagePath = resultPaths.getOrNull(pageIndex).orEmpty()
+            val imageFile = File(imagePath)
+            val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            if (imageFile.isFile) BitmapFactory.decodeFile(imagePath, options)
+            val width = options.outWidth
+            val height = options.outHeight
+            val layerPath = layerPaths.getOrNull(pageIndex).orEmpty()
+            val layerFile = File(layerPath)
+            val array = if (layerFile.isFile) runCatching { JSONArray(layerFile.readText(Charsets.UTF_8)) }.getOrNull() else null
+            val layers = (0 until (array?.length() ?: 0)).mapNotNull { array?.optJSONObject(it) }
+                .filter { it.has("left") && it.has("top") && it.has("right") && it.has("bottom") }
+            var outside = 0
+            var overlap = 0
+            var untranslated = 0
+            var empty = 0
+            val rects = ArrayList<Pair<Rect, Int>>()
+            layers.forEachIndexed { index, layer ->
+                val left = layer.optInt("left", -1)
+                val top = layer.optInt("top", -1)
+                val right = layer.optInt("right", -1)
+                val bottom = layer.optInt("bottom", -1)
+                if (left < 0 || top < 0 || right <= left || bottom <= top || (width > 0 && right > width) || (height > 0 && bottom > height)) {
+                    outside++
+                    findings.add(MangaFoxQualityFinding("خطأ", pageIndex + 1, "الطبقة ${index + 1} تتجاوز حدود الصورة أو تملك إحداثيات غير صالحة"))
+                } else {
+                    val rect = Rect(left, top, right, bottom)
+                    rects.forEach { (other, otherIndex) ->
+                        val intersection = Rect(rect)
+                        if (intersection.intersect(other)) {
+                            val intersectionArea = intersection.width().toLong() * intersection.height().toLong()
+                            val smallerArea = minOf(rect.width().toLong() * rect.height(), other.width().toLong() * other.height())
+                            if (smallerArea > 0L && intersectionArea.toDouble() / smallerArea >= 0.34) {
+                                overlap++
+                                val severity = if (intersectionArea.toDouble() / smallerArea >= 0.82) "خطأ" else "تحذير"
+                                findings.add(MangaFoxQualityFinding(severity, pageIndex + 1, "تداخل ملحوظ بين الطبقتين ${otherIndex + 1} و${index + 1}"))
+                            }
+                        }
+                    }
+                    rects.add(rect to index)
+                }
+                if (!layer.optBoolean("eraseOnly", false)) {
+                    val translated = layer.optString("translated").trim()
+                    val source = layer.optString("source").trim()
+                    if (translated.isBlank()) {
+                        empty++
+                        findings.add(MangaFoxQualityFinding("خطأ", pageIndex + 1, "الطبقة ${index + 1} لا تحتوي نص ترجمة"))
+                    } else {
+                        fun isArabicLetter(ch: Char): Boolean = ch in '\u0600'..'\u06FF' || ch in '\u0750'..'\u077F' ||
+                            ch in '\u08A0'..'\u08FF' || ch in '\uFB50'..'\uFDFF' || ch in '\uFE70'..'\uFEFF'
+                        val sourceHasForeign = source.any { it.isLetter() && !isArabicLetter(it) }
+                        val outputForeignLetters = translated.count { it.isLetter() && !isArabicLetter(it) }
+                        if (sourceHasForeign && outputForeignLetters >= 3) {
+                            untranslated++
+                            findings.add(MangaFoxQualityFinding("مراجعة", pageIndex + 1, "قد تحتوي الطبقة ${index + 1} على أحرف أجنبية متبقية؛ قد تكون اسماً أو مؤثراً صوتياً ويجب مراجعتها"))
+                        }
+                    }
+                }
+            }
+            if (!imageFile.isFile) findings.add(MangaFoxQualityFinding("خطأ", pageIndex + 1, "ملف الصورة الناتجة غير موجود"))
+            if (!layerFile.isFile) findings.add(MangaFoxQualityFinding("مراجعة", pageIndex + 1, "ملف الطبقات غير موجود؛ لا يمكن تدقيق العناصر القابلة للتحرير"))
+            MangaFoxPageAudit(pageIndex + 1, layers.size, overlap, outside, untranslated, empty, findings)
+        }
+        return MangaFoxQualityReport(audits)
+    }
+}
+
+/** Chronological, per-operation layer history shared by every page in the active chapter. */
+class MangaFoxLayerHistory(private val context: Context) {
+    private fun root() = File(context.filesDir, "mfox_phantom_history/global").apply { mkdirs() }
+    private fun stack(name: String) = File(root(), name).apply { mkdirs() }
+
+    @Synchronized fun push(page: Int, current: File) {
+        if (page < 0 || !current.isFile || current.length() > 8L * 1024L * 1024L) return
+        runCatching {
+            val payload = JSONObject().put("page", page).put("snapshot", current.readText(Charsets.UTF_8))
+            val target = File(stack("undo"), "${System.currentTimeMillis().toString().padStart(13, '0')}_${System.nanoTime()}.json")
+            writeAtomically(target, payload.toString())
+            stack("redo").listFiles()?.forEach { it.delete() }
+            trim(stack("undo"), 40)
+        }
+    }
+
+    @Synchronized fun undoLatest(layerPaths: List<String>): Boolean = moveLatest(layerPaths, "undo", "redo")
+    @Synchronized fun redoLatest(layerPaths: List<String>): Boolean = moveLatest(layerPaths, "redo", "undo")
+
+    @Synchronized fun reset() {
+        runCatching { root().deleteRecursively() }
+        root().mkdirs()
+    }
+
+    private fun moveLatest(layerPaths: List<String>, from: String, to: String): Boolean = runCatching {
+        val source = stack(from).listFiles()?.filter { it.isFile && it.extension == "json" }
+            ?.maxByOrNull { it.name } ?: return false
+        val payload = JSONObject(source.readText(Charsets.UTF_8))
+        val page = payload.optInt("page", -1)
+        val current = layerPaths.getOrNull(page)?.takeIf { it.isNotBlank() }?.let(::File)
+            ?: return false
+        if (!current.isFile) return false
+        val currentSnapshot = JSONObject().put("page", page).put("snapshot", current.readText(Charsets.UTF_8))
+        val destination = File(stack(to), "${System.currentTimeMillis().toString().padStart(13, '0')}_${System.nanoTime()}.json")
+        writeAtomically(destination, currentSnapshot.toString())
+        val desired = payload.optString("snapshot", "[]")
+        writeTextAtomically(current, desired)
+        source.delete()
+        trim(stack(to), 40)
+        true
+    }.getOrDefault(false)
+
+    private fun trim(directory: File, keep: Int) {
+        directory.listFiles()?.filter { it.isFile }?.sortedByDescending { it.name }?.drop(keep)?.forEach { it.delete() }
+    }
+
+    private fun writeAtomically(target: File, value: String) {
+        val temp = File(target.parentFile, target.name + ".tmp")
+        temp.writeText(value, Charsets.UTF_8)
+        if (!temp.renameTo(target)) { temp.copyTo(target, overwrite = true); temp.delete() }
+    }
+
+    private fun writeTextAtomically(target: File, value: String) {
+        val temp = File(target.parentFile, target.name + ".history.tmp")
+        temp.writeText(value, Charsets.UTF_8)
+        if (!temp.renameTo(target)) { temp.copyTo(target, overwrite = true); temp.delete() }
+    }
+}
+
+/** Named snapshots of every page's editable translation layers for the current chapter. */
+object MangaFoxEditSetStore {
+    data class Entry(val name: String, val fileName: String)
+    private fun folder(context: Context) = File(context.filesDir, "mfox_named_edit_sets").apply { mkdirs() }
+    private fun catalog(context: Context) = File(folder(context), "catalog.json")
+
+    @Synchronized fun save(context: Context, name: String, chapterTitle: String, scopeKey: String, layerPaths: List<String>): Boolean = runCatching {
+        require(name.isNotBlank() && layerPaths.isNotEmpty())
+        val pages = JSONArray()
+        layerPaths.forEach { path ->
+            val file = path.takeIf { it.isNotBlank() }?.let(::File)
+            pages.put(if (file?.isFile == true) file.readText(Charsets.UTF_8) else "[]")
+        }
+        val fileName = "set_${System.currentTimeMillis()}_${System.nanoTime()}_${kotlin.math.abs(name.hashCode())}.json"
+        val target = File(folder(context), fileName)
+        val snapshot = JSONObject()
+            .put("name", name.trim())
+            .put("chapterTitle", chapterTitle)
+            .put("scopeKey", scopeKey)
+            .put("createdAt", System.currentTimeMillis())
+            .put("pages", pages)
+        writeAtomically(target, snapshot.toString())
+        val old = readCatalog(context)
+        old.put(JSONObject().put("name", name.trim()).put("file", fileName)
+            .put("chapterTitle", chapterTitle).put("scopeKey", scopeKey).put("createdAt", System.currentTimeMillis()))
+        writeAtomically(catalog(context), old.toString())
+        true
+    }.getOrDefault(false)
+
+    @Synchronized fun list(context: Context, chapterTitle: String, scopeKey: String): List<Entry> {
+        val root = readCatalog(context)
+        val output = ArrayList<Entry>()
+        for (index in 0 until root.length()) {
+            val item = root.optJSONObject(index) ?: continue
+            if (item.optString("chapterTitle") != chapterTitle || item.optString("scopeKey") != scopeKey) continue
+            val fileName = item.optString("file")
+            if (fileName.isNotBlank() && File(folder(context), fileName).isFile) {
+                output.add(Entry(item.optString("name"), fileName))
+            }
+        }
+        return output.sortedByDescending { entry ->
+            runCatching { JSONObject(File(folder(context), entry.fileName).readText()).optLong("createdAt") }.getOrDefault(0L)
+        }
+    }
+
+    @Synchronized fun restore(
+        context: Context,
+        fileName: String,
+        chapterTitle: String,
+        scopeKey: String,
+        layerPaths: List<String>,
+        history: MangaFoxLayerHistory
+    ): Boolean = runCatching {
+        val safeName = File(fileName).name
+        val file = File(folder(context), safeName)
+        require(file.isFile)
+        val snapshot = JSONObject(file.readText(Charsets.UTF_8))
+        require(snapshot.optString("chapterTitle") == chapterTitle && snapshot.optString("scopeKey") == scopeKey)
+        val pages = snapshot.optJSONArray("pages") ?: error("ملف المجموعة لا يحتوي صفحات")
+        require(pages.length() == layerPaths.size && layerPaths.isNotEmpty())
+        val writes = layerPaths.mapIndexed { index, path ->
+            require(path.isNotBlank())
+            val target = File(path)
+            val content = pages.optString(index, "[]")
+            JSONArray(content)
+            target to content
+        }
+        writes.forEachIndexed { index, pair ->
+            val target = pair.first
+            target.parentFile?.mkdirs()
+            val temp = File(target.parentFile, target.name + ".named.tmp")
+            temp.writeText(pair.second, Charsets.UTF_8)
+            JSONArray(pair.second)
+            history.push(index, target)
+            if (!temp.renameTo(target)) { temp.copyTo(target, overwrite = true); temp.delete() }
+        }
+        true
+    }.getOrDefault(false)
+
+    private fun readCatalog(context: Context): JSONArray = runCatching {
+        val file = catalog(context)
+        if (file.isFile) JSONArray(file.readText(Charsets.UTF_8)) else JSONArray()
+    }.getOrDefault(JSONArray())
+
+    private fun writeAtomically(target: File, value: String) {
+        val temp = File(target.parentFile, target.name + ".tmp")
+        temp.writeText(value, Charsets.UTF_8)
+        if (!temp.renameTo(target)) { temp.copyTo(target, overwrite = true); temp.delete() }
+    }
+}
+
+/** Persistent archive: independent chapter folders grouped by manga/manhwa title. */
+object MangaFoxChapterArchive {
+    data class ChapterInfo(
+        val id: String,
+        val workName: String,
+        val chapterName: String,
+        val title: String,
+        val pageCount: Int,
+        val captureOnly: Boolean,
+        val quality: String,
+        val createdAt: Long,
+        val coverPath: String = "",
+        val sourcePageCount: Int = 0
+    )
+
+    private fun base(context: Context) = File(context.filesDir, "mfox_library").apply { mkdirs() }
+    private fun catalogFile(context: Context) = File(base(context), "catalog.json")
+    private fun readCatalog(context: Context): JSONObject = runCatching {
+        val file = catalogFile(context)
+        if (file.isFile) JSONObject(file.readText(Charsets.UTF_8)) else JSONObject()
+    }.getOrDefault(JSONObject())
+
+    @Synchronized fun list(context: Context): List<ChapterInfo> {
+        val array = readCatalog(context).optJSONArray("chapters") ?: JSONArray()
+        val result = ArrayList<ChapterInfo>()
+        for (index in 0 until array.length()) {
+            val item = array.optJSONObject(index) ?: continue
+            val id = item.optString("id")
+            val dir = File(base(context), File(item.optString("folder")).name)
+            val manifest = File(dir, "chapter.json")
+            if (id.isBlank() || !manifest.isFile) continue
+            val manifestJson = runCatching { JSONObject(manifest.readText(Charsets.UTF_8)) }.getOrNull() ?: continue
+            val resultNames = manifestJson.optJSONArray("results") ?: JSONArray()
+            val sourceNames = manifestJson.optJSONArray("sources") ?: JSONArray()
+            val pages = resultNames.length()
+            val sourcePageCount = (0 until sourceNames.length()).count { index ->
+                val relative = sourceNames.optString(index, "")
+                relative.isNotBlank() && File(dir, File(relative).name).isFile
+            }
+            val firstName = resultNames.optString(0, "")
+            val coverPath = if (firstName.isBlank()) "" else File(dir, File(firstName).name).absolutePath
+            result.add(ChapterInfo(
+                id, item.optString("workName", "عمل غير مصنف"),
+                item.optString("chapterName", "فصل"), item.optString("title", "فصل"),
+                pages, item.optBoolean("captureOnly", false), item.optString("quality", ""),
+                item.optLong("createdAt", 0L), coverPath, sourcePageCount
+            ))
+        }
+        return result.sortedByDescending { it.createdAt }
+    }
+
+    @Synchronized fun save(
+        context: Context,
+        workName: String,
+        chapterName: String,
+        title: String,
+        sources: List<String>,
+        results: List<String>,
+        layers: List<String>,
+        captureOnly: Boolean,
+        quality: String,
+        preserveExistingImages: Boolean = false
+    ): String? {
+        if (results.isEmpty()) return null
+        return runCatching {
+            val safeWork = workName.trim().ifBlank { "عمل غير مصنف" }
+            val safeChapter = chapterName.trim().ifBlank { title.ifBlank { "فصل ${System.currentTimeMillis()}" } }
+            val catalog = readCatalog(context)
+            val existing = catalog.optJSONArray("chapters") ?: JSONArray()
+            var existingId = MangaFoxRuntime.activeArchiveId.takeIf { active ->
+                (0 until existing.length()).any { existing.optJSONObject(it)?.optString("id") == active }
+            }
+            if (existingId.isNullOrBlank()) {
+                for (index in 0 until existing.length()) {
+                    val item = existing.optJSONObject(index) ?: continue
+                    if (item.optString("workName") == safeWork && item.optString("chapterName") == safeChapter) {
+                        existingId = item.optString("id")
+                        break
+                    }
+                }
+            }
+            val chapterId = existingId?.takeIf { it.isNotBlank() }
+                ?: "chapter_${System.currentTimeMillis()}_${System.nanoTime()}"
+            val previousEntry = (0 until existing.length()).mapNotNull { existing.optJSONObject(it) }
+                .firstOrNull { it.optString("id") == chapterId }
+            val folderName = previousEntry?.optString("folder")?.takeIf { it.isNotBlank() }
+                ?: "chapter_$chapterId"
+            val folder = File(base(context), File(folderName).name).apply { mkdirs() }
+            fun copyList(paths: List<String>, prefix: String): JSONArray {
+                val array = JSONArray()
+                paths.forEachIndexed { index, path ->
+                    val source = path.takeIf { it.isNotBlank() }?.let(::File)
+                    if (source == null || !source.isFile) {
+                        array.put("")
+                    } else {
+                        val isInsideFolder = runCatching { source.canonicalFile.parentFile == folder.canonicalFile }.getOrDefault(false)
+                        val ext = source.extension.takeIf { it.isNotBlank() } ?: if (prefix == "layer") "json" else "bin"
+                        val destination = if (isInsideFolder) source else
+                            File(folder, "${prefix}_${(index + 1).toString().padStart(4, '0')}.$ext")
+                        val keepExistingImage = preserveExistingImages && prefix != "layer" &&
+                            destination.isFile && destination.length() == source.length() && !isInsideFolder
+                        if (source.absolutePath != destination.absolutePath && !keepExistingImage) {
+                            source.copyTo(destination, overwrite = true)
+                        }
+                        array.put(destination.name)
+                    }
+                }
+                return array
+            }
+            val sourceArray = copyList(sources, "source")
+            val resultArray = copyList(results, "result")
+            val layerArray = copyList(layers, "layer")
+            val updatedAt = System.currentTimeMillis()
+            val createdAt = previousEntry?.optLong("createdAt", updatedAt) ?: updatedAt
+            val manifest = JSONObject()
+                .put("id", chapterId)
+                .put("workName", safeWork)
+                .put("chapterName", safeChapter)
+                .put("title", title.ifBlank { safeChapter })
+                .put("sources", sourceArray)
+                .put("results", resultArray)
+                .put("layers", layerArray)
+                .put("captureOnly", captureOnly)
+                .put("quality", quality)
+                .put("pendingEdits", MangaFoxRuntime.pendingEdits)
+                .put("createdAt", createdAt)
+                .put("updatedAt", updatedAt)
+            writeAtomically(File(folder, "chapter.json"), manifest.toString())
+            val retainedNames = HashSet<String>().apply {
+                add("chapter.json")
+                listOf(sourceArray, resultArray, layerArray).forEach { array ->
+                    for (index in 0 until array.length()) {
+                        val name = array.optString(index)
+                        if (name.isNotBlank()) add(File(name).name)
+                    }
+                }
+            }
+            folder.listFiles()?.filter { it.isFile && it.name !in retainedNames }?.forEach { it.delete() }
+            val newEntry = JSONObject()
+                .put("id", chapterId)
+                .put("workName", safeWork)
+                .put("chapterName", safeChapter)
+                .put("title", title.ifBlank { safeChapter })
+                .put("folder", folderName)
+                .put("captureOnly", captureOnly)
+                .put("quality", quality)
+                .put("createdAt", createdAt)
+                .put("updatedAt", updatedAt)
+            val merged = JSONArray()
+            for (index in 0 until existing.length()) {
+                val item = existing.optJSONObject(index) ?: continue
+                if (item.optString("id") != chapterId) merged.put(item)
+            }
+            merged.put(newEntry)
+            writeAtomically(catalogFile(context), JSONObject().put("version", 1).put("chapters", merged).toString())
+            MangaFoxRuntime.activeArchiveId = chapterId
+            MangaFoxRuntime.activeWorkName = safeWork
+            MangaFoxRuntime.activeChapterName = safeChapter
+            chapterId
+        }.getOrNull()
+    }
+
+    @Synchronized fun open(context: Context, id: String): Boolean = runCatching {
+        val array = readCatalog(context).optJSONArray("chapters") ?: return false
+        val item = (0 until array.length()).mapNotNull { array.optJSONObject(it) }
+            .firstOrNull { it.optString("id") == id } ?: return false
+        val folder = File(base(context), File(item.optString("folder")).name)
+        val manifestFile = File(folder, "chapter.json")
+        val manifest = JSONObject(manifestFile.readText(Charsets.UTF_8))
+        fun files(key: String): List<String> {
+            val values = manifest.optJSONArray(key) ?: JSONArray()
+            return (0 until values.length()).map { index ->
+                val relative = values.optString(index, "")
+                if (relative.isBlank()) "" else File(folder, File(relative).name).absolutePath
+            }
+        }
+        val results = files("results")
+        require(results.isNotEmpty() && results.all { it.isNotBlank() && File(it).isFile })
+        val sources = files("sources")
+        val layers = files("layers")
+        MangaFoxRuntime.resultPages = results
+        MangaFoxRuntime.sourcePages = results.indices.map { sources.getOrNull(it).orEmpty() }
+        MangaFoxRuntime.translationLayerFiles = results.indices.map { layers.getOrNull(it).orEmpty() }
+        MangaFoxRuntime.resultTitle = manifest.optString("title", item.optString("chapterName"))
+        MangaFoxRuntime.qualitySummary = manifest.optString("quality", "")
+        MangaFoxRuntime.captureOnlyResult = manifest.optBoolean("captureOnly", false)
+        MangaFoxRuntime.activeArchiveId = id
+        MangaFoxRuntime.activeWorkName = item.optString("workName", "عمل غير مصنف")
+        MangaFoxRuntime.activeChapterName = item.optString("chapterName", "فصل")
+        MangaFoxRuntime.pendingEdits = manifest.optBoolean("pendingEdits", false)
+        MangaFoxLayerHistory(context).reset()
+        MangaFoxRuntime.persist(context)
+        true
+    }.getOrDefault(false)
+
+    @Synchronized fun delete(context: Context, id: String) {
+        val catalog = readCatalog(context)
+        val existing = catalog.optJSONArray("chapters") ?: JSONArray()
+        val updated = JSONArray()
+        for (index in 0 until existing.length()) {
+            val item = existing.optJSONObject(index) ?: continue
+            if (item.optString("id") == id) {
+                val folder = File(base(context), File(item.optString("folder")).name)
+                val safeRoot = base(context).canonicalFile
+                if (runCatching { folder.canonicalFile.parentFile == safeRoot }.getOrDefault(false)) {
+                    folder.deleteRecursively()
+                }
+            } else updated.put(item)
+        }
+        writeAtomically(catalogFile(context), JSONObject().put("version", 1).put("chapters", updated).toString())
+    }
+
+    private fun writeAtomically(target: File, value: String) {
+        target.parentFile?.mkdirs()
+        val temp = File(target.parentFile, target.name + ".tmp")
+        temp.writeText(value, Charsets.UTF_8)
+        if (!temp.renameTo(target)) { temp.copyTo(target, overwrite = true); temp.delete() }
+    }
+}
+
+/** Safe ZIP backup of source/result/layer files plus local terminology and character notes. */
+object MangaFoxProjectArchive {
+    private const val MAX_IMPORT_BYTES = 600L * 1024L * 1024L
+
+    fun export(context: Context, output: OutputStream) {
+        val root = JSONObject()
+            .put("format", "MANGAFOX_PHANTOM_PROJECT")
+            .put("version", 1)
+            .put("title", MangaFoxRuntime.resultTitle)
+        val sources = JSONArray(); val results = JSONArray(); val layers = JSONArray()
+        // Keep every page index aligned even when an older project has a missing source or layer file.
+        MangaFoxRuntime.resultPages.forEachIndexed { index, resultPath ->
+            val source = File(MangaFoxRuntime.sourcePages.getOrNull(index).orEmpty())
+            val result = File(resultPath)
+            val layer = File(MangaFoxRuntime.translationLayerFiles.getOrNull(index).orEmpty())
+            sources.put(if (source.isFile) "source/$index${source.extension.takeIf { it.isNotBlank() }?.let { ".$it" } ?: ".jpg"}" else "")
+            results.put(if (result.isFile) "result/$index${result.extension.takeIf { it.isNotBlank() }?.let { ".$it" } ?: ".jpg"}" else "")
+            layers.put(if (layer.isFile) "layers/$index.json" else "")
+        }
+        root.put("sources", sources).put("results", results).put("layers", layers)
+            .put("quality", MangaFoxRuntime.qualitySummary)
+        ZipOutputStream(output).use { zip ->
+            zip.putNextEntry(ZipEntry("project.json")); zip.write(root.toString().toByteArray(Charsets.UTF_8)); zip.closeEntry()
+            for (i in 0 until sources.length()) {
+                val entry = sources.optString(i)
+                if (entry.isNotBlank()) putFile(zip, entry, File(MangaFoxRuntime.sourcePages[i]))
+            }
+            for (i in 0 until results.length()) {
+                val entry = results.optString(i)
+                if (entry.isNotBlank()) putFile(zip, entry, File(MangaFoxRuntime.resultPages[i]))
+            }
+            for (i in 0 until layers.length()) {
+                val entry = layers.optString(i)
+                if (entry.isNotBlank()) putFile(zip, entry, File(MangaFoxRuntime.translationLayerFiles[i]))
+            }
+            zip.putNextEntry(ZipEntry("knowledge.json"))
+            zip.write(MangaFoxKnowledgeStore(context).exportJson().toByteArray(Charsets.UTF_8))
+            zip.closeEntry()
+        }
+    }
+
+    fun restore(context: Context, input: InputStream) {
+        val temporary = File(context.filesDir, "mfox_phantom_import_${System.currentTimeMillis()}").apply { mkdirs() }
+        var consumed = 0L
+        var importedRootForRollback: File? = null
+        var importCommitted = false
+        val seenEntries = HashSet<String>()
+        try {
+            ZipInputStream(input).use { zip ->
+                while (true) {
+                    val entry = zip.nextEntry ?: break
+                    val name = entry.name.replace('\\', '/')
+                    require(seenEntries.add(name)) { "النسخة تحتوي ملفاً مكرراً: $name" }
+                    require(!entry.isDirectory && !name.startsWith("/") && !name.contains("..") &&
+                        (name == "project.json" || name == "knowledge.json" || name.matches(Regex("(source|result)/[0-9]+\\.(jpg|jpeg|png|webp)", RegexOption.IGNORE_CASE)) || name.matches(Regex("layers/[0-9]+\\.json")))) {
+                        "ملف مشروع غير آمن أو غير مدعوم: $name"
+                    }
+                    val target = File(temporary, name)
+                    require(target.canonicalPath.startsWith(temporary.canonicalPath + File.separator)) { "مسار استيراد غير آمن" }
+                    target.parentFile?.mkdirs()
+                    target.outputStream().use { out ->
+                        val buffer = ByteArray(8192)
+                        while (true) {
+                            val read = zip.read(buffer)
+                            if (read <= 0) break
+                            consumed += read
+                            require(consumed <= MAX_IMPORT_BYTES) { "حجم النسخة الاحتياطية أكبر من الحد المسموح" }
+                            out.write(buffer, 0, read)
+                        }
+                    }
+                    zip.closeEntry()
+                }
+            }
+            val manifest = File(temporary, "project.json")
+            require(manifest.isFile && manifest.length() <= 2L * 1024L * 1024L) { "ملف project.json غير موجود أو أكبر من الحد المسموح" }
+            val root = JSONObject(manifest.readText(Charsets.UTF_8))
+            require(root.optString("format") == "MANGAFOX_PHANTOM_PROJECT") { "صيغة النسخة غير معروفة" }
+            val importedRoot = File(context.filesDir, "mfox_phantom_projects/import_${System.currentTimeMillis()}").apply { mkdirs() }
+            importedRootForRollback = importedRoot
+            val sourceNames = root.optJSONArray("sources") ?: JSONArray()
+            val resultNames = root.optJSONArray("results") ?: JSONArray()
+            val layerNames = root.optJSONArray("layers") ?: JSONArray()
+            val count = minOf(resultNames.length(), sourceNames.length())
+            require(count in 1..2000) { "عدد صفحات النسخة غير صالح أو يتجاوز 2000 صفحة" }
+            val newSources = ArrayList<String>(count)
+            val newResults = ArrayList<String>(count)
+            val newLayers = ArrayList<String>(count)
+            for (i in 0 until count) {
+                fun copyEntry(name: String, folder: String): String {
+                    if (name.isBlank()) return ""
+                    val validName = when (folder) {
+                        "source", "result" -> name.matches(Regex("$folder/[0-9]+\\.(jpg|jpeg|png|webp)", RegexOption.IGNORE_CASE))
+                        "layers" -> name.matches(Regex("layers/[0-9]+\\.json"))
+                        else -> false
+                    }
+                    require(validName) { "مرجع ملف غير صالح" }
+                    val from = File(temporary, name)
+                    require(from.canonicalPath.startsWith(temporary.canonicalPath + File.separator) && from.isFile) { "ملف مفقود أو مساره غير آمن: $name" }
+                    val to = File(importedRoot, name).apply { parentFile?.mkdirs() }
+                    from.copyTo(to, overwrite = true)
+                    return to.absolutePath
+                }
+                newSources.add(copyEntry(sourceNames.optString(i), "source"))
+                newResults.add(copyEntry(resultNames.optString(i), "result"))
+                newLayers.add(copyEntry(layerNames.optString(i), "layers"))
+            }
+            require(newResults.any { it.isNotBlank() && File(it).isFile }) { "النسخة لا تحتوي صور نتائج صالحة" }
+            MangaFoxRuntime.sourcePages = newSources
+            MangaFoxRuntime.resultPages = newResults
+            MangaFoxRuntime.translationLayerFiles = newLayers
+            MangaFoxRuntime.resultTitle = root.optString("title", "مشروع Manga FOX مستورد")
+            MangaFoxRuntime.activeWorkName = "مشاريع مستوردة"
+            MangaFoxRuntime.activeChapterName = MangaFoxRuntime.resultTitle
+            MangaFoxRuntime.activeArchiveId = ""
+            MangaFoxRuntime.pendingEdits = false
+            MangaFoxRuntime.captureOnlyResult = false
+            MangaFoxRuntime.qualitySummary = root.optString("quality", "تم استيراد المشروع")
+            File(temporary, "knowledge.json").takeIf { it.isFile }?.let { knowledge ->
+                runCatching { MangaFoxKnowledgeStore(context).importJson(knowledge.readText(Charsets.UTF_8)) }
+            }
+            // Imported projects enter the same permanent work/chapter archive immediately;
+            // their edit-set scope therefore remains stable across the next app launch.
+            MangaFoxChapterArchive.save(
+                context, MangaFoxRuntime.activeWorkName, MangaFoxRuntime.activeChapterName,
+                MangaFoxRuntime.resultTitle, MangaFoxRuntime.sourcePages, MangaFoxRuntime.resultPages,
+                MangaFoxRuntime.translationLayerFiles, MangaFoxRuntime.captureOnlyResult,
+                MangaFoxRuntime.qualitySummary
+            )
+            MangaFoxRuntime.persist(context)
+            importCommitted = true
+        } finally {
+            temporary.deleteRecursively()
+            if (!importCommitted) importedRootForRollback?.deleteRecursively()
+        }
+    }
+
+    private fun putFile(zip: ZipOutputStream, entryName: String, file: File) {
+        if (!file.isFile || file.length() > MAX_IMPORT_BYTES) return
+        zip.putNextEntry(ZipEntry(entryName))
+        file.inputStream().use { it.copyTo(zip) }
+        zip.closeEntry()
+    }
+}
+
+
+/** Dominant boundary-color sampler for flat speech balloons; avoids forcing dark/colorful areas to white. */
+object MangaFoxBubbleRepair {
+    /**
+     * Samples the balloon face away from its outline and away from the source glyphs.
+     * A quantized dominant-color estimate is more stable than sampling pixels just
+     * outside an OCR rectangle, where the dark outline creates the former gray halo.
+     */
+    fun sampleInteriorColor(bitmap: android.graphics.Bitmap, balloon: Rect, excludedText: Rect): Int {
+        if (bitmap.width < 2 || bitmap.height < 2) return android.graphics.Color.WHITE
+        val safe = Rect(balloon).apply {
+            inset(maxOf(2, width() / 10), maxOf(2, height() / 10))
+            left = left.coerceIn(0, bitmap.width - 1)
+            top = top.coerceIn(0, bitmap.height - 1)
+            right = right.coerceIn(left + 1, bitmap.width)
+            bottom = bottom.coerceIn(top + 1, bitmap.height)
+        }
+        val excluded = Rect(excludedText).apply {
+            inset(-maxOf(3, width() / 5), -maxOf(3, height() / 5))
+        }
+        val stepX = maxOf(1, safe.width() / 24)
+        val stepY = maxOf(1, safe.height() / 24)
+        val samples = ArrayList<Int>(500)
+        var y = safe.top
+        while (y < safe.bottom) {
+            var x = safe.left
+            while (x < safe.right) {
+                if (!excluded.contains(x, y)) samples.add(bitmap.getPixel(x, y))
+                x += stepX
+            }
+            y += stepY
+        }
+        if (samples.size < 8) {
+            // For a very large text box, recover the dominant color from the full
+            // inner balloon. Text pixels are usually a minority in a speech bubble.
+            var fy = safe.top
+            while (fy < safe.bottom) {
+                var fx = safe.left
+                while (fx < safe.right) {
+                    samples.add(bitmap.getPixel(fx, fy))
+                    fx += stepX
+                }
+                fy += stepY
+            }
+        }
+        if (samples.isEmpty()) return android.graphics.Color.WHITE
+
+        val buckets = HashMap<Int, MutableList<Int>>()
+        samples.forEach { color ->
+            val key = ((android.graphics.Color.red(color) shr 5) shl 6) or
+                ((android.graphics.Color.green(color) shr 5) shl 3) or
+                (android.graphics.Color.blue(color) shr 5)
+            buckets.getOrPut(key) { ArrayList() }.add(color)
+        }
+        val dominant = buckets.values.maxByOrNull { it.size }.orEmpty()
+        val chosen = if (dominant.size >= maxOf(6, samples.size / 10)) dominant else samples
+        fun median(channel: (Int) -> Int): Int = chosen.map(channel).sorted()[chosen.size / 2]
+        val red = median { android.graphics.Color.red(it) }
+        val green = median { android.graphics.Color.green(it) }
+        val blue = median { android.graphics.Color.blue(it) }
+        return android.graphics.Color.rgb(red, green, blue)
+    }
+
+    fun sampleBackground(bitmap: android.graphics.Bitmap, area: Rect): Int {
+        if (bitmap.width < 2 || bitmap.height < 2) return android.graphics.Color.WHITE
+        val left = area.left.coerceIn(0, bitmap.width - 1)
+        val right = (area.right - 1).coerceIn(left, bitmap.width - 1)
+        val top = area.top.coerceIn(0, bitmap.height - 1)
+        val bottom = (area.bottom - 1).coerceIn(top, bitmap.height - 1)
+        val gap = maxOf(2, minOf(area.width(), area.height()) / 12)
+        val colors = ArrayList<Int>(48)
+        val steps = 12
+        for (i in 0..steps) {
+            val x = left + ((right - left) * i / steps)
+            val y = top + ((bottom - top) * i / steps)
+            val topY = (top - gap).coerceAtLeast(0)
+            val bottomY = (bottom + gap).coerceAtMost(bitmap.height - 1)
+            val leftX = (left - gap).coerceAtLeast(0)
+            val rightX = (right + gap).coerceAtMost(bitmap.width - 1)
+            colors.add(bitmap.getPixel(x, topY))
+            colors.add(bitmap.getPixel(x, bottomY))
+            colors.add(bitmap.getPixel(leftX, y))
+            colors.add(bitmap.getPixel(rightX, y))
+        }
+        fun lum(c: Int) = (android.graphics.Color.red(c) * 30 + android.graphics.Color.green(c) * 59 + android.graphics.Color.blue(c) * 11) / 100
+        val bright = colors.filter { lum(it) >= 218 }
+        val source = if (bright.size >= colors.size * 0.68f) bright else colors
+        fun median(channel: (Int) -> Int): Int = source.map(channel).sorted()[source.size / 2]
+        val r = median { android.graphics.Color.red(it) }
+        val g = median { android.graphics.Color.green(it) }
+        val b = median { android.graphics.Color.blue(it) }
+        val chroma = maxOf(r, g, b) - minOf(r, g, b)
+        val brightness = (r * 30 + g * 59 + b * 11) / 100
+        return when {
+            bright.size >= colors.size * 0.72f && brightness >= 228 && chroma <= 28 -> android.graphics.Color.WHITE
+            brightness >= 242 && chroma <= 12 -> android.graphics.Color.rgb(250, 250, 250)
+            else -> android.graphics.Color.rgb(r, g, b)
+        }
+    }
+}
+
+/** Conservative direction and fitting hints shared by the renderer and editor. */
+object MangaFoxLayoutEngine {
+    fun shouldUseVertical(bounds: Rect, userChoice: String = "auto"): Boolean = when (userChoice) {
+        "vertical" -> true
+        "horizontal" -> false
+        else -> bounds.height() > bounds.width() * 1.42f
+    }
+
+    fun fittingFontSize(preferredPx: Float, rectWidth: Int, rectHeight: Int, minimumPx: Float = 7f): Float {
+        val safeWidth = rectWidth.coerceAtLeast(8).toFloat()
+        val safeHeight = rectHeight.coerceAtLeast(8).toFloat()
+        return minOf(preferredPx, safeWidth * 0.82f, safeHeight * 0.72f).coerceAtLeast(minimumPx)
+    }
+}
+
+/** Runtime profile helper; it never starts more than one CPU-heavy page job per configured worker. */
+/** Supported cloud providers. Each provider has its own base URL and model catalog. */
+internal object MangaFoxApiProvider {
+    const val OPENAI = "openai"
+    const val DEEPSEEK = "deepseek"
+    const val CUSTOM = "custom"
+
+    data class Config(
+        val id: String,
+        val displayName: String,
+        val baseUrl: String,
+        val defaultModel: String,
+        val models: List<String>
+    )
+
+    fun selectedId(context: Context): String {
+        val saved = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getString(PREF_CONTEXT_PROVIDER, CUSTOM) ?: CUSTOM
+        return when (saved) {
+            DEEPSEEK -> DEEPSEEK
+            CUSTOM -> CUSTOM
+            else -> OPENAI
+        }
+    }
+
+    /** Static identity/config is also used by the encrypted secret store. */
+    fun config(providerId: String): Config = when (providerId) {
+        DEEPSEEK -> Config(
+            DEEPSEEK, "DeepSeek", "https://api.deepseek.com", "deepseek-flash",
+            listOf("deepseek-flash", "deepseek-v4-pro")
+        )
+        CUSTOM -> Config(
+            CUSTOM, "مزود مخصص", "https://api.example.com/v1", "model-name",
+            listOf("model-name")
+        )
+        else -> Config(
+            OPENAI, "OpenAI", "https://api.openai.com/v1", "gpt-6.1-sol",
+            listOf("gpt-6-astra", "gpt-6.1-sol", "gpt-6-luna")
+        )
+    }
+
+    /** Custom provider settings are user-supplied and stored locally per device. */
+    fun config(context: Context, providerId: String): Config {
+        val base = config(providerId)
+        if (base.id != CUSTOM) return base
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val customUrl = prefs.getString(PREF_CUSTOM_API_BASE_URL, base.baseUrl)
+            ?.trim()?.trimEnd('/')?.takeIf { it.isNotBlank() } ?: base.baseUrl
+        val customModel = prefs.getString(PREF_CUSTOM_API_MODEL, base.defaultModel)
+            ?.trim()?.takeIf { it.isNotBlank() } ?: base.defaultModel
+        return base.copy(baseUrl = customUrl, defaultModel = customModel, models = listOf(customModel))
+    }
+
+    fun baseUrl(providerId: String): String = config(providerId).baseUrl
+    fun defaultModel(providerId: String): String = config(providerId).defaultModel
+    fun modelPreferenceKey(providerId: String): String = when (providerId) {
+        OPENAI -> PREF_CONTEXT_MODEL
+        CUSTOM -> PREF_CUSTOM_API_MODEL
+        else -> "${PREF_CONTEXT_MODEL}_${providerId}"
+    }
+    fun displayName(providerId: String): String = config(providerId).displayName
+}
+
+/** Encrypted API-secret storage backed by Android Keystore; provider keys never overwrite one another. */
+internal object MangaFoxSecureSecretStore {
+    private const val ANDROID_KEYSTORE = "AndroidKeyStore"
+    private const val KEY_ALIAS = "manga_fox_ai_api_aes_v1"
+    private const val TRANSFORMATION = "AES/GCM/NoPadding"
+
+    private fun keyAlias(providerId: String) = if (providerId == MangaFoxApiProvider.OPENAI)
+        KEY_ALIAS else "${KEY_ALIAS}_${providerId}"
+
+    private fun ivPreference(providerId: String) = if (providerId == MangaFoxApiProvider.OPENAI)
+        PREF_AI_SECRET_IV else "${PREF_AI_SECRET_IV}_${providerId}"
+
+    private fun cipherPreference(providerId: String) = if (providerId == MangaFoxApiProvider.OPENAI)
+        PREF_AI_SECRET_CIPHER else "${PREF_AI_SECRET_CIPHER}_${providerId}"
+
+    @Synchronized private fun getOrCreateKey(providerId: String): SecretKey {
+        val store = KeyStore.getInstance(ANDROID_KEYSTORE).apply { load(null) }
+        val alias = keyAlias(providerId)
+        val existing = store.getKey(alias, null) as? SecretKey
+        if (existing != null) return existing
+        val generator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, ANDROID_KEYSTORE)
+        generator.init(
+            KeyGenParameterSpec.Builder(alias, KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
+                .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+                .setRandomizedEncryptionRequired(true)
+                .build()
+        )
+        return generator.generateKey()
+    }
+
+    fun put(context: Context, secret: String, providerId: String = MangaFoxApiProvider.OPENAI) {
+        require(secret.isNotBlank()) { "مفتاح API فارغ" }
+        val safeProvider = MangaFoxApiProvider.config(providerId).id
+        val cipher = Cipher.getInstance(TRANSFORMATION)
+        cipher.init(Cipher.ENCRYPT_MODE, getOrCreateKey(safeProvider))
+        val encrypted = cipher.doFinal(secret.toByteArray(Charsets.UTF_8))
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
+            .putString(ivPreference(safeProvider), Base64.encodeToString(cipher.iv, Base64.NO_WRAP))
+            .putString(cipherPreference(safeProvider), Base64.encodeToString(encrypted, Base64.NO_WRAP))
+            .apply()
+    }
+
+    fun get(context: Context, providerId: String = MangaFoxApiProvider.OPENAI): String? {
+        return runCatching {
+            val safeProvider = MangaFoxApiProvider.config(providerId).id
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            val ivValue = prefs.getString(ivPreference(safeProvider), null) ?: return@runCatching null
+            val cipherValue = prefs.getString(cipherPreference(safeProvider), null) ?: return@runCatching null
+            val iv = Base64.decode(ivValue, Base64.NO_WRAP)
+            val encrypted = Base64.decode(cipherValue, Base64.NO_WRAP)
+            val cipher = Cipher.getInstance(TRANSFORMATION)
+            cipher.init(Cipher.DECRYPT_MODE, getOrCreateKey(safeProvider), GCMParameterSpec(128, iv))
+            String(cipher.doFinal(encrypted), Charsets.UTF_8).takeIf { it.isNotBlank() }
+        }.getOrNull()
+    }
+
+    fun clear(context: Context, providerId: String = MangaFoxApiProvider.OPENAI) {
+        val safeProvider = MangaFoxApiProvider.config(providerId).id
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
+            .remove(ivPreference(safeProvider)).remove(cipherPreference(safeProvider)).apply()
+        runCatching {
+            KeyStore.getInstance(ANDROID_KEYSTORE).apply { load(null) }.deleteEntry(keyAlias(safeProvider))
+        }
+    }
+}
+
+/** Multi-provider Chat Completions adapter specialized for Chinese-to-Arabic manhua dialogue. */
+internal object MangaFoxAiTranslator {
+    private fun providerId(context: Context) = MangaFoxApiProvider.selectedId(context)
+
+    /** Sends a minimal real Chat Completions request, validating key, model, endpoint and payload together. */
+    fun testConnection(context: Context) {
+        val provider = providerId(context)
+        if (MangaFoxSecureSecretStore.get(context, provider).isNullOrBlank()) {
+            throw IllegalStateException("مفتاح ${MangaFoxApiProvider.displayName(provider)} غير محفوظ")
+        }
+        val answer = translate(
+            context,
+            "你好",
+            emptyList(), emptyList(), scriptMode = "auto"
+        )
+        if (answer.isBlank()) throw IllegalStateException("نجح الاتصال لكن لم يصل نص من النموذج")
+        val containsArabic = answer.any {
+            it in '\u0600'..'\u06FF' || it in '\u0750'..'\u077F' || it in '\u08A0'..'\u08FF'
+        }
+        if (!containsArabic) {
+            throw IllegalStateException("وصل رد من المزود، لكنه لم يُرجع ترجمة عربية؛ تحقق من النموذج وتوافق واجهة Chat Completions")
+        }
+    }
+
+    private fun selectedModel(context: Context): String {
+        val provider = providerId(context)
+        val config = MangaFoxApiProvider.config(context, provider)
+        val saved = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getString(MangaFoxApiProvider.modelPreferenceKey(config.id), config.defaultModel)
+            ?.trim()?.takeIf { it.isNotBlank() } ?: config.defaultModel
+        return if (provider == MangaFoxApiProvider.CUSTOM) saved
+            else saved.takeIf { it in config.models } ?: config.defaultModel
+    }
+
+    fun translate(
+        context: Context,
+        source: String,
+        glossary: List<MangaFoxKnowledgeStore.GlossaryEntry>,
+        characters: List<MangaFoxKnowledgeStore.CharacterEntry>,
+        scriptMode: String = "auto",
+        sourceLanguage: String = "auto"
+    ): String {
+        val provider = providerId(context)
+        val config = MangaFoxApiProvider.config(context, provider)
+        val key = MangaFoxSecureSecretStore.get(context, provider)?.takeIf { it.isNotBlank() }
+            ?: throw IllegalStateException("مفتاح ${config.displayName} غير محفوظ")
+        val baseUrl = config.baseUrl.trim().trimEnd('/')
+        val endpoint = if (baseUrl.endsWith("/chat/completions", true)) baseUrl else "$baseUrl/chat/completions"
+        require(endpoint.startsWith("https://", true)) { "يُسمح بعنوان HTTPS فقط" }
+        val model = selectedModel(context)
+        val reasoningEffort = if (provider == MangaFoxApiProvider.DEEPSEEK) "high" else when (model) {
+            "gpt-6-astra" -> "high"
+            "gpt-6.1-sol" -> "medium"
+            else -> "low"
+        }
+
+        val glossaryText = glossary.take(60).joinToString("\n") {
+            "${it.source.take(70)} = ${it.arabic.take(90)}" + if (it.note.isBlank()) "" else " (${it.note.take(70)})"
+        }.ifBlank { "لا توجد مصطلحات محفوظة." }
+        val characterText = characters.take(35).joinToString("\n") {
+            "${it.name.take(50)}" + if (it.voice.isBlank() && it.notes.isBlank()) "" else " | ${it.voice.take(70)} | ${it.notes.take(80)}"
+        }.ifBlank { "لا توجد بيانات شخصيات محفوظة." }
+
+        val sourceLanguageName = when (sourceLanguage) {
+            "zh" -> "الصينية المبسطة أو التقليدية"
+            "ja" -> "اليابانية"
+            "ko" -> "الكورية"
+            "en" -> "الإنجليزية"
+            else -> "لغة المصدر المكتشفة تلقائياً"
+        }
+        val systemPrompt = """
+أنت مترجم مانجا ومانهوا محترف من $sourceLanguageName إلى العربية الفصحى. انقل المعنى المقصود بدقة، ولا تترك حروفاً أو كلمات من لغة المصدر دون ترجمة إلا إذا كانت اسماً علماً يحتاج إلى نقل صوتي عربي.
+قواعد إلزامية:
+1) افهم قواعد لغة المصدر، والضمائر المحذوفة، والسياق، والتلميح، والسخرية، والأمثال والتعابير الاصطلاحية.
+2) اكتب عربية فصحى طبيعية ومتماسكة تناسب حوار المانهوا، مع الحفاظ على نبرة المتحدث (تهديد، احترام، غضب، دهشة، مزاح...).
+3) لا تضف أحداثاً أو معلومات غير موجودة، ولا تحذف معنى أو شرطاً أو نفياً أو درجة احترام.
+4) ثبّت أسماء الشخصيات والأماكن والمهارات والألقاب وفق المعجم المرفق. لا تترجم الاسم العلم ترجمة وصفية.
+5) إذا كان النص ناقصاً أو غامضاً، اختر أقرب معنى تدعمه الكلمات ولا تخترع سياقاً. حافظ على علامات الوقف والانفعال عند الحاجة.
+6) أخرج الترجمة العربية فقط، دون شرح أو مقدمات أو علامات اقتباس زائدة. لا تكرر النص الصيني.
+7) المؤثرات الصوتية تُصاغ عربياً بإيجاز بما يناسب المشهد، ولا تحولها إلى جملة حوار.
+
+${if (sourceLanguage == "zh") "نوع الكتابة الصينية المطلوب التعامل معه: ${when (scriptMode) {
+            "Hans" -> "الصينية المبسطة (简体中文)"
+            "Hant" -> "الصينية التقليدية (繁體中文)"
+            else -> "اكتشف تلقائياً من الحروف والسياق إن كانت مبسطة أم تقليدية"
+        }}." else "لغة المصدر المحددة: $sourceLanguageName."} لا تحوّل أسماء الأعلام أو المصطلحات إلى معانٍ وصفية، واكتب نقلها الصوتي بالعربية عند الحاجة.
+
+ذاكرة المصطلحات:
+$glossaryText
+
+ذاكرة الشخصيات ونبراتها:
+$characterText
+""".trimIndent()
+
+        val messages = JSONArray()
+            .put(JSONObject().put("role", if (provider == MangaFoxApiProvider.OPENAI) "developer" else "system")
+                .put("content", systemPrompt))
+            .put(JSONObject().put("role", "user").put("content", source))
+        val outputBudget = (source.length * 2 + 600).coerceIn(1200, 6000)
+        val body = JSONObject().put("model", model).put("messages", messages)
+        when (provider) {
+            MangaFoxApiProvider.DEEPSEEK -> body.put("reasoning_effort", reasoningEffort)
+                .put("thinking", JSONObject().put("type", "enabled"))
+                .put("max_tokens", outputBudget)
+            MangaFoxApiProvider.CUSTOM -> body.put("max_tokens", outputBudget)
+            else -> body.put("reasoning_effort", reasoningEffort)
+                .put("max_completion_tokens", outputBudget)
+        }
+        val connection = (URL(endpoint).openConnection() as HttpURLConnection).apply {
+            requestMethod = "POST"
+            connectTimeout = 18000
+            readTimeout = 45000
+            doOutput = true
+            setRequestProperty("Authorization", "Bearer $key")
+            setRequestProperty("Content-Type", "application/json; charset=utf-8")
+            setRequestProperty("Accept", "application/json")
+        }
+        try {
+            connection.outputStream.use { it.write(body.toString().toByteArray(Charsets.UTF_8)) }
+            val status = connection.responseCode
+            val stream = if (status in 200..299) connection.inputStream else connection.errorStream
+            val response = stream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }.orEmpty()
+            if (status !in 200..299) {
+                val detail = runCatching {
+                    JSONObject(response).optJSONObject("error")?.optString("message")?.takeIf { it.isNotBlank() }
+                }.getOrNull()
+                val explanation = when (status) {
+                    401 -> "مفتاح API غير صحيح أو منتهي الصلاحية (401)"
+                    403 -> "المفتاح لا يملك صلاحية استخدام النموذج (403)"
+                    404 -> "النموذج أو مسار API غير موجود (404)"
+                    429 -> "تجاوزت الحصة أو حد الطلبات؛ تحقق من الفوترة والرصيد (429)"
+                    in 500..599 -> "خلل مؤقت لدى خادم API ($status)"
+                    else -> "رفض خادم API الطلب (HTTP $status)"
+                }
+                throw IllegalStateException(explanation + (detail?.let { " — $it" } ?: ""))
+            }
+            val json = JSONObject(response)
+            val content = json.optJSONArray("choices")?.optJSONObject(0)
+                ?.optJSONObject("message")?.opt("content")
+            val translated = when (content) {
+                is String -> content.trim()
+                is JSONArray -> (0 until content.length()).mapNotNull { i ->
+                    content.optJSONObject(i)?.optString("text")?.takeIf { it.isNotBlank() }
+                }.joinToString(" ").trim()
+                else -> ""
+            }
+            if (translated.isBlank()) throw IllegalStateException("أعاد API استجابة بلا نص مترجم")
+            return translated
+        } finally {
+            connection.disconnect()
+        }
+    }
+
+    data class ContextBlock(val id: Int, val language: String, val text: String)
+
+    /** Splits large pages into batches and preserves successful IDs when one batch fails. */
+    fun translatePageContext(
+        context: Context,
+        blocks: List<ContextBlock>,
+        glossary: List<MangaFoxKnowledgeStore.GlossaryEntry>,
+        characters: List<MangaFoxKnowledgeStore.CharacterEntry>,
+        previousContext: List<MangaFoxLocalLlm.Bubble> = emptyList()
+    ): Map<Int, String> {
+        require(blocks.isNotEmpty()) { "لا توجد فقاعات لإرسالها" }
+        val batches = ArrayList<List<ContextBlock>>()
+        var current = ArrayList<ContextBlock>()
+        var currentChars = 0
+        blocks.forEach { block ->
+            val wouldExceedCount = current.size >= 40
+            val wouldExceedChars = current.isNotEmpty() && currentChars + block.text.length > 16000
+            if (wouldExceedCount || wouldExceedChars) {
+                batches.add(current.toList())
+                current = ArrayList()
+                currentChars = 0
+            }
+            current.add(block)
+            currentChars += block.text.length
+        }
+        if (current.isNotEmpty()) batches.add(current.toList())
+
+        val combined = LinkedHashMap<Int, String>()
+        var firstFailure: Throwable? = null
+        batches.forEachIndexed { index, batch ->
+            runCatching {
+                translatePageContextBatch(context, batch, glossary, characters, previousContext)
+            }.onSuccess { combined.putAll(it) }
+                .onFailure { error -> if (firstFailure == null) firstFailure = error }
+        }
+        if (combined.isEmpty()) {
+            throw IllegalStateException(
+                firstFailure?.message ?: "لم يتمكن المزود من ترجمة أي مجموعة من الصفحة"
+            )
+        }
+        return combined
+    }
+
+    /** One network round-trip per batch; IDs preserve the original bubble-to-layer mapping. */
+    private fun translatePageContextBatch(
+        context: Context,
+        blocks: List<ContextBlock>,
+        glossary: List<MangaFoxKnowledgeStore.GlossaryEntry>,
+        characters: List<MangaFoxKnowledgeStore.CharacterEntry>,
+        previousContext: List<MangaFoxLocalLlm.Bubble> = emptyList()
+    ): Map<Int, String> {
+        require(blocks.isNotEmpty()) { "لا توجد فقاعات لإرسالها" }
+        require(blocks.size <= 90) { "عدد فقاعات الصفحة كبير جداً لمحرك السياق" }
+        require(blocks.sumOf { it.text.length } <= 24000) { "نص الصفحة طويل جداً لمحرك السياق" }
+        val provider = providerId(context)
+        val config = MangaFoxApiProvider.config(context, provider)
+        val key = MangaFoxSecureSecretStore.get(context, provider)?.takeIf { it.isNotBlank() }
+            ?: throw IllegalStateException("مفتاح ${config.displayName} غير محفوظ")
+        val pageCorpus = (blocks.asSequence().map { it.text } + previousContext.asSequence().map { it.text })
+            .joinToString(" ").lowercase(java.util.Locale.ROOT)
+        fun relevanceScore(term: String): Int {
+            val normalized = term.trim().lowercase(java.util.Locale.ROOT)
+            if (normalized.isBlank()) return 0
+            return Regex(Regex.escape(normalized)).findAll(pageCorpus).count()
+        }
+        val glossaryText = glossary.mapIndexed { index, entry ->
+            Triple(index, entry, relevanceScore(entry.source))
+        }.sortedWith(
+            compareByDescending<Triple<Int, MangaFoxKnowledgeStore.GlossaryEntry, Int>> { it.third }
+                .thenBy { it.first }
+        ).take(120).joinToString("\n") { (_, entry, _) ->
+            "${entry.source.take(100)} = ${entry.arabic.take(140)} ${entry.note.take(100)}"
+        }
+        val characterText = characters.mapIndexed { index, entry ->
+            Triple(index, entry, relevanceScore(entry.name))
+        }.sortedWith(
+            compareByDescending<Triple<Int, MangaFoxKnowledgeStore.CharacterEntry, Int>> { it.third }
+                .thenBy { it.first }
+        ).take(80).joinToString("\n") { (_, entry, _) ->
+            "${entry.name.take(80)} | ${entry.voice.take(100)} | ${entry.notes.take(120)}"
+        }
+        val payload = JSONArray()
+        blocks.forEach { block ->
+            payload.put(JSONObject().put("id", block.id).put("language", block.language).put("text", block.text))
+        }
+        val chineseScriptMode = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getString(PREF_ZH_SCRIPT, "auto") ?: "auto"
+        val chineseScriptDescription = when (chineseScriptMode) {
+            "Hans" -> "الصينية المبسطة (简体中文)"
+            "Hant" -> "الصينية التقليدية (繁體中文)"
+            else -> "اكتشاف تلقائي للمبسطة أو التقليدية"
+        }
+        val containsChinese = blocks.any { block ->
+            block.language == "zh" || block.text.any { it in '\u4E00'..'\u9FFF' }
+        }
+        val previousContextText = previousContext.takeLast(5).joinToString("\n") { item ->
+            val arabic = item.translatedText?.takeIf { it.isNotBlank() }
+                ?.let { " | الترجمة العربية السابقة: ${it.take(180)}" }.orEmpty()
+            "[${item.language}] ${item.text.take(220)}$arabic"
+        }
+        val systemPrompt = """
+أنت مترجم مانجا ومانهوا محترف إلى العربية الفصحى. ستصلك فقاعات صفحة واحدة بالترتيب الأصلي.
+افهم الحوار كله كوحدة سياقية واحدة قبل صياغة أي ترجمة: من المتحدث؟ إلى من يتكلم؟ ما مرجع الضمير؟ ما جنس الشخصية عندما تدعمه قرائن الحوار؟ ما استمرار الجملة أو النكتة أو التهديد بين الفقاعات؟
+سياق الصفحة السابقة للاستدلال على الضمائر واستمرار الحوار فقط، ولا تعِد ترجمته:
+${previousContextText.ifBlank { "لا يوجد سياق سابق" }}
+${if (containsChinese) "نوع الكتابة الصينية المحدد في إعدادات التطبيق: $chineseScriptDescription. تعامل مع المبسطة والتقليدية بوصفهما اختلافاً كتابياً للنص نفسه، ولا تغيّر أسماء الأعلام بسبب اختلاف شكل الحروف." else ""}
+قواعد صارمة:
+1. ترجم كل عنصر منفصلاً مع الحفاظ على id نفسه، ولا تدمج فقاعتين ولا تنقل كلام فقاعة إلى أخرى.
+2. استخدم السياق الكامل لتثبيت الضمائر والتذكير والتأنيث ونبرة الشخصيات، ولا تخترع جنساً أو هوية عند غياب الدليل.
+3. حافظ على ترتيب الفقاعات والأسماء والألقاب والمصطلحات. طبّق الذاكرة المرفقة عند تطابقها.
+4. لا تحذف نفياً أو شرطاً أو معلومة ولا تضف أحداثاً. لا تشرح ولا تضف مقدمات.
+5. أخرج JSON صالحاً فقط بهذا الشكل: {"translations":[{"id":0,"text":"الترجمة العربية"}]}. يجب أن تحتوي الاستجابة على كل id مرة واحدة بالضبط.
+6. لا تترك أي حرف صيني أو ياباني أو كوري أو كلمة لاتينية من النص الأصلي داخل الترجمة. انقل أسماء الأعلام صوتياً إلى العربية، ولا تحذف الحروف القصيرة أو التعجبات أو المؤثرات الصوتية؛ صغها بالعربية.
+7. إذا تعذّر فهم جزء من الفقاعة، انقل أقرب معنى تؤيده الحروف المقروءة ولا تستبدله بنص فارغ أو رموز أو تخمين مطوّل.
+
+قاموس المصطلحات:
+${glossaryText.ifBlank { "لا يوجد" }}
+
+الشخصيات ونبراتها:
+${characterText.ifBlank { "لا توجد بيانات شخصية" }}
+""".trimIndent()
+        val model = selectedModel(context)
+        val reasoningEffort = if (provider == MangaFoxApiProvider.DEEPSEEK) "high" else when (model) {
+            "gpt-6-astra" -> "high"
+            "gpt-6.1-sol" -> "medium"
+            else -> "low"
+        }
+        val outputBudget = (blocks.sumOf { it.text.length } * 2).coerceIn(2048, 12000)
+        val messages = JSONArray()
+            .put(JSONObject().put("role", if (provider == MangaFoxApiProvider.OPENAI) "developer" else "system")
+                .put("content", systemPrompt))
+            .put(JSONObject().put("role", "user").put("content", payload.toString()))
+        val body = JSONObject().put("model", model).put("messages", messages)
+        when (provider) {
+            MangaFoxApiProvider.DEEPSEEK -> body.put("response_format", JSONObject().put("type", "json_object"))
+                .put("reasoning_effort", reasoningEffort)
+                .put("thinking", JSONObject().put("type", "enabled"))
+                .put("max_tokens", outputBudget)
+            MangaFoxApiProvider.CUSTOM -> body.put("max_tokens", outputBudget)
+            else -> body.put("response_format", JSONObject().put("type", "json_object"))
+                .put("reasoning_effort", reasoningEffort)
+                .put("max_completion_tokens", outputBudget)
+        }
+        val baseUrl = config.baseUrl.trim().trimEnd('/')
+        val endpoint = if (baseUrl.endsWith("/chat/completions", true)) baseUrl else "$baseUrl/chat/completions"
+        require(endpoint.startsWith("https://", true)) { "يُسمح بعنوان HTTPS فقط" }
+        val connection = (URL(endpoint).openConnection() as HttpURLConnection).apply {
+            requestMethod = "POST"
+            connectTimeout = 18000
+            readTimeout = 65000
+            doOutput = true
+            setRequestProperty("Authorization", "Bearer $key")
+            setRequestProperty("Content-Type", "application/json; charset=utf-8")
+            setRequestProperty("Accept", "application/json")
+        }
+        try {
+            connection.outputStream.use { it.write(body.toString().toByteArray(Charsets.UTF_8)) }
+            val status = connection.responseCode
+            val response = (if (status in 200..299) connection.inputStream else connection.errorStream)
+                ?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }.orEmpty()
+            if (status !in 200..299) {
+                val detail = runCatching { JSONObject(response).optJSONObject("error")?.optString("message") }.getOrNull()
+                throw IllegalStateException("فشل محرك سياق الصفحة HTTP $status${detail?.takeIf { it.isNotBlank() }?.let { " · $it" } ?: ""}")
+            }
+            val message = JSONObject(response).optJSONArray("choices")?.optJSONObject(0)
+                ?.optJSONObject("message")
+            val contentValue = message?.opt("content")
+            val content = when (contentValue) {
+                is String -> contentValue
+                is JSONArray -> (0 until contentValue.length()).mapNotNull { itemIndex ->
+                    val part = contentValue.opt(itemIndex)
+                    when (part) {
+                        is JSONObject -> part.optString("text").takeIf { it.isNotBlank() }
+                        is String -> part.takeIf { it.isNotBlank() }
+                        else -> null
+                    }
+                }.joinToString("\n")
+                else -> ""
+            }
+            val unfenced = content.trim().removePrefix("```json").removePrefix("```").removeSuffix("```").trim()
+            val jsonStart = unfenced.indexOf('{')
+            val jsonEnd = unfenced.lastIndexOf('}')
+            val cleanedJson = if (jsonStart >= 0 && jsonEnd > jsonStart) unfenced.substring(jsonStart, jsonEnd + 1) else unfenced
+            val translations = runCatching { JSONObject(cleanedJson).optJSONArray("translations") }.getOrNull()
+                ?: throw IllegalStateException("استجابة السياق لا تحتوي قائمة translations بصيغة JSON")
+            val expectedIds = blocks.map { it.id }.toSet()
+            val mapped = LinkedHashMap<Int, String>()
+            for (i in 0 until translations.length()) {
+                val row = translations.optJSONObject(i) ?: continue
+                val id = row.optInt("id", -1)
+                val value = row.optString("text").trim()
+                if (id in expectedIds && value.isNotBlank()) mapped[id] = value
+            }
+            if (mapped.isEmpty()) {
+                throw IllegalStateException("لم يُرجع النموذج أي ترجمة قابلة للربط بالفقاعات")
+            }
+            // Keep valid rows from a partial answer. The caller individually falls back
+            // to ML Kit for missing IDs instead of throwing away every good translation.
+            return mapped
+        } finally {
+            connection.disconnect()
+        }
+    }
+}
+
+object MangaFoxPerformanceAdvisor {
+    data class Profile(val name: String, val maxImageSide: Int, val workerCount: Int, val highContrastPass: Boolean)
+    fun forDevice(availableMemoryMb: Int, cpuCores: Int): Profile = when {
+        availableMemoryMb < 900 -> Profile("توفير الذاكرة", 1800, 1, false)
+        availableMemoryMb < 1800 -> Profile("متوازن", 2400, 1, true)
+        else -> Profile("دقة مرتفعة", 3200, minOf(2, cpuCores.coerceAtLeast(1)), true)
+    }
+}
+
+
+// ============================================================
+// MERGED FROM: MangaFox_V3_0_3_MangaFoxImageViews.kt
+// ============================================================
+
+class RegionSelectionView(context: Context) : View(context) {
+    private val density = resources.displayMetrics.density
+    private val fillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.argb(70, 0, 220, 110)
+        style = Paint.Style.FILL
+    }
+    private val strokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.rgb(0, 220, 110)
+        style = Paint.Style.STROKE
+        strokeWidth = 4f * density
+        strokeJoin = Paint.Join.ROUND
+        strokeCap = Paint.Cap.ROUND
+    }
+    private val path = Path()
+    private val bounds = RectF()
+    private var hasSelection = false
+    private var minX = 0f
+    private var minY = 0f
+    private var maxX = 0f
+    private var maxY = 0f
+
+    override fun onDraw(canvas: Canvas) {
+        super.onDraw(canvas)
+        if (!hasSelection) return
+        val closed = Path(path).apply { close() }
+        canvas.drawPath(closed, fillPaint)
+        canvas.drawPath(path, strokePaint)
+    }
+
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        val x = event.x.coerceIn(0f, width.toFloat())
+        val y = event.y.coerceIn(0f, height.toFloat())
+        when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
+                parent?.requestDisallowInterceptTouchEvent(true)
+                path.reset()
+                path.moveTo(x, y)
+                minX = x; maxX = x; minY = y; maxY = y
+                hasSelection = true
+                invalidate()
+                return true
+            }
+            MotionEvent.ACTION_MOVE -> {
+                path.lineTo(x, y)
+                if (x < minX) minX = x
+                if (x > maxX) maxX = x
+                if (y < minY) minY = y
+                if (y > maxY) maxY = y
+                invalidate()
+                return true
+            }
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                parent?.requestDisallowInterceptTouchEvent(false)
+                path.lineTo(x, y)
+                if (x < minX) minX = x
+                if (x > maxX) maxX = x
+                if (y < minY) minY = y
+                if (y > maxY) maxY = y
+                invalidate()
+                return true
+            }
+        }
+        return true
+    }
+
+    fun toSourceRect(sourceWidth: Int, sourceHeight: Int): Rect? {
+        if (!hasSelection || width <= 0 || height <= 0) return null
+        bounds.set(minX, minY, maxX, maxY)
+        val rect = Rect(
+            (bounds.left / width * sourceWidth).roundToInt().coerceIn(0, sourceWidth - 1),
+            (bounds.top / height * sourceHeight).roundToInt().coerceIn(0, sourceHeight - 1),
+            (bounds.right / width * sourceWidth).roundToInt().coerceIn(1, sourceWidth),
+            (bounds.bottom / height * sourceHeight).roundToInt().coerceIn(1, sourceHeight)
+        )
+        return rect.takeIf { it.width() > 0 && it.height() > 0 }
+    }
+}
+
+data class MangaFoxOverlayRegion(val bounds: Rect, val status: String, val shape: String, val layerIndex: Int = -1)
+
+class ZoomableImageView(context: Context) : ImageView(context) {
+    private val drawMatrix = Matrix()
+    private var bubbleOverlay: List<MangaFoxOverlayRegion> = emptyList()
+    private var showBubbleOverlay = true
+    private var imageTapListener: ((Float, Float) -> Unit)? = null
+    private val overlayPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        strokeWidth = 5f
+    }
+    private val gestureDetector = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
+        override fun onDown(e: MotionEvent): Boolean = true
+        override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
+            imageTapListener?.invoke(e.x, e.y)
+            return true
+        }
+        override fun onDoubleTap(e: MotionEvent): Boolean {
+            toggleDoubleTapZoom(e.x, e.y)
+            return true
+        }
+    })
+
+    fun setOnImageTapListener(listener: ((Float, Float) -> Unit)?) { imageTapListener = listener }
+    fun setBubbleOverlay(regions: List<MangaFoxOverlayRegion>, visible: Boolean) {
+        bubbleOverlay = regions.map { it.copy(bounds = Rect(it.bounds)) }
+        showBubbleOverlay = visible
+        invalidate()
+    }
+    fun currentBubbleOverlay(): List<MangaFoxOverlayRegion> = bubbleOverlay.map { it.copy(bounds = Rect(it.bounds)) }
+
+    fun mapPointToSource(x: Float, y: Float): PointF? {
+        val inverse = Matrix()
+        if (!drawMatrix.invert(inverse)) return null
+        val points = floatArrayOf(x, y)
+        inverse.mapPoints(points)
+        val width = drawable?.intrinsicWidth ?: return null
+        val height = drawable?.intrinsicHeight ?: return null
+        if (points[0] < 0f || points[1] < 0f || points[0] >= width || points[1] >= height) return null
+        return PointF(points[0], points[1])
+    }
+
+    private fun toggleDoubleTapZoom(x: Float, y: Float) {
+        if (userScale > 1.05f) {
+            resetBaseMatrix()
+        } else {
+            val target = 2.35f
+            drawMatrix.postScale(target, target, x, y)
+            userScale = target
+            fixBounds()
+            imageMatrix = drawMatrix
+        }
+    }
+    private val displayedRect = RectF()
+    private var userScale = 1f
+    private var lastX = 0f
+    private var lastY = 0f
+    private var dragging = false
+    private var imageFilePath: String? = null
+    private var loadedBitmap: Bitmap? = null
+    private val scaleDetector = ScaleGestureDetector(context, object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
+        override fun onScale(detector: ScaleGestureDetector): Boolean {
+            val next = (userScale * detector.scaleFactor).coerceIn(1f, 5f)
+            val factor = next / userScale
+            userScale = next
+            drawMatrix.postScale(factor, factor, detector.focusX, detector.focusY)
+            fixBounds()
+            imageMatrix = drawMatrix
+            return true
+        }
+    })
+
+    init {
+        scaleType = ScaleType.MATRIX
+        isClickable = true
+    }
+
+    override fun onDraw(canvas: Canvas) {
+        super.onDraw(canvas)
+        if (!showBubbleOverlay || bubbleOverlay.isEmpty() || drawable == null) return
+        canvas.save()
+        canvas.concat(drawMatrix)
+        bubbleOverlay.forEach { region ->
+            overlayPaint.color = when (region.status.lowercase(Locale.ROOT)) {
+                "failed", "error", "red" -> Color.rgb(239, 68, 68)
+                "review", "uncertain", "warning" -> Color.rgb(250, 204, 21)
+                else -> Color.rgb(52, 211, 153)
+            }
+            overlayPaint.strokeWidth = max(4f, min(width, height) / 420f)
+            val rect = RectF(region.bounds)
+            when (region.shape) {
+                "oval" -> canvas.drawOval(rect, overlayPaint)
+                "spiky" -> {
+                    val path = Path()
+                    val cx = rect.centerX(); val cy = rect.centerY()
+                    val rx = rect.width() / 2f; val ry = rect.height() / 2f
+                    for (i in 0 until 24) {
+                        val angle = (Math.PI * 2.0 * i / 24.0).toFloat()
+                        val radius = if (i % 2 == 0) 1f else 0.91f
+                        val px = cx + kotlin.math.cos(angle) * rx * radius
+                        val py = cy + kotlin.math.sin(angle) * ry * radius
+                        if (i == 0) path.moveTo(px, py) else path.lineTo(px, py)
+                    }
+                    path.close()
+                    canvas.drawPath(path, overlayPaint)
+                }
+                else -> canvas.drawRoundRect(rect, 5f, 5f, overlayPaint)
+            }
+        }
+        canvas.restore()
+    }
+
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        resetBaseMatrix()
+    }
+
+    fun setImageFile(path: String) {
+        imageFilePath = path
+        releasePage()
+    }
+
+    fun loadPage() {
+        if (loadedBitmap != null) return
+        val path = imageFilePath ?: return
+        val bitmap = BitmapFactory.decodeFile(path) ?: return
+        loadedBitmap = bitmap
+        super.setImageBitmap(bitmap)
+        post { resetBaseMatrix() }
+    }
+
+    fun releasePage() {
+        val old = loadedBitmap
+        loadedBitmap = null
+        super.setImageDrawable(null)
+        old?.let { if (!it.isRecycled) it.recycle() }
+        userScale = 1f
+        drawMatrix.reset()
+    }
+
+    override fun onDetachedFromWindow() {
+        releasePage()
+        super.onDetachedFromWindow()
+    }
+
+    private fun resetBaseMatrix() {
+        val d = drawable ?: return
+        if (width <= 0 || height <= 0 || d.intrinsicWidth <= 0 || d.intrinsicHeight <= 0) return
+        // The page view is measured from the exact source aspect ratio. Scale X/Y
+        // independently by final integer bounds so rounding cannot leave a one-pixel
+        // black seam between consecutive chapter pages.
+        val scaleX = width.toFloat() / d.intrinsicWidth.toFloat()
+        val scaleY = height.toFloat() / d.intrinsicHeight.toFloat()
+        drawMatrix.reset()
+        drawMatrix.setScale(scaleX, scaleY)
+        userScale = 1f
+        imageMatrix = drawMatrix
+    }
+
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        gestureDetector.onTouchEvent(event)
+        scaleDetector.onTouchEvent(event)
+        when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
+                lastX = event.x
+                lastY = event.y
+                dragging = userScale > 1.01f
+                parent?.requestDisallowInterceptTouchEvent(dragging)
+                return true
+            }
+            MotionEvent.ACTION_POINTER_DOWN -> {
+                parent?.requestDisallowInterceptTouchEvent(true)
+                return true
+            }
+            MotionEvent.ACTION_MOVE -> {
+                if (userScale > 1.01f && !scaleDetector.isInProgress && event.pointerCount == 1) {
+                    val dx = event.x - lastX
+                    val dy = event.y - lastY
+                    drawMatrix.postTranslate(dx, dy)
+                    fixBounds()
+                    imageMatrix = drawMatrix
+                    dragging = true
+                    parent?.requestDisallowInterceptTouchEvent(true)
+                }
+                lastX = event.x
+                lastY = event.y
+                return true
+            }
+            MotionEvent.ACTION_POINTER_UP, MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                if (userScale <= 1.01f) parent?.requestDisallowInterceptTouchEvent(false)
+                if (event.actionMasked != MotionEvent.ACTION_POINTER_UP && userScale <= 1.01f) resetBaseMatrix()
+                return true
+            }
+        }
+        return true
+    }
+
+    private fun fixBounds() {
+        val d = drawable ?: return
+        displayedRect.set(0f, 0f, d.intrinsicWidth.toFloat(), d.intrinsicHeight.toFloat())
+        drawMatrix.mapRect(displayedRect)
+        var dx = 0f
+        var dy = 0f
+        if (displayedRect.width() <= width) dx = width / 2f - displayedRect.centerX()
+        else if (displayedRect.left > 0f) dx = -displayedRect.left
+        else if (displayedRect.right < width) dx = width - displayedRect.right
+        if (displayedRect.height() <= height) dy = height / 2f - displayedRect.centerY()
+        else if (displayedRect.top > 0f) dy = -displayedRect.top
+        else if (displayedRect.bottom < height) dy = height - displayedRect.bottom
+        drawMatrix.postTranslate(dx, dy)
+    }
+}
+
+
+// ============================================================
+// MERGED FROM: MangaFox_V3_0_3_MangaFoxRuntime.kt
+// ============================================================
+
+/** @N5CR4 — Durable per-operation checkpoint metadata. Paths are app-private and validated on restore. */
+object MangaFoxOperationCheckpoint {
+    private const val FILE_NAME = "mfox_operation_checkpoint_v1.json"
+
+    @Synchronized fun save(
+        context: Context,
+        title: String,
+        inputs: List<String>,
+        nextGroup: Int,
+        completedResults: List<String>,
+        completedSources: List<String>,
+        completedLayers: List<String>,
+        preserveInputs: Boolean
+    ) {
+        runCatching {
+            val root = JSONObject()
+                .put("version", 1)
+                .put("title", title)
+                .put("inputs", JSONArray(inputs))
+                .put("nextGroup", nextGroup.coerceAtLeast(0))
+                .put("results", JSONArray(completedResults))
+                .put("sources", JSONArray(completedSources))
+                .put("layers", JSONArray(completedLayers))
+                .put("preserveInputs", preserveInputs)
+                .put("updatedAt", System.currentTimeMillis())
+            val target = File(context.filesDir, FILE_NAME)
+            val temp = File(context.filesDir, "$FILE_NAME.tmp")
+            temp.writeText(root.toString(), Charsets.UTF_8)
+            if (!temp.renameTo(target)) {
+                temp.copyTo(target, overwrite = true)
+                temp.delete()
+            }
+        }
+    }
+
+    @Synchronized fun read(context: Context): JSONObject? = runCatching {
+        val file = File(context.filesDir, FILE_NAME)
+        if (!file.isFile) return null
+        val json = JSONObject(file.readText(Charsets.UTF_8))
+        if (json.optInt("version") != 1) return null
+        json
+    }.getOrNull()
+
+    @Synchronized fun clear(context: Context) {
+        runCatching { File(context.filesDir, FILE_NAME).delete() }
+    }
+
+    fun completedPages(context: Context): Int = read(context)?.optJSONArray("results")?.length() ?: 0
+}
+
+object MangaFoxRuntime {
+    private const val SESSION_MANIFEST = "mfox_session_v1.json"
+
+    @Synchronized fun persist(context: Context) {
+        runCatching {
+            val root = org.json.JSONObject()
+                .put("title", resultTitle)
+                .put("quality", qualitySummary)
+                .put("sources", org.json.JSONArray(sourcePages))
+                .put("results", org.json.JSONArray(resultPages))
+                .put("layers", org.json.JSONArray(translationLayerFiles))
+                .put("captureOnly", captureOnlyResult)
+                .put("workName", activeWorkName)
+                .put("chapterName", activeChapterName)
+                .put("activeArchiveId", activeArchiveId)
+                .put("pendingEdits", pendingEdits)
+            val target = File(context.filesDir, SESSION_MANIFEST)
+            val temp = File(context.filesDir, "$SESSION_MANIFEST.tmp")
+            temp.writeText(root.toString(), Charsets.UTF_8)
+            if (!temp.renameTo(target)) {
+                temp.copyTo(target, overwrite = true)
+                temp.delete()
+            }
+        }
+    }
+
+    @Synchronized fun restore(context: Context) {
+        runCatching {
+            val manifest = File(context.filesDir, SESSION_MANIFEST)
+            if (!manifest.isFile) {
+                fun indexed(files: List<File>, prefix: String): List<File> = files
+                    .filter { it.isFile && it.name.startsWith(prefix) && it.length() > 0L }
+                    .sortedBy { it.name.substringAfterLast('_').substringBefore('.').toIntOrNull() ?: Int.MAX_VALUE }
+                val legacyResults = indexed(
+                    (context.filesDir.listFiles()?.toList().orEmpty() + context.cacheDir.listFiles()?.toList().orEmpty()),
+                    "mfox_result_"
+                )
+                val legacySources = indexed(context.filesDir.listFiles()?.toList().orEmpty(), "mfox_source_")
+                val legacyLayers = indexed(context.filesDir.listFiles()?.toList().orEmpty(), "mfox_layers_")
+                val count = minOf(legacyResults.size, legacySources.size)
+                if (count > 0) {
+                    resultPages = legacyResults.take(count).map { it.absolutePath }
+                    sourcePages = legacySources.take(count).map { it.absolutePath }
+                    translationLayerFiles = (0 until count).map { legacyLayers.getOrNull(it)?.absolutePath.orEmpty() }
+                    resultTitle = "الفصل السابق"
+                    persist(context)
+                }
+                return
+            }
+            val root = org.json.JSONObject(manifest.readText(Charsets.UTF_8))
+            // Keep positional alignment: an empty layer path for page 2 must not
+            // shift page 3's layer file into page 2 after process restoration.
+            fun stringList(key: String): List<String> {
+                val array = root.optJSONArray(key) ?: return emptyList()
+                return (0 until array.length()).map { index -> array.optString(index, "") }
+            }
+            val sources = stringList("sources")
+            val results = stringList("results")
+            val layers = stringList("layers")
+            val count = minOf(sources.size, results.size)
+            sourcePages = sources.take(count)
+            resultPages = results.take(count)
+            translationLayerFiles = (0 until count).map { layers.getOrNull(it).orEmpty() }
+            resultTitle = root.optString("title", "الفصل المترجم")
+            qualitySummary = root.optString("quality", qualitySummary)
+            captureOnlyResult = root.optBoolean("captureOnly", false)
+            activeWorkName = root.optString("workName", "عمل غير مصنف")
+            activeChapterName = root.optString("chapterName", resultTitle)
+            activeArchiveId = root.optString("activeArchiveId", "")
+            pendingEdits = root.optBoolean("pendingEdits", false)
+            val sessionResultsValid = resultPages.isNotEmpty() &&
+                resultPages.all { it.isNotBlank() && File(it).isFile }
+            val sessionSourcesValid = sourcePages.size == resultPages.size &&
+                sourcePages.all { it.isBlank() || File(it).isFile }
+            val sessionLayersValid = translationLayerFiles.size == resultPages.size &&
+                translationLayerFiles.all { it.isBlank() || File(it).isFile }
+            if (!sessionResultsValid || !sessionSourcesValid || !sessionLayersValid) {
+                val recoverArchiveId = activeArchiveId
+                sourcePages = emptyList()
+                resultPages = emptyList()
+                translationLayerFiles = emptyList()
+                activeArchiveId = ""
+                pendingEdits = false
+                // The working copies may have been cleaned after a later translation.
+                // Reopen the permanent chapter copy before declaring the session empty.
+                if (recoverArchiveId.isNotBlank() && MangaFoxChapterArchive.open(context, recoverArchiveId)) {
+                    return
+                }
+                persist(context)
+            }
+        }
+    }
+
+    @Synchronized fun removePage(context: Context, index: Int) {
+        if (index !in resultPages.indices) return
+        val removed = listOfNotNull(
+            resultPages.getOrNull(index), sourcePages.getOrNull(index), translationLayerFiles.getOrNull(index)
+        )
+        resultPages = resultPages.toMutableList().also { it.removeAt(index) }
+        if (index in sourcePages.indices) sourcePages = sourcePages.toMutableList().also { it.removeAt(index) }
+        if (index in translationLayerFiles.indices) translationLayerFiles = translationLayerFiles.toMutableList().also { it.removeAt(index) }
+        removed.forEach { path -> runCatching { if (path.isNotBlank()) File(path).delete() } }
+        MangaFoxLayerHistory(context).reset()
+        if (activeArchiveId.isNotBlank()) {
+            if (resultPages.isNotEmpty()) {
+                MangaFoxChapterArchive.save(
+                    context, activeWorkName, activeChapterName, resultTitle,
+                    sourcePages, resultPages, translationLayerFiles, captureOnlyResult, qualitySummary
+                )
+            } else {
+                MangaFoxChapterArchive.delete(context, activeArchiveId)
+                activeArchiveId = ""
+                pendingEdits = false
+                captureOnlyResult = false
+            }
+        }
+        persist(context)
+    }
+
+    @Volatile var status: String = "جاهز للترجمة"
+    @Volatile var resultPages: List<String> = emptyList()
+    @Volatile var sourcePages: List<String> = emptyList()
+    @Volatile var resultTitle: String = "الفصل المترجم"
+    @Volatile var lastError: String = ""
+    @Volatile var progressPercent: Int = 0
+    @Volatile var progressDetail: String = ""
+    @Volatile var detectedBlocks: Int = 0
+    @Volatile var translatedBlocks: Int = 0
+    @Volatile var failedBlocks: Int = 0
+    @Volatile var skippedBlocks: Int = 0
+    @Volatile var qualitySummary: String = "لم تبدأ ترجمة بعد"
+    @Volatile var failedBlockSamples: List<String> = emptyList()
+    // Per-page OCR/translation layers are stored separately from the rendered JPG.
+    @Volatile var translationLayerFiles: List<String> = emptyList()
+    @Volatile var captureOnlyResult: Boolean = false
+    @Volatile var activeWorkName: String = "عمل غير مصنف"
+    @Volatile var activeChapterName: String = "الفصل المترجم"
+    @Volatile var activeArchiveId: String = ""
+    @Volatile var pendingEdits: Boolean = false
+}
+
+/**
+ * @N5CR4 — Manga FOX theme model and bounded theme-pack reader.
+ * Theme packs are ZIP files containing one theme.json, or a plain theme JSON file.
+ * No paths/assets/scripts are extracted or executed.
+ */
+data class MangaFoxTheme(
+    val id: String,
+    val name: String,
+    val background: Int,
+    val panel: Int,
+    val accent: Int,
+    val surfaceAlt: Int,
+    val text: Int,
+    val muted: Int,
+    val onAccent: Int,
+    val isCustom: Boolean = false
+) {
+    fun toJson(): JSONObject = JSONObject()
+        .put("format", "MANGAFOX_THEME")
+        .put("version", 1)
+        .put("id", id)
+        .put("name", name)
+        .put("background", String.format(Locale.US, "#%06X", 0xFFFFFF and background))
+        .put("panel", String.format(Locale.US, "#%06X", 0xFFFFFF and panel))
+        .put("accent", String.format(Locale.US, "#%06X", 0xFFFFFF and accent))
+        .put("surfaceAlt", String.format(Locale.US, "#%06X", 0xFFFFFF and surfaceAlt))
+        .put("text", String.format(Locale.US, "#%06X", 0xFFFFFF and text))
+        .put("muted", String.format(Locale.US, "#%06X", 0xFFFFFF and muted))
+        .put("onAccent", String.format(Locale.US, "#%06X", 0xFFFFFF and onAccent))
+}
+
+object MangaFoxThemeStore {
+    val defaultTheme = MangaFoxTheme(
+        "fox_noir", "Dark Studio · البنفسجي والأسود",
+        Color.rgb(10, 8, 17), Color.rgb(24, 20, 35), Color.rgb(177, 107, 255),
+        Color.rgb(48, 39, 65), Color.rgb(250, 247, 255), Color.rgb(190, 180, 207), Color.WHITE
+    )
+
+    private val builtIns = listOf(
+        defaultTheme,
+        MangaFoxTheme("purple_nebula", "Purple Nebula · سديم بنفسجي", Color.rgb(9, 7, 20), Color.rgb(27, 20, 45), Color.rgb(180, 112, 255), Color.rgb(54, 39, 78), Color.rgb(247, 241, 255), Color.rgb(190, 177, 211), Color.WHITE),
+        MangaFoxTheme("ocean_blue", "Ocean Blue · محيط أزرق", Color.rgb(5, 16, 27), Color.rgb(14, 34, 51), Color.rgb(65, 190, 235), Color.rgb(26, 57, 78), Color.rgb(235, 248, 255), Color.rgb(165, 195, 211), Color.rgb(3, 20, 31)),
+        MangaFoxTheme("sakura", "Sakura · ساكورا", Color.rgb(25, 10, 20), Color.rgb(48, 22, 38), Color.rgb(255, 126, 178), Color.rgb(78, 38, 61), Color.rgb(255, 241, 247), Color.rgb(218, 181, 198), Color.rgb(48, 10, 30)),
+        MangaFoxTheme("emerald", "Emerald · زمردي", Color.rgb(6, 17, 15), Color.rgb(17, 37, 31), Color.rgb(76, 214, 151), Color.rgb(31, 65, 52), Color.rgb(237, 255, 246), Color.rgb(171, 207, 188), Color.rgb(5, 31, 21)),
+        MangaFoxTheme("crimson", "Crimson · قرمزي", Color.rgb(20, 7, 10), Color.rgb(43, 17, 23), Color.rgb(242, 83, 105), Color.rgb(73, 28, 38), Color.rgb(255, 241, 243), Color.rgb(216, 174, 182), Color.WHITE),
+        MangaFoxTheme("blood_moon", "Blood Moon · قمر دموي", Color.rgb(18, 7, 13), Color.rgb(40, 16, 27), Color.rgb(235, 74, 112), Color.rgb(65, 26, 42), Color.rgb(255, 241, 245), Color.rgb(220, 174, 189), Color.WHITE),
+        MangaFoxTheme("midnight_cyan", "Midnight Cyan · ليلي سماوي", Color.rgb(5, 11, 17), Color.rgb(13, 27, 38), Color.rgb(55, 220, 220), Color.rgb(24, 48, 61), Color.rgb(233, 253, 255), Color.rgb(164, 197, 204), Color.rgb(3, 25, 29)),
+        MangaFoxTheme("copper", "Copper Forge · نحاسي", Color.rgb(19, 12, 9), Color.rgb(39, 25, 18), Color.rgb(218, 139, 83), Color.rgb(66, 42, 29), Color.rgb(255, 244, 232), Color.rgb(205, 176, 151), Color.rgb(32, 17, 9))
+    )
+
+    fun resolve(context: Context, id: String?): MangaFoxTheme {
+        val key = id?.trim().orEmpty()
+        return builtIns.firstOrNull { it.id == key } ?: customFiles(context)
+            .firstNotNullOfOrNull { file -> runCatching { parseTheme(JSONObject(file.readText(Charsets.UTF_8)), true) }.getOrNull()?.takeIf { it.id == key } }
+            ?: defaultTheme
+    }
+
+    fun all(context: Context): List<MangaFoxTheme> {
+        val custom = customFiles(context).mapNotNull { file ->
+            runCatching { parseTheme(JSONObject(file.readText(Charsets.UTF_8)), true) }.getOrNull()
+        }
+        return builtIns + custom
+    }
+
+    fun deleteCustom(context: Context, id: String): Boolean {
+        if (builtIns.any { it.id == id }) return false
+        val file = File(themeDirectory(context), safeId(id) + ".json")
+        return !file.exists() || file.delete()
+    }
+
+    fun importTheme(context: Context, input: InputStream): MangaFoxTheme {
+        val bytes = readBounded(input, 2 * 1024 * 1024)
+        val jsonBytes = if (bytes.size >= 4 && bytes[0] == 0x50.toByte() && bytes[1] == 0x4b.toByte()) {
+            var found: ByteArray? = null
+            var total = 0
+            ZipInputStream(bytes.inputStream()).use { zip ->
+                while (true) {
+                    val entry = zip.nextEntry ?: break
+                    val name = entry.name.replace('\\', '/')
+                    require(!name.startsWith("/") && !name.split('/').any { it == ".." }) { "مسار غير آمن داخل حزمة الثيم" }
+                    if (entry.isDirectory) {
+                        val scratch = ByteArray(4096)
+                        while (true) {
+                            val count = zip.read(scratch)
+                            if (count < 0) break
+                            total += count
+                            require(total <= 512 * 1024) { "الحزمة تحتوي بيانات زائدة" }
+                        }
+                        zip.closeEntry()
+                        continue
+                    }
+                    if (name.equals("theme.json", true) || name.endsWith("/theme.json", true) || name.endsWith(".json", true)) {
+                        val candidate = readBounded(zip, 256 * 1024)
+                        total += candidate.size
+                        require(total <= 256 * 1024) { "بيانات الثيم أكبر من الحد المسموح" }
+                        if (found == null) found = candidate
+                    } else {
+                        // Drain the entry safely without extracting it.
+                        val scratch = ByteArray(4096)
+                        while (true) {
+                            val count = zip.read(scratch)
+                            if (count < 0) break
+                            total += count
+                            require(total <= 512 * 1024) { "الحزمة تحتوي بيانات زائدة" }
+                        }
+                    }
+                    zip.closeEntry()
+                }
+            }
+            requireNotNull(found) { "لم يتم العثور على theme.json داخل الحزمة" }
+        } else bytes
+
+        val json = JSONObject(String(jsonBytes, Charsets.UTF_8))
+        require(json.optString("format") == "MANGAFOX_THEME") { "صيغة الثيم غير معروفة" }
+        require(json.optInt("version", 0) == 1) { "إصدار الثيم غير مدعوم" }
+        val parsed = parseTheme(json, true)
+        val uniqueId = uniqueCustomId(context, parsed.id)
+        val theme = parsed.copy(id = uniqueId, isCustom = true)
+        val target = File(themeDirectory(context), "$uniqueId.json")
+        val temp = File(target.parentFile, target.name + ".tmp")
+        temp.writeText(theme.toJson().put("id", uniqueId).toString(), Charsets.UTF_8)
+        if (!temp.renameTo(target)) {
+            temp.copyTo(target, overwrite = true)
+            temp.delete()
+        }
+        return theme
+    }
+
+    fun exportPack(theme: MangaFoxTheme, output: OutputStream) {
+        ZipOutputStream(output).use { zip ->
+            zip.putNextEntry(ZipEntry("theme.json"))
+            zip.write(theme.toJson().toString(2).toByteArray(Charsets.UTF_8))
+            zip.closeEntry()
+            zip.putNextEntry(ZipEntry("README.txt"))
+            zip.write("MANGA FOX THEME PACK v1\nImport this .mftheme file from Manga FOX > Themes.\n".toByteArray(Charsets.UTF_8))
+            zip.closeEntry()
+        }
+    }
+
+    private fun parseTheme(json: JSONObject, custom: Boolean): MangaFoxTheme {
+        val name = json.optString("name").trim()
+        require(name.isNotBlank() && name.length <= 48) { "اسم الثيم فارغ أو طويل" }
+        fun parseColor(key: String, fallback: Int): Int {
+            val value = json.optString(key, "").trim()
+            if (value.isBlank()) return fallback
+            require(Regex("^#[0-9A-Fa-f]{6}$").matches(value)) { "قيمة اللون $key غير صالحة" }
+            return Color.parseColor(value)
+        }
+        val rawId = json.optString("id", "custom_${System.currentTimeMillis()}")
+        val id = safeId(rawId)
+        require(id.isNotBlank()) { "معرّف الثيم غير صالح" }
+        val base = defaultTheme
+        val background = parseColor("background", base.background)
+        val panel = parseColor("panel", base.panel)
+        val accent = parseColor("accent", base.accent)
+        val surfaceAlt = parseColor("surfaceAlt", panel)
+        val text = parseColor("text", if (isLight(background)) Color.rgb(30, 27, 22) else Color.WHITE)
+        val muted = parseColor("muted", if (isLight(background)) Color.rgb(100, 91, 78) else Color.LTGRAY)
+        val onAccent = parseColor("onAccent", if (isLight(accent)) Color.BLACK else Color.WHITE)
+        return MangaFoxTheme(id, name, background, panel, accent, surfaceAlt, text, muted, onAccent, custom)
+    }
+
+    private fun isLight(color: Int): Boolean =
+        (Color.red(color) * 299 + Color.green(color) * 587 + Color.blue(color) * 114) / 1000 >= 150
+
+    private fun safeId(value: String): String = value.lowercase(Locale.ROOT)
+        .replace(Regex("[^a-z0-9_-]"), "_").trim('_').take(40)
+
+    private fun uniqueCustomId(context: Context, requested: String): String {
+        val candidate = safeId(requested).ifBlank { "custom_theme" }
+        if (builtIns.none { it.id == candidate } && !File(themeDirectory(context), "$candidate.json").exists()) return candidate
+        return "${candidate.take(28)}_${System.currentTimeMillis().toString().takeLast(8)}"
+    }
+
+    private fun customFiles(context: Context): List<File> =
+        themeDirectory(context).listFiles()?.filter { it.isFile && it.extension.equals("json", true) }
+            ?.sortedBy { it.name.lowercase(Locale.ROOT) } ?: emptyList()
+
+    private fun themeDirectory(context: Context): File = File(context.filesDir, "mfox_themes").apply { mkdirs() }
+
+    private fun readBounded(input: InputStream, maxBytes: Int): ByteArray {
+        val out = java.io.ByteArrayOutputStream()
+        val buffer = ByteArray(8192)
+        var total = 0
+        while (true) {
+            val count = input.read(buffer)
+            if (count < 0) break
+            total += count
+            require(total <= maxBytes) { "حجم ملف الثيم يتجاوز الحد المسموح" }
+            out.write(buffer, 0, count)
+        }
+        return out.toByteArray()
+    }
+}
+
+
+/** @N5CR4 — persistent FIFO chapter queue. Work itself remains in the AccessibilityService worker. */
+class MangaFoxChapterQueueService : android.app.Service() {
+    companion object {
+        private const val CHANNEL_ID = "mfox_chapter_queue"
+        private const val NOTIFICATION_ID = 74031
+        private const val QUEUE_PREFS = "mfox_chapter_queue_v1"
+        private const val KEY_PENDING = "pending_ids"
+        private const val KEY_ACTIVE = "active_id"
+        private const val ACTION_PROCESS = "com.manga.fox.action.PROCESS_CHAPTER_QUEUE"
+        @Volatile private var serviceInstance: MangaFoxChapterQueueService? = null
+
+        private fun prefs(context: Context) = context.getSharedPreferences(QUEUE_PREFS, Context.MODE_PRIVATE)
+        private fun readIds(context: Context): MutableList<String> {
+            val raw = prefs(context).getString(KEY_PENDING, "[]") ?: "[]"
+            val array = runCatching { JSONArray(raw) }.getOrDefault(JSONArray())
+            return (0 until array.length()).map { array.optString(it) }.filter { it.isNotBlank() }.distinct().toMutableList()
+        }
+        private fun writeIds(context: Context, ids: List<String>) {
+            val array = JSONArray(); ids.distinct().forEach { array.put(it) }
+            prefs(context).edit().putString(KEY_PENDING, array.toString()).apply()
+        }
+        private fun start(context: Context) {
+            val intent = Intent(context, MangaFoxChapterQueueService::class.java).setAction(ACTION_PROCESS)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) context.startForegroundService(intent) else context.startService(intent)
+        }
+        fun enqueue(context: Context, ids: List<String>) {
+            require(ids.isNotEmpty()) { "لم يتم اختيار فصول" }
+            synchronized(this) {
+                val combined = (readIds(context) + ids).distinct()
+                writeIds(context, combined)
+            }
+            start(context)
+        }
+        fun kick(context: Context) {
+            if (readIds(context).isNotEmpty()) start(context)
+        }
+        fun onChapterFinished(context: Context, id: String, success: Boolean, detail: String) {
+            synchronized(this) {
+                val remaining = readIds(context).filterNot { it == id }
+                writeIds(context, remaining)
+                prefs(context).edit().remove(KEY_ACTIVE)
+                    .putString("last_result", if (success) "نجح: $id" else "فشل: $id · ${detail.take(180)}")
+                    .apply()
+            }
+            serviceInstance?.let { service ->
+                service.processing = false
+                service.updateNotification(if (success) "اكتمل فصل من الطابور" else "تجاوز فصل متعذر")
+                service.mainHandler.postDelayed({ service.processNext() }, 700L)
+            } ?: kick(context)
+        }
+    }
+
+    private val mainHandler = Handler(Looper.getMainLooper())
+    private var processing = false
+    private var retryCount = 0
+
+    override fun onCreate() {
+        super.onCreate()
+        serviceInstance = this
+        createChannel()
+        val initialNotification = buildNotification("تهيئة طابور الفصول")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            startForeground(
+                NOTIFICATION_ID,
+                initialNotification,
+                android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
+            )
+        } else {
+            startForeground(NOTIFICATION_ID, initialNotification)
+        }
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && intent?.action != null && intent.action != ACTION_PROCESS) {
+            stopSelfResult(startId); return START_NOT_STICKY
+        }
+        updateNotification()
+        mainHandler.post { processNext() }
+        return START_STICKY
+    }
+
+    private fun createChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            manager.createNotificationChannel(NotificationChannel(CHANNEL_ID, "طابور ترجمة الفصول", NotificationManager.IMPORTANCE_LOW))
+        }
+    }
+
+    private fun buildNotification(message: String): Notification {
+        val pending = readIds(this).size
+        val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) Notification.Builder(this, CHANNEL_ID)
+            else Notification.Builder(this)
+        val openIntent = PendingIntent.getActivity(
+            this, 74032, Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP),
+            if (Build.VERSION.SDK_INT >= 23) PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE else PendingIntent.FLAG_UPDATE_CURRENT
+        )
+        return builder.setSmallIcon(android.R.drawable.ic_menu_upload)
+            .setContentTitle("Manga Fox · طابور الفصول")
+            .setContentText("$message · المتبقي: $pending")
+            .setContentIntent(openIntent).setOngoing(pending > 0).build()
+    }
+
+    fun updateNotification(message: String = "معالجة الفصول في الخلفية") {
+        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        manager.notify(NOTIFICATION_ID, buildNotification(message))
+    }
+
+    private fun processNext() {
+        if (processing) return
+        val ids = readIds(this)
+        if (ids.isEmpty()) {
+            getSharedPreferences(QUEUE_PREFS, Context.MODE_PRIVATE).edit().remove(KEY_ACTIVE).apply()
+            stopForeground(true)
+            stopSelf()
+            return
+        }
+        val accessibility = MangaFoxAccessibilityService.instance
+        if (accessibility == null) {
+            updateNotification("بانتظار تفعيل خدمة إمكانية الوصول")
+            mainHandler.postDelayed({ processNext() }, 4000L)
+            return
+        }
+        val active = getSharedPreferences(QUEUE_PREFS, Context.MODE_PRIVATE).getString(KEY_ACTIVE, "").orEmpty()
+        val nextId = active.takeIf { it.isNotBlank() } ?: ids.first()
+        getSharedPreferences(QUEUE_PREFS, Context.MODE_PRIVATE).edit().putString(KEY_ACTIVE, nextId).apply()
+        when (accessibility.startQueuedArchiveChapter(nextId)) {
+            1 -> { processing = true; retryCount = 0; updateNotification("تُترجم: ${ids.size} فصل متبقٍ") }
+            0 -> {
+                updateNotification("بانتظار انتهاء العملية الحالية")
+                mainHandler.postDelayed({ processNext() }, 3500L)
+            }
+            else -> {
+                retryCount++
+                if (retryCount <= 2) mainHandler.postDelayed({ processNext() }, 2500L)
+                else onChapterFinished(this, nextId, false, "لا توجد صور أصلية قابلة لإعادة الترجمة أو تعذر فتح الفصل")
+            }
+        }
+    }
+
+    override fun onBind(intent: Intent?) = null
+    override fun onDestroy() {
+        serviceInstance = null
+        processing = false
+        super.onDestroy()
+    }
+}
